@@ -1,0 +1,129 @@
+image: rjzjh/duckula
+imageTag: data.2.0.0
+imagePullPolicy: IfNotPresent
+
+persistence:
+  enabled: true
+  # 指定存储，推荐使用此方式，注意创建的的访问模式为：accessMode: ReadWriteMany
+  #existingClaim: duckula
+  # 快速搭建demo可以使用此方式，要求k8s拥有此storageClass
+  storageClass: "tamscloud-disk-normal"
+  accessMode: ReadWriteMany
+  size: 40Gi
+  annotations: {}
+userconfig:
+  root:
+    zk.properties: |-
+      common.others.zookeeper.constr=null
+      common.others.zookeeper.sleepTimeMs=1000
+      common.others.zookeeper.maxRetries=5
+      common.others.zookeeper.sessionTimeoutMs=9000
+      common.others.zookeeper.connectionTimeoutMs=60000
+    duckula-ops.properties: |-
+      #http连接
+      common.http.connpool.maxtotal=200
+      common.http.connpool.maxperroute=20
+      common.http.connpool.defaultconn.sockettimeout=50000
+      common.http.connpool.defaultconn.connecttimeout=50000
+      common.http.connpool.defaultconn.requesttimeout=50000
+      #阿里云
+      common.others.aliyun.server.accesskey=LTAIwzNMCeiZDmtx
+      common.others.aliyun.server.secretkey=tZummSzWVeQ86ZRckX4ocYBkwx71XA
+      duckula.ops.listener.enable=false
+      #ssh代理
+      common.apiext.ssh.host=ssh-jump
+      common.apiext.ssh.port=22
+      common.apiext.ssh.username=dbtunnel
+      common.apiext.ssh.password=VOk2MRIXQxaDkylgkLLe1J23VpIWy_
+      #外网传阿里云1分种传了40M，放大到3分种传120M，中够大部分的用户插件的传输任务
+      common.os.ssh.uncork.removeAbandonedTimeout=180
+      #2分钟进行漏洞检查，默认3分钟  
+      common.os.ssh.uncork.timeBetweenEvictionRunsMillis=120000
+      #需要跟据实据情况替换
+      duckula.ops.homedir=/opt/duckula
+      duckula.ops.datadir=/data/duckula-data
+      #默认的用户名和密码
+      common.os.ssh.username=xplat
+      #明文为：1
+      common.os.ssh.pwd=1
+      #开启任务的模式,tiller/k8s/process
+      duckula.ops.starttask.pattern=null
+      #使用的碰盘PVC
+      duckula.ops.starttask.claimname=null
+      #tiller
+      common.kubernetes.tiller.serverip=101.37.108.219
+      common.kubernetes.tiller.port=44134
+      #kubernetes
+      common.kubernetes.apiserver.master.url=null
+      common.kubernetes.apiserver.master.username=null
+      common.kubernetes.apiserver.master.password=null
+      common.kubernetes.apiserver.namespace.default=default
+      #k8s
+      duckula.task.image.tag=task.1.1.11    
+  es:
+    es-dev.properties: |-
+      common.es.host.name=101.37.152.91
+      common.es.cluster.name=es-test
+      common.es.host.port.rest=9200
+      common.es.host.port.transport=9300
+      common.es.host.scheme=http
+      common.es.client.transport.ping_timeout=5s
+      common.es.client.transport.nodes_sampler_interval=5s
+      common.es.http.head=header=value&
+      common.es.http.maxRetryTimeoutMillis=30000
+      common.es.http.connectTimeout=1000
+      common.es.http.socketTimeout=30000
+      common.es.http.connectionRequestTimeout=500
+      common.es.query.timeout=5000
+      common.es.query.index=none
+      common.es.query.type=_doc
+      common.es.http.aync.maxConnTotal=100
+      common.es.http.aync.maxConnPerRoute=100
+  kafka:
+    kafka-dev.properties: |-
+      common.others.kafka.common.bootstrap.servers=kafka-dev:9092
+      common.others.kafka.producer.acks=1
+      common.others.kafka.producer.retries=2147483647
+      common.others.kafka.producer.max.block.ms=9223372036854775807L
+      common.others.kafka.producer.max.in.flight.requests.per.connection=1
+      common.others.kafka.producer.linger.ms=10
+      common.others.kafka.producer.batch.size=102400
+      common.others.kafka.producer.buffer.memory=33554432
+      common.others.kafka.producer.compression.type=none
+      common.others.kafka.producer.max.request.size=1048576
+      common.others.kafka.producer.receive.buffer.bytes=32768
+      common.others.kafka.producer.request.timeout.ms=30000
+      common.others.kafka.producer.send.buffer.bytes=131072
+      common.others.kafka.producer.connections.max.idle.ms=540000
+      common.others.kafka.consumer.group.id=tams-group
+      common.others.kafka.consumer.enable.auto.commit=true
+      common.others.kafka.consumer.auto.commit.interval.ms=1000
+      common.others.kafka.consumer.session.timeout.ms=30000
+      common.others.kafka.consumer.auto.offset.reset=earliest
+      #hosts,hostname用逗号隔开
+      docker.host.ip.120.27.209.9=kafka-dev
+  redis:
+    redis-dev.properties: |-
+      common.redis.redisserver.timeout=2000  
+      common.redis.redisserver.maxWaitMillis=10000
+      common.redis.redisserver.maxTotal=200
+      common.redis.redisserver.maxIdle=20
+      common.redis.redisserver.testOnBorrow=true
+      common.redis.redisserver.testWhileIdle=true
+      common.redis.redisserver.defaultDb=0
+      common.redis.redisserver.password=null
+      common.redis.redisserver.minIdle=0
+      common.redis.redisserver.minEvictableIdleTimeMillis=13000
+      common.redis.redisserver.softMinEvictableIdleTimeMillis=13000
+      common.redis.redisserver.numTestsPerEvictionRun=3
+      common.redis.redisserver.testOnReturn=false
+      common.redis.redisserver.timeBetweenEvictionRunsMillis=60000
+      common.redis.redisserver.blockWhenExhausted=true
+      common.redis.redisserver.leak.enable=false
+      common.redis.redisserver.clientName=tams
+      common.redis.cachecloud.client_version = 1.2.0
+      common.redis.cachecloud.domain_url = http://118.31.67.136:9218
+      common.redis.cachecloud.redis_cluster_suffix = /cache/client/redis/cluster/%s.json?clientVersion=
+      common.redis.cachecloud.redis_sentinel_suffix = /cache/client/redis/sentinel/%s.json?clientVersion=
+      common.redis.cachecloud.redis_standalone_suffix = /cache/client/redis/standalone/%s.json?clientVersion=
+      common.redis.cachecloud.cachecloud_report_url = /cachecloud/client/reportData.json

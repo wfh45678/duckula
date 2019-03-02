@@ -1,0 +1,255 @@
+<project
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://maven.apache.org/POM/4.0.0">
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>duckula-ops</artifactId>
+	<packaging>war</packaging>
+	<name>duckula-ops Tapestry 5 Application</name>
+	<dependencies>
+		<!-- To set up an application with a database, change the artifactId below 
+			to tapestry-hibernate, and add a dependency on your JDBC driver. You'll also 
+			need to add Hibernate configuration files, such as hibernate.cfg.xml. -->
+		<dependency>
+			<groupId>org.apache.tapestry</groupId>
+			<artifactId>tapestry-core</artifactId>
+		</dependency>
+
+		<!-- Include the Log4j implementation for the SLF4J logging framework -->
+		<!-- logback，存位点信息时也用到了logback,不好改为log4j2 -->
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+		</dependency>
+
+
+		<dependency>
+			<groupId>org.apache.tapestry</groupId>
+			<artifactId>tapestry-webresources</artifactId>
+		</dependency>
+
+		<!-- Uncomment this to add support for file uploads: -->
+		<!-- <dependency> <groupId>org.apache.tapestry</groupId> <artifactId>tapestry-upload</artifactId> 
+			<version>${tapestry-release-version}</version> </dependency> -->
+
+		<!-- A dependency on either JUnit or TestNG is required, or the surefire 
+			plugin (which runs the tests) will fail, preventing Maven from packaging 
+			the WAR. Tapestry includes a large number of testing facilities designed 
+			for use with TestNG (http://testng.org/), so it's recommended. -->
+
+		<dependency>
+			<groupId>org.apache.tapestry</groupId>
+			<artifactId>tapestry-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Provided by the servlet container, but sometimes referenced in the 
+			application code. -->
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
+		<!-- Provide dependency to the Tapestry javadoc taglet which replaces the 
+			Maven component report -->
+		<dependency>
+			<groupId>org.apache.tapestry</groupId>
+			<artifactId>tapestry-javadoc</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
+
+		<dependency>
+			<groupId>org.apache.tapestry</groupId>
+			<artifactId>tapestry-spring</artifactId>
+		</dependency>
+		<!-- 这3个包如果去除，会导致esclient创建失败java.lang.NoClassDefFoundError: org/apache/logging/log4j/message/Message,如果添加会导致日志不能打到控制台，k8s收集不到日志，冲突！！！ -->
+		<dependency>
+			<groupId>net.wicp.tams</groupId>
+			<artifactId>duckula-common</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.logging.log4j</groupId>
+					<artifactId>log4j-slf4j-impl</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.logging.log4j</groupId>
+					<artifactId>log4j-core</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.logging.log4j</groupId>
+					<artifactId>log4j-api</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<!-- 先解决：java.lang.NoClassDefFoundError: org/apache/logging/log4j/message/Message 
+			还需测console控制台的输出 -->
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-api</artifactId>
+		</dependency>
+		<!-- 阿里云 -->
+		<dependency>
+			<groupId>com.aliyun</groupId>
+			<artifactId>aliyun-java-sdk-rds</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.aliyun</groupId>
+			<artifactId>aliyun-java-sdk-core</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>net.wicp.tams</groupId>
+			<artifactId>common-http</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.wicp.tams</groupId>
+			<artifactId>tams-component</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.wicp.tams</groupId>
+			<artifactId>common-others</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.wicp.tams</groupId>
+			<artifactId>common-apiext</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.wicp.tams</groupId>
+			<artifactId>common-os</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.wicp.tams</groupId>
+			<artifactId>common-es-client</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.logging.log4j</groupId>
+					<artifactId>log4j-api</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>net.wicp.tams</groupId>
+			<artifactId>common-kubernetes</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.wicp.tams</groupId>
+			<artifactId>duckula-install</artifactId>
+			<version>2.0.0</version>
+			<exclusions>
+				<exclusion>
+					<groupId>*</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+	</dependencies>
+	<build>
+		<finalName>duckula-ops</finalName>
+		<plugins>
+			<!-- 打包资源 -->
+			<plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.5</version>
+				<executions>
+					<execution>
+						<id>copy-duckula</id>
+						<phase>process-sources</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${basedir}/src/main/webapp/resource</outputDirectory>
+							<resources>
+								<resource>
+									<directory>../duckula-install/target</directory>
+									<includes>
+										<include>duckula.tar</include>
+										<include>duckula-data.tar</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>net.wicp.tams</groupId>
+				<artifactId>ts-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>dkops</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>dkops</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+			</plugin>
+
+			<!-- Run the application using "mvn jetty:run" -->
+			<plugin>
+				<groupId>org.mortbay.jetty</groupId>
+				<artifactId>maven-jetty-plugin</artifactId>
+				<version>6.1.26</version>
+				<configuration>
+					<!-- Log to the console. -->
+					<requestLog
+						implementation="org.mortbay.jetty.NCSARequestLog">
+						<!-- This doesn't do anything for Jetty, but is a workaround for a 
+							Maven bug that prevents the requestLog from being set. -->
+						<append>true</append>
+					</requestLog>
+					<connectors>
+						<connector
+							implementation="org.mortbay.jetty.nio.SelectChannelConnector">
+							<port>9090</port>
+						</connector>
+					</connectors>
+					<systemProperties>
+						<systemProperty>
+							<name>tapestry.execution-mode</name>
+							<value>development</value>
+						</systemProperty>
+					</systemProperties>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+
+	<properties>
+		<testng-release-version>6.8.21</testng-release-version>
+		<slf4j-release-version>1.7.19</slf4j-release-version>
+		<log4j.version>2.6.2</log4j.version>
+	</properties>
+	<parent>
+		<groupId>net.wicp.tams</groupId>
+		<artifactId>duckula</artifactId>
+		<version>2.0.0</version>
+	</parent>
+</project>

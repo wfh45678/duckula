@@ -1,0 +1,274 @@
+<html xmlns:t="http://tapestry.apache.org/schema/tapestry_5_4.xsd"
+      xmlns:r="tapestry-library:rjzjh"
+      xmlns:s="tapestry-library:tams"
+      xmlns:p="tapestry:parameter"> 
+<head>
+   <title isMenu="true" module="3">ES索引管理</title>
+</head>
+<body>
+   <r:query id="q"  qBlock="query" queryUrl="/es/indexManager:query/${cluster}" uBlock="save"   saveUrl="/es/indexManager:save/${cluster}" deleteUrl="/es/indexManager:del/${cluster}" opFormatter="showopt" 
+        columns="[[{field:'index',width:250,title:'索引'},{field:'type',width:250,title:'类型'},{field:'alias',width:300,title:'别名'},{field:'isExit',width:100,title:'es是否存在'},{field:'op',width:250,title:'操作'}]]" 
+        dialogStyle="width:900px;height:650px;" initAddHandle="initAdd" saveCheckHandle="saveCheck" pagination="false" usrBlock="usrBlock"/>
+   <t:block id="query">
+       <table class="frame_table_list_4">
+		 <tr>
+			    <td class="frame_table_list_4_righttext">索引</td>
+				<td>
+				   <r:validatebox name="index"/>
+				</td>				
+			 	<td class="frame_table_list_4_righttext">类型</td>			 	    
+			 	<td>
+			 	   <r:validatebox name="type"/>
+			 	</td>
+			 	<td class="frame_table_list_4_righttext">别名</td>
+			 	<td>
+			 	   <r:validatebox name="alias"/>
+			 	</td>	
+			 	<td class="frame_table_list_4_righttext"></td>
+		        <td>
+				</td>		 	
+		 </tr>
+	  </table>
+   </t:block>
+   
+   <t:block id="usrBlock">
+       集群： <r:combobox id="cluster" name="cluster" url="/es/indexManager:queryMiddlewareType/es" changeHandle="changeCluster" width="80" required="true" value="cluster"></r:combobox>
+   </t:block>
+   
+   <t:block id="save">
+        <table class="frame_table_list_2">
+                  <tr>
+			         <td class="frame_table_list_2_righttext">
+			            <font>提示</font>
+			         </td>
+			         <td  colspan="3" align="left">
+			            <font color="red">索引内容跟据库-表基于对应关系生成，可以手动修改</font>
+			         </td>
+			      </tr>
+			      <tr>
+			         <td class="frame_table_list_2_righttext">索引</td>
+			         <td>
+			            <r:validatebox name="index" style="width:280px;" required="true"/>
+			            <input type="hidden" name="id"/>
+	                 </td>
+		             <td class="frame_table_list_2_righttext">数据库实例</td>
+			         <td>
+			            <r:combobox id="dbinst_inst" name="dbinst" url="/duckula/taskManager:queryInst" changeHandle="changeDbInst" width="180"></r:combobox>
+	                 </td>
+			      </tr>
+			      <tr>			         
+	                  <td class="frame_table_list_2_righttext">分片数量</td>
+			         <td>
+			           <r:numberbox name="shardsNum"  required="true"></r:numberbox>
+	                 </td>
+	                  <td class="frame_table_list_2_righttext">复制份数</td>
+			         <td>
+			           <r:numberbox name="replicas"  required="false"></r:numberbox>
+	                 </td>
+			      </tr>	
+			      <tr>
+			         <td class="frame_table_list_2_righttext" name="trdb">库名-表名(主)</td>
+			         <td name="trdb">
+			             <r:validatebox id="dbid" name="db" style="width:100px;" required="false"/>-
+			             <r:validatebox id="tbid" name="tb" style="width:100px;" required="false"/>
+	                 </td>
+			         <td class="frame_table_list_2_righttext" name="trdb"> &nbsp;&nbsp;&nbsp; 库名-表名(从)-关联字段</td>
+			         <td name="trdb">
+			             <r:validatebox id="db1id" name="db1" style="width:100px;" required="false"/>-
+			             <r:validatebox id="tb1id" name="tb1" style="width:100px;" required="false"/>-
+			             <r:validatebox id="rela1id" name="rela1" style="width:100px;" required="false"/>
+	                 </td> 
+			      </tr>		 			      
+			      <tr>
+			         <td class="frame_table_list_2_righttext">内容</td>
+			         <td colspan="3">
+			             <input id="contentsave"  name="content" class="easyui-textbox" data-options="multiline:true,height:280,width:650"/>
+	                 </td>
+			      </tr>
+			       <tr>
+			         <td class="frame_table_list_2_righttext">备注</td>
+			         <td colspan="3">
+			            <input  name="remark" class="easyui-textbox" data-options="multiline:true,height:80,width:650"/>
+	                 </td>
+			      </tr>
+	 </table>
+   </t:block>
+   
+    <r:dialog id="queryIndex" title="请填写别名" width="560" height="450"  closable="true"   toolbar="[{'id':'saveAliasBut','iconCls':'icon-save','text':'转换别名','plain':true},{'id':'createAliasBut','iconCls':'icon-save','text':'创建别名','plain':true}]">
+      <form id="saveIndexForm">
+         <table class="frame_table_list_2">	
+                  <tr>
+			         <td class="frame_table_list_2_righttext">
+			            <font>提示</font>
+			         </td>
+			         <td align="left">
+			            <font color="red">转换别名需要选择“新索引”，创建别名可以不做选择</font>
+			         </td>
+			      </tr>	    
+			      <tr>
+			         <td class="frame_table_list_2_righttext">旧索引</td>
+			 	     <td>
+			 	       <r:combogrid id="oldIndexSel" name="oldIndex"  columns="[[{field:'index',width:130,title:'id'},{field:'pri',width:80,title:'分块数'},{field:'docs_count',width:80,title:'文档数'},{field:'store_size',width:110,title:'存储大小'}]]" idfield="index" panelWidth="450" panelHeight="300" textfield="id" width="200" pagination="false" readonly="true"></r:combogrid>
+			 	     </td>
+			      </tr>	
+			      <tr>
+			         <td class="frame_table_list_2_righttext">别名</td>
+			 	     <td>
+			 	        <r:validatebox id="aliasNew" name="aliasNew" style="width:400px;"/>
+			 	     </td>
+			      </tr>      
+			      <tr>
+			         <td class="frame_table_list_2_righttext">新索引</td>
+			         <td>
+			            <r:combogrid id="newIndexSel" name="newIndex"  columns="[[{field:'index',width:130,title:'id'},{field:'pri',width:80,title:'分块数'},{field:'docs_count',width:80,title:'文档数'},{field:'store_size',width:110,title:'存储大小'}]]" idfield="index" panelWidth="450" panelHeight="300" textfield="id" width="200" pagination="false" required="true"></r:combogrid>
+			 	    </td>			 	  	 
+			      </tr>
+			     
+	     </table> 
+	  </form>       
+   </r:dialog>
+  
+<script>
+    function changeCluster(newValue,oldValue){
+         var url= $.rjzjh.packurl('/es/indexManager/'+newValue);
+         window.location.href=url;
+    }
+
+     function showopt(value,row,index){
+            var optCan=gt( row.hostNum,0);
+       	    var update= '<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-edit"  data-options="disabled:'+optCan+'"  style="margin-right:10px" onclick="_doUpdate('+index+') ">'+msg.update+'</a>';
+       	    var deletebut= '<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove" data-options="disabled:'+optCan+'" style="margin-right:10px" onclick="_doDelete('+index+') ">'+msg.delete_+'</a>';  
+       	    var alischange= '<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-edit"  data-options="disabled:'+optCan+'"  style="margin-right:10px" onclick="changeAlias('+index+') ">别名管理</a>';     	    
+			return update+deletebut+alischange;
+     }    
+     
+     function getRow(index){
+     	 var rows = jQuery('#q_grid').datagrid('getRows');
+     	 return rows[index];
+     }
+     
+    
+     
+          //由于context过长会报：413 (FULL head)
+     function saveCheck(formdata){
+         jQuery.messager.progress({
+				    	title:'${message:common.hint.waiting}',
+				    	msg:'${message:common.hint.handling}'
+				    });  
+          $.ajax({
+            url: $.rjzjh.packurl('/es/indexManager:save/${cluster}'),
+            contentType: "application/json; charset=utf-8",
+            data: $("#q_updateform").serializeObject(),
+            type: "post",
+            dataType: 'json',
+            success: function (data) {
+              jQuery.messager.progress('close');
+               _closeDlg();
+			   jQuery('#q_grid').datagrid('reload');
+            }
+        });
+        return false;
+     }
+     
+     function getRow(index){
+     	 var rows = jQuery('#q_grid').datagrid('getRows');
+     	 return rows[index];
+     }
+     
+     var oldIndex;
+     function changeAlias(index){
+         var row=getRow(index);
+         $.post($.rjzjh.packurl('/es/indexManager:queryIndex/${cluster}'),{},function(data){
+                    $('#saveIndexForm').form('clear');
+			        var g = $('#oldIndexSel').combogrid('grid');	// get datagrid object
+		            var r = g.datagrid('loadData',data);	// get the selected row      
+		            $('#oldIndexSel').combogrid('setValue', row.index);
+		            oldIndex=row.index;
+		            $('#aliasNew').val(row.alias);
+		            var g2 = $('#newIndexSel').combogrid('grid');	// get datagrid object
+		            var r2 = g2.datagrid('loadData',data);	// get the selected row  
+			        $.rjzjh.opendialog2("queryIndex"); 
+	     },'json');        
+     }
+        
+ 	
+     function initAdd(){
+        var cluster=$('#cluster').val();
+	    if(cluster==''){
+	        $.rjzjh.alert('请选择集群！');
+	        return false;
+	     }
+        $('#type_save').val('_doc');        
+     }
+     
+     
+  function changeDbInst(val){
+       if(_isUpdateInit){//防止在打开修改页面时会覆盖它的结果
+           _isUpdateInit=false;
+           if("no"==val||""==val){
+              $('td[name="trdb"]').css({"visibility":"hidden"});
+           }else{
+              $('td[name="trdb"]').css({"visibility":"visible"});//display:none
+           }
+           return;
+       }
+      //$('#dbid').val('binlog_test_db');
+     // $('#tbid').val('file_type_test');
+      if("no"==val||""==val){          
+          $('td[name="trdb"]').css({"visibility":"hidden"});
+      }else{
+         $('td[name="trdb"]').css({"visibility":"visible"});//display:none
+      }
+   }
+     
+     
+  $(function(){      
+      $('#saveAliasBut').click(function(){           
+           var newIndex= $.rjzjh.getcombogrid('newIndexSel','index');
+           var alias= $('#aliasNew').val();
+           
+          if(!jQuery('#saveIndexForm').form('validate')){
+			 return;
+		  }else if(newIndex==''){
+              $.rjzjh.alert('新的索引必须选择');
+		      return;
+          }
+          // alert(oldIndex+newIndex+alias);
+           $.post($.rjzjh.packurl('/es/indexManager:changeIndexAlias/${cluster}'),{'oldIndex':oldIndex,'newIndex':newIndex,'alias':alias},function(data){
+               $.rjzjh.opt2(data,function(){
+                   $('#queryIndex').dialog('close');
+                   jQuery('#q_grid').datagrid('reload');
+               });			  
+	      },'json');
+      }); 
+      $('#createAliasBut').click(function(){
+          var aliass= $('#aliasNew').val();
+          if(aliass==''){
+              $.rjzjh.alert('请输入别名');
+		      return;
+          }
+          $.post($.rjzjh.packurl('/es/indexManager:createIndexAlias/${cluster}'),{'oldIndex':oldIndex,'alias':aliass},function(data){
+               $.rjzjh.opt2(data,function(){
+                   $('#queryIndex').dialog('close');
+                   jQuery('#q_grid').datagrid('reload');
+               });			  
+	      },'json');
+      });
+      $('#tbid,#rela1id').blur(function(){
+         var dbinst_inst=$('#dbinst_inst').val();
+         var dbid=$('#dbid').val();
+         var tbid=$('#tbid').val();
+         if(or( dbinst_inst=='', dbid=='',tbid=='')){
+            $.rjzjh.alert('输入数据库实例，库名-表名会自动生成索引的内容');
+            return null;
+         }
+         var formData= $("#q_updateform").serializeObject();
+         $.post($.rjzjh.packurl('/es/indexManager:createIndex/${cluster}'),formData,function(data){
+              $('#contentsave').textbox('setValue', data);	  
+	      },'text');
+      }); 
+   });    
+   
+</script>
+</body>
+</html>

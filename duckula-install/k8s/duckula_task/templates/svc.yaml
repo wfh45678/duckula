@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "duckula.fullname" . }}
+  labels:
+    app: {{ template "duckula.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+{{- if .Values.service.jmxexport }}
+  - name: jmxexport
+    port: {{ .Values.service.jmxexport.port }}
+    targetPort: jmxexport
+    {{- if .Values.service.jmxexport.nodePort }}
+    nodePort: {{ .Values.service.jmxexport.nodePort }}
+    {{- end }}
+ {{- end }}
+ {{- if .Values.service.debugport }}
+  - name: debugport
+    port: {{ .Values.service.debugport.port }}
+    targetPort: debug
+    {{- if .Values.service.debugport.nodePort }}
+    nodePort: {{ .Values.service.debugport.nodePort }}
+    {{- end }}
+{{- end }}
+  selector:
+    app: {{ template "duckula.name" . }}
+    release: {{ .Release.Name }}
+    

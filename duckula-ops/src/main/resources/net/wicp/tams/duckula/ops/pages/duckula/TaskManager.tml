@@ -1,0 +1,342 @@
+<html xmlns:t="http://tapestry.apache.org/schema/tapestry_5_4.xsd"
+      xmlns:r="tapestry-library:rjzjh"
+      xmlns:s="tapestry-library:tams"
+      xmlns:p="tapestry:parameter"> 
+<head>
+   <title isMenu="true" module="3">任务管理</title>
+</head>
+<body>
+   <r:query id="q"  qBlock="query" queryUrl="/duckula/taskManager:query" uBlock="save"   saveUrl="/duckula/taskManager:save" deleteUrl="/duckula/taskManager:del" opFormatter="showopt" 
+        columns="[[{field:'id',width:250,title:'任务ID'},{field:'senderEnum1',width:80,title:'发送者'}, {field:'ip',width:300,title:'数据库'},{field:'rules',width:400,title:'规则模式'},${ColDifferent},{field:'op',width:350,title:'操作'}]]" 
+        dialogStyle="width:800px;height:600px;" initAddHandle="initAdd" saveCheckHandle="saveCheck" pagination="false"/>
+   <t:block id="query">
+       <table class="frame_table_list_4">
+		 <tr>
+			    <td class="frame_table_list_4_righttext">任务Id</td>
+				<td>
+				   <r:validatebox name="id"/>
+				</td>
+				<td class="frame_table_list_4_righttext">数据库地址</td>
+			 	<td>
+			 	   <r:validatebox name="ip"/>
+			 	</td>
+			 	<td class="frame_table_list_4_righttext">规则模式</td>			 	    
+			 	<td>
+			 	   <r:validatebox name="rules"/>
+			 	</td>
+			 	<td class="frame_table_list_4_righttext"></td>
+			 	<td>
+			 	   
+			 	</td>
+		 </tr>
+	  </table>
+   </t:block>
+   
+   <t:block id="save">
+        <table class="frame_table_list_2">
+                  <tr>
+			         <td class="frame_table_list_2_righttext">
+			            <font>提示</font>
+			         </td>
+			         <td  colspan="3" align="left">
+			            <font color="red">修改任务ID表示重建task，以前的位点将做废</font>
+			         </td>
+			      </tr>
+			      <tr>
+			         <td class="frame_table_list_2_righttext">任务Id</td>
+			         <td colspan="3">
+			            <r:validatebox name="id" style="width:650px;" required="true"/>
+			            <input type="hidden" name="clientId"/>
+	                 </td>
+			 	  	
+			      </tr>
+			      <tr>
+			         <td class="frame_table_list_2_righttext">image版本</td>
+			         <td>
+			            <r:validatebox id="imageVersion_save" name="imageVersion" style="width:250px;" required="false"/>
+	               </td>
+			 	  	 <td class="frame_table_list_2_righttext">名称空间</td>
+			 	     <td>
+			 	        <r:validatebox id="namespace_save" name="namespace" style="width:250px;" required="false"/>
+			 	     </td>
+			      </tr>
+			      
+			      <tr>
+			         <td class="frame_table_list_2_righttext">数据库实例</td>
+			         <td>
+			            <r:combobox id="dbinst_inst" name="dbinst" url="/duckula/taskManager:queryInst" changeHandle="changeDbInst" width="150"></r:combobox>
+	                 </td>
+	                  <td class="frame_table_list_2_righttext">位点回溯</td>
+			 	     <td>
+			 	       <r:comboboxenum id="posListener_save"  name="posListener" enumClass="net.wicp.tams.common.constant.dic.YesOrNo" required="false"></r:comboboxenum>
+			 	     </td>
+			      </tr>
+			      <tr name="trdb">
+			        <td class="frame_table_list_2_righttext">数据库地址</td>
+			 	     <td>
+			 	       <r:validatebox id="ip_save" name="ip" style="width:250px;" required="true"/>
+			 	     </td>
+			         <td class="frame_table_list_2_righttext">端口</td>
+			         <td>
+			           <r:numberbox id="port_save" name="port" style="width:250px;" min="1024" max="65536" missingMessage="端口必填，大于1024小于65536" required="true"/>
+	                 </td>			 	  	
+			      </tr>
+			      <tr name="trdb">
+			         <td class="frame_table_list_2_righttext">用户名</td>
+			         <td>
+			           <r:validatebox id="user_save" name="user" style="width:250px;" required="true"/>
+	                 </td>
+			 	  	 <td class="frame_table_list_2_righttext">密码</td>
+			 	     <td>
+			 	        <r:validatebox id="pwd_save" name="pwd" style="width:250px;" required="true"/>
+			 	     </td>
+			      </tr>
+			     
+			       <tr>
+			         <td class="frame_table_list_2_righttext">是rds</td>
+			         <td>
+			            <r:comboboxenum id="rds_save"  name="rds" enumClass="net.wicp.tams.common.constant.dic.YesOrNo" required="false"></r:comboboxenum>
+	               </td>
+			 	  	 <td class="frame_table_list_2_righttext">需要SSH</td>
+			 	     <td>
+			 	         <r:comboboxenum id="rds_isSsh"  name="isSsh" enumClass="net.wicp.tams.common.constant.dic.YesOrNo" required="false"></r:comboboxenum>
+			 	     </td>
+			      </tr>
+			       <tr>
+			 	     <td class="frame_table_list_2_righttext">规则</td>
+			 	     <td colspan="3">
+			 	         <r:validatebox  name="rules" style="width:650px;" required="true"/>
+			 	     </td>
+			      </tr>			      
+			      <tr>
+			         <td class="frame_table_list_2_righttext">接收者</td>
+			 	     <td>
+			 	      <r:comboboxenum id="senderClass_save"  name="senderEnum" enumClass="net.wicp.tams.duckula.common.constant.SenderEnum" required="true" changeHandle="changeSender"></r:comboboxenum>
+			 	     </td>
+			 	  	 <td  name="othersender" class="frame_table_list_2_righttext">其它发送者</td>
+			 	     <td name="othersender">
+			 	        <r:validatebox name="receivePluginDir" style="width:250px;" required="false"/>
+			 	     </td>
+			      </tr>
+			      <tr>
+			         <td class="frame_table_list_2_righttext">中间件类型</td>
+			         <td>
+			            <r:comboboxenum id="middlewareType_save"  name="middlewareType" enumClass="net.wicp.tams.duckula.common.constant.MiddlewareType" required="false"></r:comboboxenum>
+	               </td>
+			 	  	 <td class="frame_table_list_2_righttext">中间件实例</td>
+			 	     <td>
+			 	        <r:combobox id="middlewareInst_save" name="middlewareInst" textField="text" valueField="value" url="/es/indexManager:queryMiddlewareType" parent="middlewareType_save" required="true"></r:combobox>
+			 	     </td>
+			      </tr>
+			      <tr>
+			 	     <td class="frame_table_list_2_righttext">是否运行</td>
+			         <td>
+			            <r:comboboxenum id="run_save"  name="run" enumClass="net.wicp.tams.common.constant.dic.YesOrNo" required="false"></r:comboboxenum>
+	                 </td>
+	                 <td name="serializerEnum" class="frame_table_list_2_righttext">序列化</td>
+			 	     <td name="serializerEnum">
+			 	         <r:comboboxenum id="serializerEnum_save"  name="serializerEnum" enumClass="net.wicp.tams.duckula.common.constant.SerializerEnum" required="false"></r:comboboxenum>
+			 	     </td>
+			      </tr>
+			       <tr>
+			         <td class="frame_table_list_2_righttext">业务处理</td>
+			 	     <td>
+			 	      <r:comboboxenum id="busiClass_save"  name="busiEnum" enumClass="net.wicp.tams.duckula.common.constant.BusiEnum" required="true" changeHandle="changeBusi"></r:comboboxenum>
+			 	     </td>
+			 	  	 <td  name="otherbusi" class="frame_table_list_2_righttext">其它业务处理</td>
+			 	     <td name="otherbusi">
+			 	        <r:validatebox name="busiPluginDir" style="width:250px;" required="false"/>
+			 	     </td>
+			      </tr>
+			      
+			      <tr>
+			         <td class="frame_table_list_2_righttext">参数(Map)</td>
+			         <td colspan="3">
+			            <r:validatebox id="params_save" name="params" style="width:650px;"/>
+	                 </td>
+			      </tr>
+			       <tr>
+			         <td class="frame_table_list_2_righttext">备注</td>
+			         <td colspan="3">
+			            <input  name="remark" class="easyui-textbox" data-options="multiline:true,height:80,width:650"/>
+	                 </td>
+			      </tr>
+	 </table>
+   </t:block>
+
+   <r:dialogtree id="server_dialog" treeLoadUrl="/duckula/taskManager:QueryTree" title="指派服务器" width="600" sucHandle="doSuc" checkHandle="doCheck"></r:dialogtree>   
+<script>
+     var needServer=${needServer};
+     function showopt(value,row,index){
+            var optCan=gt(row.hostNum,0);
+            var k8sCan=!(""==row.podStatus);//Pending
+            var lastCan= needServer?optCan:k8sCan;  
+       	    var update= '<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-edit"  data-options="disabled:'+lastCan+'"  style="margin-right:10px" onclick="_doUpdate('+index+') ">'+msg.update+'</a>';
+       	    var deletebut= '<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove" data-options="disabled:'+lastCan+'" style="margin-right:10px" onclick="_doDelete('+index+') ">'+msg.delete_+'</a>';       	    
+			var serverbut='<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-role"  style="margin-right:10px" onclick="doServer(\''+index+'\') ">分派服务器</a>';
+			var k8sbut='<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-role" data-options="disabled:'+k8sCan+'" style="margin-right:10px" onclick="doStartK8sTask(\''+index+'\') ">启动任务</a>';
+			var stopServer='<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-role" data-options="disabled:'+!optCan+'" style="margin-right:10px" onclick="doServerStop(\''+index+'\') ">停止服务器</a>';
+			var stopServer_k8s='<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-role" data-options="disabled:'+!k8sCan+'" style="margin-right:10px" onclick="doServerStopFork8s(\''+index+'\') ">停止k8s任务</a>';
+			if(needServer){
+			   return update+deletebut+serverbut+stopServer;
+			}else{
+			   return update+deletebut+k8sbut+stopServer_k8s;
+			}			
+     }
+     function doServer(index){
+         var row=getRow(index);
+         require(["component/rjzjh/dialogtree"], function(sel) {
+			  sel.loadData('server_dialog',{id:row.hosts,taskid:row.id});
+	     });
+     }  
+     function doServerStop(index){
+       var row=getRow(index);
+       $.rjzjh.confirm('你确定要停止此任务吗？',function(){
+           $.messager.progress({
+		    	title:window.msg.hintwaiting,
+		    	msg:window.msg.hinthandling
+            });    
+           $.post($.rjzjh.packurl('/duckula/taskManager:stopTask'),{taskid:row.id,serverid:row.hosts,commandtype:'task'},function(data){
+             $.messager.progress('close');
+             $.rjzjh.opt2(data,function(){
+			    jQuery('#q_grid').datagrid('reload');
+	         }); 
+	       },'json');
+       });
+     }
+     
+    function doServerStopFork8s(index){
+       var row=getRow(index);
+       $.rjzjh.confirm('你确定要停止此任务吗？',function(){
+           $.messager.progress({
+		    	title:window.msg.hintwaiting,
+		    	msg:window.msg.hinthandling
+            });    
+           $.post($.rjzjh.packurl('/duckula/taskManager:stopTaskForK8s'),{taskid:row.id,commandtype:'task'},function(data){
+             $.messager.progress('close');
+             $.rjzjh.opt2(data,function(){
+			    jQuery('#q_grid').datagrid('reload');
+	         }); 
+	       },'json');
+       });
+     }
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     function doStartK8sTask(index){
+        var row=getRow(index);
+       $.rjzjh.confirm('你确定要启动此任务吗？',function(){
+           $.messager.progress({
+		    	title:window.msg.hintwaiting,
+		    	msg:window.msg.hinthandling
+            });    
+           $.post($.rjzjh.packurl('/duckula/taskManager:startK8sTask'),{taskid:row.id},function(data){
+             $.messager.progress('close');
+             $.rjzjh.opt2(data,function(){
+			    jQuery('#q_grid').datagrid('reload');
+	         }); 
+	       },'json');
+       });
+     }
+      
+     function changeSender(val){
+        if("no"===val){
+           $('td[name="othersender"]').css({"visibility":"visible"});
+        }else{
+           $('td[name="othersender"]').css({"visibility":"hidden"});
+        }
+        if(or('kafka'==val,'redis'==val)){
+          $('td[name="serializerEnum"]').css({"visibility":"visible"});
+        }else{
+          $('td[name="serializerEnum"]').css({"visibility":"hidden"});
+          $('#serializerEnum_save').combobox('setValue','no');
+        }
+     }
+     
+     function changeBusi(val){
+        if("custom"===val){
+           $('td[name="otherbusi"]').css({"visibility":"visible"});
+        }else{
+           $('td[name="otherbusi"]').css({"visibility":"hidden"});
+        }
+     }
+     
+     function getRow(index){
+     	 var rows = jQuery('#q_grid').datagrid('getRows');
+     	 return rows[index];
+     }
+     
+     function saveCheck(formdata){
+       //var sendClassSel=  $('#senderClass_save').combobox('getValue');
+       //var paramsVal=  $('#params_save').val();
+      // if(sendClassSel=='kafka'){
+       //    if(paramsVal==''||lt(paramsVal.indexOf('topic'),0)){
+      //         $.rjzjh.alert('参数需要设置topic');
+       //        return false;
+         //  }
+      // }
+       return true;
+     }
+     
+     function doSuc(data){
+        //$.rjzjh.openhint();
+        //$.rjzjh.sleep(5000);
+        jQuery('#q_grid').datagrid('reload');
+        $('#server_dialog_dialog').dialog('close');
+     }
+     
+    function doCheck(ids){
+      if(gt(ids.length,1)){
+            $.rjzjh.alert("只能是单选或是取消选择");
+            return false;
+      }else{
+        return true;
+        }       
+     }
+	
+   function initAdd(){
+      $('#port_save').numberbox('setValue',3306);
+      $('#dbinst_inst').combobox('setValue','no');     
+      $('#busiClass_save').combobox('setValue','no');
+      $('#imageVersion_save').val('${defaultImageVersion}');
+      $('#namespace_save').val('${defaultNamespace}');
+      
+   }
+   
+
+   function changeDbInst(val){
+       if(_isUpdateInit){//防止在打开修改页面时会覆盖它的结果
+           _isUpdateInit=false;
+           if("no"==val||""==val){
+              $('tr[name="trdb"]').css({"visibility":"visible"});
+           }else{
+              $('tr[name="trdb"]').css({"visibility":"hidden"});//display:none
+           }
+           return;
+       }
+   
+      //alert(val);
+      if("no"==val||""==val){
+          $('#ip_save').val('');
+          $('#port_save').numberbox('setValue',3306);
+          $('#user_save').val('');
+          $('#pwd_save').val('');
+          $('tr[name="trdb"]').css({"visibility":"visible"});
+      }else{
+         $('#ip_save').val('1');//设置一些无意义的值
+         $('#port_save').numberbox('setValue',3306);
+         $('#user_save').val('1');
+         $('#pwd_save').val('1');
+         $('tr[name="trdb"]').css({"visibility":"hidden"});//display:none
+      }
+   }
+</script>
+</body>
+</html>

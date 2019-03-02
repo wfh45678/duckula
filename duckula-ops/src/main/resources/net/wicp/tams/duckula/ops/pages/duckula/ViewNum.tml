@@ -1,0 +1,55 @@
+<html xmlns:t="http://tapestry.apache.org/schema/tapestry_5_4.xsd"
+      xmlns:r="tapestry-library:rjzjh"
+      xmlns:s="tapestry-library:tams"
+      xmlns:p="tapestry:parameter"> 
+<head>
+   <title isMenu="true" module="3">统计信息</title>
+</head>
+<body>
+   <r:query id="q"  qBlock="query" queryUrl="/duckula/viewnum:query"  opFormatter="showopt" 
+        columns="[[{field:'id',width:250,title:'任务ID'},{field:'insertNum',width:100,title:'新增数'},{field:'updateNum',width:100,title:'修改数'},{field:'deleteNum',width:100,title:'删除数'},{field:'parserEvent',width:100,title:'解析事件数'},{field:'sendEvent',width:100,title:'发送事件数'},{field:'ringbuffEvent',width:100,title:'未发事件数'},{field:'op',width:200,title:'操作'}]]" 
+        dialogStyle="width:800px;height:360px;" pagination="false"/>
+   <t:block id="query">
+       <table class="frame_table_list_4">
+		 <tr>
+			    <td class="frame_table_list_4_righttext">任务Id</td>
+				<td> <r:validatebox name="id"/>
+				</td>
+				<td class="frame_table_list_4_righttext"></td>
+			 	<td>
+			 	</td>
+			 	<td class="frame_table_list_4_righttext"></td>			 	    
+			 	<td>
+			 	</td>
+			 	<td class="frame_table_list_4_righttext"></td>
+			 	<td>
+			 	</td>
+		 </tr>
+	  </table>
+   </t:block>
+<script>
+    function showopt(value,row,index){
+          //  var optCan=false;//gt(row.hostNum,0);   	    
+			//var initbut='<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-role" data-options="disabled:'+optCan+'" style="margin-right:10px" onclick="initCount(\''+index+'\') ">重新开始统计</a>';
+			//return initbut;
+     }
+     
+     function initCount(index){
+        var row=getRow(index);
+          //alert(row.id);
+         $.rjzjh.confirm('您是否要重置此任务的统计数据？',function(){
+		   $.post($.rjzjh.packurl('/duckula/viewnum:initCount'),{id:row.id},function(data){
+             $.rjzjh.optshow2(data,function(){
+			    jQuery('#q_grid').datagrid('reload');
+	         }); 
+	       },'json');
+		 });
+     } 
+     
+      function getRow(index){
+     	 var rows = jQuery('#q_grid').datagrid('getRows');
+     	 return rows[index];
+     }
+</script>
+</body>
+</html>

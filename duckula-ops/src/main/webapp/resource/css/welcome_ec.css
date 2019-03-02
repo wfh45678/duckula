@@ -1,0 +1,33 @@
+@charset "utf-8";
+/* CSS Document */
+
+.text_welcometitle{
+	color:#4A60B6;
+	font-size:35px;
+	line-height:35px;
+	font-family:Arial, Helvetica, sans-serif;
+	font-weight:bold;	
+	}
+.text_introduce_en{
+	font-size:10px;
+	line-height:12px;
+	font-weight:normal;
+	color:#999;
+	}
+
+
+.table_welcome{
+	margin-top:12%;
+	margin-bottom:20px;
+	}
+.table_introduce{
+	font-family:"微软雅黑",Arial, Helvetica, sans-serif;
+	font-size:12px;
+	color:#666;
+	}
+.table_introduce td{
+	padding:15px 0px;
+	}
+
+
+	

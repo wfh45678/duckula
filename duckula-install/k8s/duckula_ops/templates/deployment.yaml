@@ -1,0 +1,124 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "duckula.fullname" . }}
+  labels:
+    app: {{ template "duckula.name" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+spec:
+  template:
+    metadata:
+      labels:
+        app: {{ template "duckula.fullname" . }}
+{{- with .Values.podAnnotations }}
+      annotations:
+{{ toYaml . | indent 8 }}
+{{- end }}
+    spec:
+    
+    {{- if not .Values.persistence.existingClaim }} 
+      initContainers:
+      - name: pro-data
+        image: '{{ .Values.image }}:{{ .Values.imageDataTag }}'
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: data
+          mountPath: /data/duckula-data
+      {{- if .Values.userconfig.root }}
+        - name: userconfig-root
+          mountPath: /opt/userconfig
+      {{- end }}
+      {{- if .Values.userconfig.es }}
+        - name: userconfig-es
+          mountPath: /opt/userconfig/es
+      {{- end }}
+      {{- if .Values.userconfig.kafka }}
+        - name: userconfig-kafka
+          mountPath: /opt/userconfig/kafka
+      {{- end }}
+      {{- if .Values.userconfig.redis }}
+        - name: userconfig-redis
+          mountPath: /opt/userconfig/redis
+      {{- end }} 
+     {{- end }}     
+      containers:
+      - name: {{ template "duckula.fullname" . }}
+        image: '{{ .Values.image }}:{{ .Values.imageOpsTag }}'
+        resources:
+{{ toYaml .Values.resources | indent 10 }}       
+        imagePullPolicy: IfNotPresent
+        #command:  ["ping", "127.0.0.1"]
+        env:
+        - name: zk
+          value: {{ .Values.env.zk }}
+        - name: taskpattern
+          value: tiller
+        {{- if  .Values.persistence.enabled }}
+        - name: claimname
+         {{- if  .Values.persistence.existingClaim }}        
+          value: {{ .Values.persistence.existingClaim }}
+         {{- else }}
+          value: {{ template "duckula.fullname" . }}      
+         {{- end }}     
+        {{- end }}                   
+        ports:
+        - name: ops
+          containerPort: 8080
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "/bin/echo 0"
+          initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+          successThreshold: {{ .Values.livenessProbe.successThreshold }}
+          failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "/bin/echo 0"
+          initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+          successThreshold: {{ .Values.readinessProbe.successThreshold }}
+          failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+        volumeMounts:
+        - name: data
+          mountPath: /data/duckula-data                        
+      volumes:
+      - name: data
+      {{- if and  .Values.persistence.enabled  }}
+        persistentVolumeClaim:
+          claimName: {{ .Values.persistence.existingClaim | default (include "duckula.fullname" .) }}
+      {{- else }}
+        emptyDir: {}
+      {{- end -}} 
+   {{- if not .Values.persistence.existingClaim }} 
+      {{- if .Values.userconfig.root }}
+      - name: userconfig-root
+        configMap:
+          name: {{ template "duckula.fullname" . }}-root
+      {{- end }}
+      {{- if .Values.userconfig.es }}
+      - name: userconfig-es
+        configMap:
+          name: {{ template "duckula.fullname" . }}-es
+      {{- end }}
+      {{- if .Values.userconfig.kafka }}
+      - name: userconfig-kafka
+        configMap:
+          name: {{ template "duckula.fullname" . }}-kafka
+      {{- end }}
+      {{- if .Values.userconfig.redis }}
+      - name: userconfig-redis
+        configMap:
+          name: {{ template "duckula.fullname" . }}-redis
+      {{- end }}  
+    {{- end }}    
+      

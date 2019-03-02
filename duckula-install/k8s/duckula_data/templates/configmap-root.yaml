@@ -1,0 +1,11 @@
+{{- if .Values.userconfig.root }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "duckula.fullname" . }}-root
+data:
+{{- range $key, $val := .Values.userconfig.root }}
+  {{ $key }}: |-
+{{ $val | indent 4}}
+{{- end }}
+{{- end -}}

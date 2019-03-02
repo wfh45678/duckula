@@ -1,0 +1,86 @@
+image: rjzjh/duckula
+imageTaskTag: task.2.0.0
+imagePullPolicy: IfNotPresent
+#运行的命令 docker-run.sh:监听mysql  docker-consumer.sh：kafka监听  docker-dump.sh: 全量导入
+#cmd:  docker-dump.sh
+#taskid都是必填的 zk：也可以在zk.properties进行配置
+#env:
+  #zk: 47.99.35.252:2181,47.99.45.41:2181,116.62.124.249:2181
+  #taskid: binlog_test_db-user_info-es_b-_doc
+  
+## set to `now` to get a one time job, or a cronjob schedule like `0 0 * * *`
+## set to `nojob`  不是job
+#schedule: "0/5 * * * *"
+schedule: nojob
+
+## 在schedule不是now和nojob时有效
+successfulJobsHistoryLimit: 2
+failedJobsHistoryLimit: 2
+## 设置host
+#hosts:
+#- {ip: 120.27.209.9,host: [kafka-dev] }
+#- {ip: 120.27.209.11,host: [kafka-test]}
+
+service:
+  type: ClusterIP
+  jmxexport:
+    port: 8080
+    # nodePort: 32000
+  debugport:
+    port: 2780
+    # nodePort: 32001
+
+## 如果需要设置hosts
+#hosts:
+  #ip: 120.27.209.9
+  #host: 
+  #- kafka-dev
+
+#持久化
+persistence:
+  enabled: true
+  #设置ops的持久化卷，必须设置，如果enabled为fals将是全新安装不能与ops建立连接
+  #existingClaim: duckula
+  annotations: {}  
+ 
+podAnnotations: {}
+
+
+userconfig:
+  root:
+    #zk.properties: |-
+      #common.others.zookeeper.constr=null
+    #duckula-ops.properties: |-
+      #common.http.connpool.maxtotal=200
+  es:
+    #es-dev.properties: |-
+      #common.es.host.name=101.37.152.91
+  kafka:
+    #kafka-dev.properties: |-
+      #common.others.kafka.common.bootstrap.servers=kafka-dev:9092
+  redis:
+    #redis-dev.properties: |-
+      #common.redis.redisserver.timeout=2000 
+
+#dump请调整此资源
+resources:
+  requests:
+    memory: 320Mi
+    cpu: 100m
+  limits:
+    memory: 320Mi
+    cpu:  100m
+
+livenessProbe:
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 3
+
+readinessProbe:
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 1
+  successThreshold: 1
+  failureThreshold: 3

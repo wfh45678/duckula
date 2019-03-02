@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration status="error" shutdownHook="disable">
+	<appenders>
+		<Console name="Console" target="SYSTEM_OUT">
+			<ThresholdFilter level="trace" onMatch="ACCEPT"
+				onMismatch="DENY" />
+			<PatternLayout pattern="%d %p %c{1.} [%t] %m%n" />
+		</Console>
+
+
+		<RollingFile name="sender" fileName="${sys:logRoot}/sender.log"
+			filePattern="${sys:logRoot}/sender-%d{yyyyMMdd}-%i.log">
+			<PatternLayout pattern="%d %p %c{1.} [%t] %m%n" />
+			<Policies>
+				<OnStartupTriggeringPolicy />
+				<SizeBasedTriggeringPolicy size="30 MB" />
+				<TimeBasedTriggeringPolicy />
+			</Policies>
+		</RollingFile>
+
+
+
+		<RollingFile name="error" fileName="${sys:logRoot}/error.log"
+			filePattern="${sys:logRoot}/error-%d{yyyyMMdd}-%i.log">
+			<PatternLayout pattern="%m%n" />
+			<Policies>
+				<OnStartupTriggeringPolicy />
+				<SizeBasedTriggeringPolicy size="30 MB" />
+				<TimeBasedTriggeringPolicy />
+			</Policies>
+		</RollingFile>
+
+		<RollingFile name="other" fileName="${sys:logRoot}/other.log"
+			filePattern="${sys:logRoot}/other-%d{yyyyMMdd}-%i.log">
+			<PatternLayout pattern="%d %p %c{1.} [%t] %m%n" />
+			<Policies>
+				<OnStartupTriggeringPolicy />
+				<SizeBasedTriggeringPolicy size="30 MB" />
+				<TimeBasedTriggeringPolicy />
+			</Policies>
+		</RollingFile>
+	</appenders>
+	<loggers>
+		<Logger name="errorBinlog" level="error" additivity="false">
+			<AppenderRef ref="error" />
+		</Logger>
+		<root level="info">
+			<appender-ref ref="other" />
+			<appender-ref ref="Console" />
+		</root>
+	</loggers>
+</configuration>  

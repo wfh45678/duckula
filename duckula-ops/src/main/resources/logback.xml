@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 只需配置好 log.dir 和 projectname 属性-->
+<configuration debug="false">
+	<property name="log.dir" value="${DUCKULA_DATA}/logs/ops" />
+	<property name="projectname" value="duckulaOps" />
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<target>System.out</target>
+		<encoder charset="UTF-8">
+			<pattern>%d [%thread] %-5p [%c] [%F:%L] [msg=%X{msg:-}]- %msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<appender name="infoAppender"
+			  class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${log.dir}/${projectname}_${HOSTNAME}.log</file>
+	    <filter class="ch.qos.logback.classic.filter.LevelFilter">
+			<level>INFO</level>
+			<onMatch>ACCEPT</onMatch>
+			<onMismatch>DENY</onMismatch>
+		</filter> 
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>${log.dir}/${projectname}_${HOSTNAME}-%d{yyyy-MM-dd}.log
+			</fileNamePattern>
+			<maxHistory>30</maxHistory>
+		</rollingPolicy>
+		<encoder charset="UTF-8">
+			<pattern>%d [%thread] %-5p [%c] [%F:%L] [msg=%X{msg:-}]- %msg%n</pattern>
+		</encoder>
+	</appender>
+	<appender name="errorAppender"
+			  class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${log.dir}/${projectname}_${HOSTNAME}_error.log</file>
+		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+			<level>WARN</level>
+		</filter>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>${log.dir}/${projectname}_${HOSTNAME}_error-%d{yyyy-MM-dd}.log
+			</fileNamePattern>
+			<maxHistory>30</maxHistory>
+		</rollingPolicy>
+		<encoder charset="UTF-8">
+			<pattern>%d [%thread] %-5p [%c] [%F:%L] [msg=%X{msg:-}]- %msg%n</pattern>
+		</encoder>
+	</appender>	
+	<root>
+		 <level value="INFO" />
+		<appender-ref ref="errorAppender" />
+		<appender-ref ref="infoAppender" />
+		<appender-ref ref="STDOUT" />
+	</root>
+</configuration>

@@ -1,0 +1,21 @@
+---
+lowercaseOutputName: true
+lowercaseOutputLabelNames: true
+whitelistObjectNames:
+  - 'net.wicp.tams.duckula:*'
+rules:
+  - pattern: '^net.wicp.tams.duckula<service=Task, name=(Duckula\w+)><>(\w+):'
+    name: task_$2
+    labels:
+      name: $1
+      prop: $2
+  - pattern: '^net.wicp.tams.duckula<service=Dump, name=(Duckula\w+)><>(\w+):'
+    name: task_$2
+    labels:
+      name: $1
+      prop: $2
+  - pattern: '^net.wicp.tams.duckula<service=Consumer, name=(Duckula\w+)><>(\w+):'
+    name: task_$2
+    labels:
+      name: $1
+      prop: $2

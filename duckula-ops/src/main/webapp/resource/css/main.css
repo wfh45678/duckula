@@ -1,0 +1,391 @@
+@charset "utf-8";
+/* CSS Document */
+
+html,body{
+	border:none;
+	margin:0px;
+	padding:0px;
+	height:100%;  /* DIV全屏高度自适应*/
+	overflow:hidden; /* DIV全屏高度自适应*/
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:12px;
+	line-height:14px;
+	color:#333;	
+	}
+.text_leftmenu_list{
+	color:#FFF;
+	font-size:14px;
+	line-height:14px;
+	font-family:"微软雅黑",Arial, Helvetica, sans-serif;
+	font-weight:bold;
+	}
+img{
+	margin:0px;
+	border:none;
+	padding:opx;
+	}
+a{
+	border:none;
+	margin:0px;
+	padding:0px;
+	}
+a:link,a:visited,a:hover,a:active{
+	text-decoration:none;
+	}
+#frame_body{ /* 主页全局框架*/
+	z-index:100;
+	width:100%;
+	height:100%;
+	overflow:hidden;
+	background:#fff;
+	padding-left:2px;
+	padding-top:0px;
+	}
+	
+#frame_role{ /* 框架顶部角色信息DIV*/
+	z-index:101;
+	position:relative;
+	float:left;
+	width:70px;
+	margin-top:0px;
+	height:50px;
+	background:#FFF;
+	border:1px solid #BBBBBB;
+	border-radius: 4px; /* CSS3圆角效果*/
+		}
+#frame_phone{ /*框架顶部TOP软电话*/
+	z-index:102;
+	position:relative;
+	margin-left:74px;
+	width:auto;
+	height:50px;
+	background:#4A60B6;
+	border:1px solid #4A60B6;
+	border-radius: 4px; /* CSS3圆角效果*/
+	}
+#frame_tool{/* 框架左侧快捷工具栏 */
+	z-index:103;
+	clear:both;
+	position:relative;
+	float:left;
+	margin-top:0px;
+	width:70px;
+	height:100%;
+	overflow:hidden;
+	background:#4A60B6;
+	border-radius: 4px; /* CSS3圆角效果*/
+	}
+#frame_menu{/* 框架左侧快捷工具栏划出菜单 */
+	z-index:199;
+	position:relative;
+	float:left;
+	top:2px;
+	padding:10px 10px 20px 26px;
+	min-width:160px;
+	height:100%;
+	margin-top:50px;
+	overflow:hidden;
+	background:#5F72BE;
+	border-left:1px solid #FFF;/*左侧工具栏分割线*/
+	border-radius: 4px; /* CSS3圆角效果*/
+	}
+	
+	
+	
+#frame_label{
+	position:relative;
+	margin-left:0px;
+	height:28px;
+	background:#F9F9F9;
+	border:1px solid #BBBBBB;
+	line-height:28px;
+	}
+	
+	
+#frame_windows{/*主界面操作区域*/
+	clear:both;
+	position:absolute;
+	margin-left: 74px;
+	margin-top: 2px;
+	height: 100%;
+	overflow: hidden;
+	background:fff;
+	border-radius: 4px; /* CSS3圆角效果*/
+	}
+
+#frame_plan{/*待办公事项-四分一左上方区域*/
+    position:relative;
+	float:left;
+	width:50%;
+	height:50%;  /* DIV全屏高度自适应*/
+	overflow:hidden; /* DIV全屏高度自适应*/
+	}
+#frame_report{/*状态图表-四分一右上方区域*/
+    position:relative;
+	float:left;
+	width:50%;
+	height:50%;  /* DIV全屏高度自适应*/
+	overflow:hidden; /* DIV全屏高度自适应*/
+	}
+	
+#frame_report2{/*待办公事项-四分一左下方区域*/
+    position:relative;
+	clear:both;
+	float:left;
+	width:50%;
+	height:50%;  /* DIV全屏高度自适应*/
+	overflow:hidden; /* DIV全屏高度自适应*/
+	}
+#frame_report3{/*状态图表-四分一右下方区域*/
+    position:relative;
+	float:left;
+	width:50%;
+	height:50%;  /* DIV全屏高度自适应*/
+	overflow:hidden; /* DIV全屏高度自适应*/
+	}
+#frame_message{/*主窗口底部消息通知栏*/
+	position:absolute;
+	bottom:0px;
+	clear:both;
+	width:100%;
+	height:24px;
+	background:#F6F8FB;
+	border:1px solid #DCDDDD;
+	}
+
+
+	
+#frame_role_list{ /* 角色信息下拉层*/
+	z-index: 205;
+	position: absolute;
+	left: 0px;
+	top: 55px;
+	min-height: 150px;
+	min-width:40px;
+	background: #fff;
+	border: 1px  solid #bbbbbb;
+	border-radius: 4px; /* CSS3圆角效果*/
+	padding: 0px;
+	opacity: 1;/*透明效果：完全不透明*/
+}
+.frame_role_list_ul{
+	list-style:none;
+	margin-left:-35px;
+	}
+.frame_role_list_ul li,.frame_role_list_ul li:link{
+	margin-left:-10px;
+	height:20px;
+	line-height:20px;
+	color:#666;
+	padding: 2px 10px 2px 16px;
+	}
+.frame_role_list_ul li a:visited{
+	color:#666;
+	}
+.frame_role_list_ul li a:active{
+	color:#666;
+	}
+.frame_role_list_ul li:hover{
+
+	color:#666;
+	background:#F5F5F5;
+	border-top:1px solid  #BBBBBB;
+	border-bottom:1px solid  #BBBBBB;
+	}
+	
+	
+.flame_tool_ul{
+	list-style-type:none;
+	text-align:left;
+	margin-left:-38px;
+	}
+.flame_tool_ul li{
+	margin-bottom:6px;
+	}
+	
+.table_role{
+	margin-top:5px;
+	}
+
+
+
+
+
+#phone_number{	/*来电信息显示层*/
+	position:relative;
+	float: left;
+	margin-left: 30px;
+	width: 400px;
+	height: 50px;
+	}
+#phone_out{	/*用户系统退出层*/
+	position:relative;
+	float:right;
+	width:150px;
+	height:50px;
+	background:#4A60B6;
+	}
+#phone_button{	/*软电话功能按钮层*/
+	height:50px;
+	margin-left:500px;
+	padding-top:4px;
+	padding-left:-15px;
+
+	}
+#phone_dial{/*软件电话拨号盘*/
+	z-index:170;
+	position:relative;
+	margin:-2px 0px 0px -12px;
+	width:330px;
+	height:200px;
+	background:#4A60B6;
+	background-image:url(../images/phone/phone_dial_bg.png);
+	background-repeat:no-repeat;
+	background-position:left top;
+	border:1px solid #FFF;
+	border-radius: 4px; /* CSS3圆角效果*/
+	}
+#phone_dial_close{
+	position:relative;
+	margin-top:-195px;
+	margin-left:308px;
+	width:12px;
+	height:12px;
+
+
+	}
+.phone_button_span{
+	margin-right:4px;
+	}
+	
+.table_phone_number{
+	color:#FFF;
+	height:50px;
+	}
+.table_phone_out{/*退出表格位置定位*/
+	margin-top:4px;
+	}
+.table_dial{
+	margin:10px;
+	}
+.table_dial_number{
+	display:block;
+	height:34px;
+	width:34px;
+	line-height:34px;
+	font-size:16px;
+	font-weight:bold;
+	text-align:center;
+	color:#FFF;
+	background:#6477BF;
+	border:1px solid #4A60B6;
+	border-radius: 4px; /* CSS3圆角效果*/
+	}
+.table_dial_number:visited{
+	color:#FFF;
+	background:#4A60B6;
+	border:1px solid #FFF;
+	}
+.table_dial_number:hover{
+	color:#FFF;
+	background:#4A60B6;
+	border:1px solid #FFF;
+	}
+.table_dial_number:active{
+	color:#FFF;
+	background:#7989C8;
+	border:1px solid #FFF;
+	}
+	
+.table_dial_list{/*软件电话右侧常用见客户列表TD样式*/
+	background:#E9ECF5;
+	padding:2px 12px;
+	border-radius: 4px;
+	}
+	
+.table_plan/*待办事项表格List*/{
+	line-height:24px;
+	border-right:1px solid #DEDEDC;
+	}
+.table_plan td{
+	padding-left:14px;
+	border-bottom:1px solid #DEDEDC;
+	}
+.table_plan tr:hover{
+	background:#EDF6FB;
+	}
+.table_plan_td_state{
+	width:60px;
+	background:#52ACCF;
+	}
+
+
+.text_plan_td_state{
+	font-size:16px;
+	font-weight:bold;
+	color:#FFF;
+	margin-left:4px;
+	}
+
+
+
+.text_dial_title{
+	color:#FFF;
+	line-height:17px;
+	font-weight:bold;
+	}
+.text_phone{
+	font-family:Walkway SemiBold,Arial,  Geneva, sans-serif;
+	font-size:39px;
+	font-weight:bold;
+	line-height:38px;
+	}
+.text_site{
+	font-family:"微软雅黑",Arial,  Geneva, sans-serif;
+	font-size:16px;
+	line-height:16px;
+	font-weight:bold;
+	}
+.text_time{
+	font-size:14px;
+	line-height:16px;
+	}
+	
+
+.text_menu_left{/*左侧划出菜单文字效果*/
+	color:#FFF;
+	font-size:13px;
+	line-height:16px;
+	text-align:left;
+	font-weight:bold;
+	margin-left:-45px;
+	}
+.text_menu_left:hover{
+	color:#E4F0F1;
+	}
+
+.text_menu_left_li{
+	margin-left:-24px;
+	color:#FFF;
+	font-size:13px;
+	line-height:24px;
+	text-align:left;
+	font-weight:bold;
+	}
+
+
+
+.text_menu_left_li a{
+	display:block;
+	width:120px;
+	color:#FFF;
+	}
+.text_menu_left_li a:visited{
+	color:#fff;
+	}
+.text_menu_left_li a:hover{
+	color:#fff;
+	background:#929FD3;
+	border:1px solid #C2CAE7;
+	}
+	

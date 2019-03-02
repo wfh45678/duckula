@@ -1,0 +1,45 @@
+#ops and data
+FROM jetty:9.4.12-jre8-alpine
+# me
+MAINTAINER andy "rjzjh@163.com"
+#
+LABEL version="2.0"
+LABEL location="Shang Hai" author="andy" role="Ops"
+
+USER root
+COPY ./duckula-ops.war /var/lib/jetty/webapps
+COPY ./duckula-data.tar  /data/
+ENV DUCKULA_VERSION 1.0.1
+ENV JAVA_OPTIONS="-Xmx1g" \
+	DUCKULA_DATA="/data/duckula-data" \
+	DUCKULA_HOME="/opt/duckula" \
+	metricspath="/data/duckula-data/logs/metrics" \
+	claimname="duckula" \
+	TZ=Asia/Shanghai
+
+	
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories; \
+	apk add --update --no-cache tzdata; \
+	cp /usr/share/zoneinfo/${TZ}/etc/localtime; \
+    echo "${TZ}" > /etc/timezone; \
+	mkdir -p /opt/duckula; \
+    mkdir -p /opt/userconfig; \
+    chown -R jetty:jetty /data; \
+    for path in \
+		 /data/duckula-data \
+		 /opt/duckula \
+		 /opt/userconfig \
+	; do \
+		mkdir -p "$path"; \
+		chown -R jetty:jetty "$path"; \
+	done; 
+VOLUME /data/duckula-data/
+VOLUME /opt/userconfig/
+
+COPY ./docker-entrypoint/ops/docker-entrypoint.sh   /
+
+RUN set -ex; \
+    chmod  +x  /docker-entrypoint.sh; \
+    chown jetty:jetty /docker-entrypoint.sh;
+
+USER jetty

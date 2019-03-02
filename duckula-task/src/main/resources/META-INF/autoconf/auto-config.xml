@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config description="自动配置：common-apiext" xmlns:j="jelly:core">  
+	<script>
+		<generate template="duckula-task.properties.vm" destfile="duckula-task.properties" charset="utf-8" />
+	</script>
+</config>

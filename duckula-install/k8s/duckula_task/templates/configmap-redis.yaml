@@ -1,0 +1,11 @@
+{{- if .Values.userconfig.redis }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "duckula.fullname" . }}-redis
+data:
+{{- range $key, $val := .Values.userconfig.redis }}
+  {{ $key }}: |-
+{{ $val | indent 4}}
+{{- end }}
+{{- end -}}

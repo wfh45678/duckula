@@ -1,0 +1,196 @@
+<html xmlns:t="http://tapestry.apache.org/schema/tapestry_5_4.xsd"
+      xmlns:r="tapestry-library:rjzjh"
+      xmlns:s="tapestry-library:tams"
+      xmlns:p="tapestry:parameter"> 
+<head>
+   <title isMenu="true" module="3">插件管理</title>
+</head>
+<body>
+   <r:query id="q"  qBlock="query" queryUrl="/es/busiPluginManager:query" uBlock="save"   saveUrl="/es/busiPluginManager:save" deleteUrl="/es/busiPluginManager:del" opFormatter="showopt" 
+        columns="[[{field:'id',width:100,title:'id'},{field:'projectName',width:250,title:'项目名称'},{field:'update',width:100,title:'上传人'},{field:'lastUpdateTime',width:150,title:'上传时间'},{field:'pluginFileName',width:250,title:'插件文件名'},{field:'fileExit',width:100,title:'ops存在'},${colDifferent}{field:'op',width:350,title:'操作'}]]" 
+        dialogStyle="width:800px;height:600px;" initAddHandle="initAdd" saveCheckHandle="saveCheck" pagination="false"/>
+   <t:block id="query">
+       <table class="frame_table_list_4">
+		 <tr>
+			    <td class="frame_table_list_4_righttext">项目名</td>
+				<td>
+				   <r:validatebox name="projectName"/>
+				</td>				
+			 	<td class="frame_table_list_4_righttext"></td>			 	    
+			 	<td>
+			 	</td>
+			 	<td class="frame_table_list_4_righttext"></td>
+			 	<td>
+			 	</td>
+			 	<td class="frame_table_list_4_righttext"></td>
+		 </tr>
+	  </table>
+   </t:block>
+   
+   <t:block id="save">
+        <table class="frame_table_list_2">
+                  <tr>
+			         <td class="frame_table_list_2_righttext">
+			            <font>提示：</font>
+			         </td>
+			         <td  colspan="3" align="left">
+			            <font color="red">不同的ID将是新增</font>
+			         </td>
+			      </tr>
+			      <tr>
+			        <td class="frame_table_list_2_righttext" name="trdb">id</td>
+			         <td>
+			             <r:validatebox name="id" style="width:280px;" required="true"/>
+	                 </td>	
+	                   <td class="frame_table_list_2_righttext">项目名</td>
+			         <td>
+			             <r:validatebox name="projectName" style="width:280px;" required="true"/>
+			         </td>			        
+			      </tr>
+			      <tr>
+			         <td class="frame_table_list_2_righttext">上传者</td>
+			         <td>
+			             <r:validatebox name="update" style="width:280px;" required="true"/>
+	                 </td>
+			         <td class="frame_table_list_2_righttext"></td>
+			         <td>
+			          </td>
+			      </tr>	  
+			       <tr>
+			         <td class="frame_table_list_2_righttext">备注</td>
+			         <td colspan="3">
+			            <input  name="remark" class="easyui-textbox" data-options="multiline:true,height:80,width:650"/>
+	                 </td>
+			      </tr>
+	 </table>
+   </t:block>
+      
+   <r:dialogtree id="server_dialog" treeLoadUrl="/duckula/taskManager:QueryTree" title="指派服务器" width="600" sucHandle="doSuc" checkHandle="doCheck"></r:dialogtree>
+   
+   
+   <r:dialog id="uploadFile" width="440" height="300" title="dialogTitle" toolbar="[{id:'uploadDo',text:'上传',iconCls:'icon-save'}]">
+         <form id="cfm" method="post"  enctype="multipart/form-data" action="${contextPath}/es/busiPluginManager:saveFile">
+ 	   		<table class="frame_table_list_2">
+              　<tr>
+ 	   		 		<td class="frame_table_list_2_righttext">上传插件</td>
+ 	   		 		<td><span><r:upload id="upFile" multi="false"></r:upload></span></td>
+ 	   		 	</tr>		
+                <tr>
+         			<td class="frame_table_list_2_righttext"></td>
+         			<td><input type="hidden" id="uploadId" name="id"/></td>
+         		</tr>
+         		
+ 	   		 </table>
+ 	   	</form>
+ 	</r:dialog>
+<script>
+     function showstatus(val,row){
+        if(val==-1){
+          return "插件异常";
+        }else if(val==0){
+           return "无此插件";
+        }else if(val==1){
+           return "插件需更新";
+        }else if(val==2){
+           return "插件正常";
+        }
+        return '未知';
+     }
+     var needServer=${needServer};
+     function showopt(value,row,index){
+            var optCan=gt(row.hostNum,0);
+       	    var update= '<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-edit"  data-options="disabled:'+optCan+'"  style="margin-right:10px" onclick="_doUpdate('+index+') ">'+msg.update+'</a>';
+       	    var deletebut= '<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove" data-options="disabled:'+optCan+'" style="margin-right:10px" onclick="_doDelete('+index+') ">'+msg.delete_+'</a>'; 
+       	    var serverbut='<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-role" style="margin-right:10px" onclick="doUpload(\''+index+'\') ">上传插件</a>';  
+       	    var syncCan=  row.fileExitServer==2;
+       	    var syncbut='<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-role"  data-options="disabled:'+syncCan+'" style="margin-right:10px" onclick="doSync(\''+index+'\') ">同步插件</a>';  
+       	    if(needServer){
+       	       return update+deletebut+serverbut+syncbut;
+       	    }else{
+       	       return update+deletebut+serverbut;
+       	    } 
+     }
+     
+     function doSync(index){
+         $.rjzjh.confirm('你确定要同步此插件吗？需要一些时间',function(){
+             var row=getRow(index);
+	         $.messager.progress({
+			    	title:window.msg.hintwaiting,
+			    	msg:window.msg.hinthandling
+	            }); 
+	         $.post($.rjzjh.packurl('/es/busiPluginManager:uploadPlug'),row,function(data){
+	              $.messager.progress('close');
+				  jQuery('#q_grid').datagrid('reload');
+		     },'json');
+         });                  
+     }
+     
+     function doUpload(index){
+         var row=getRow(index);
+         $('#uploadId').val(row.id);
+         $.rjzjh.opendialog2("uploadFile");
+     }
+     
+     function doSuc(data){
+        jQuery('#q_grid').datagrid('reload');
+        $('#server_dialog_dialog').dialog('close');
+     }
+    function doCheck(ids){
+      if(gt(ids.length,1)){
+            $.rjzjh.alert("只能是单选或是取消选择");
+            return false;
+      }else{
+        return true;
+        }       
+     }    
+     
+     function getRow(index){
+     	 var rows = jQuery('#q_grid').datagrid('getRows');
+     	 return rows[index];
+     }
+     
+     function saveCheck(formdata){      
+       return true;
+     }
+     
+     function getRow(index){
+     	 var rows = jQuery('#q_grid').datagrid('getRows');
+     	 return rows[index];
+     }        
+     function initAdd(){
+     
+     }
+     
+     function checkForm(){
+	        	var retValue=true;
+		        var uploadId=jQuery('#uploadId').val();
+		        if(uploadId==''){
+		           $.rjzjh.alert('需要id');
+		           return false;
+		        }
+				jQuery("input[filetag='rjzjhuploadfield']").each(function(i,n){
+				            if(n.value==''){
+				              retValue=false;
+				              $.rjzjh.alert('上传文件不能为空');
+				              return;
+				            }
+				            if(!n.value.endWith('.tar')){
+				               retValue=false;
+				               $.rjzjh.alert('需要选择tar包上传');
+				              return;
+				            }
+				 });
+				return retValue;
+	 }
+         
+  $(function(){      
+       jQuery('#uploadDo').click(function(){
+			   	if(checkForm()){
+			   	   document.getElementById('cfm').submit();
+			   	}		   
+		});
+   });    
+   
+</script>
+</body>
+</html>

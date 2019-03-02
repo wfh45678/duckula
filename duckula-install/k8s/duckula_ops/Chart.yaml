@@ -1,0 +1,18 @@
+name: duckula-ops
+version: 0.0.1
+appVersion: 1.1
+description: binlog监听，数据实时推送
+keywords:
+- duckula
+- duckula-ops
+- binlog
+- mysql
+home: https://www.mysql.com/
+icon: https://www.mysql.com/common/logos/logo-mysql-170x115.png
+sources:
+- https://github.com/kubernetes/charts
+- https://github.com/docker-library/mysql
+maintainers:
+- name: andy.zhou
+  email: rjzjh@163.com
+engine: gotpl

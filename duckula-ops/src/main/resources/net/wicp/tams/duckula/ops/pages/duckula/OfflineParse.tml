@@ -1,0 +1,131 @@
+<html xmlns:t="http://tapestry.apache.org/schema/tapestry_5_4.xsd"
+      xmlns:r="tapestry-library:rjzjh"
+      xmlns:s="tapestry-library:tams"
+      xmlns:p="tapestry:parameter"> 
+<head>
+   <title isMenu="true" module="3">离线追加</title>
+</head>
+<body>
+   <r:query id="q"  qBlock="query" queryUrl="/duckula/offlineParse:query" opFormatter="showopt" deleteUrl="/duckula/offlineParse:del"
+        columns="[[{field:'id',width:150,title:'离线任务ID'},{field:'taskOnlineId',width:150,title:'在线任务'},{field:'binlogFiles',width:320,title:'binlog日志'},{field:'timeBegin',width:130,title:'开始时间'},{field:'timeEnd',width:130,title:'结束时间'},{field:'runStartTime',width:130,title:'运行时间'},{field:'runEndTime',width:130,title:'运行结束时间'},{field:'op',width:300,title:'操作'}]]" 
+        dialogStyle="width:800px;height:460px;" initAddHandle="initAdd" initSaveHandle="initUpdate"/>
+   <t:block id="query">
+       <table class="frame_table_list_4">
+		 <tr>
+			    <td class="frame_table_list_4_righttext">离线任务ID</td>
+				<td>
+				   <r:validatebox name="id"/>
+				</td>
+				<td class="frame_table_list_4_righttext"></td>
+			 	<td>
+			 	</td>
+			 	<td class="frame_table_list_4_righttext"></td>			 	    
+			 	<td>
+			 	</td>
+			 	<td class="frame_table_list_4_righttext"></td>
+			 	<td>
+			 	</td>
+		 </tr>
+	  </table>
+   </t:block> 
+   
+  <r:dialog id="taskiddialog" width="560" height="500" title="任务ID">
+    <form id="viewform">
+         <table class="frame_table_list_2">
+			      <tr>
+			         <td class="frame_table_list_2_righttext">离线任务Id</td>
+			         <td>
+			            <r:validatebox  name="id" style="width:400px;" readonly="true"/>
+	                 </td>
+			      </tr>
+			       <tr>
+			         <td class="frame_table_list_2_righttext">在线任务</td>
+			         <td>
+			            <r:validatebox  name="taskOnlineId" style="width:400px;" readonly="true"/>
+	                 </td>
+			      </tr>
+			      <tr>
+			         <td class="frame_table_list_2_righttext">数据库实例</td>
+			         <td>
+			            <r:validatebox  name="dbinst" style="width:400px;" readonly="true"/>
+	                 </td>
+			      </tr>	
+			      <tr>
+			         <td class="frame_table_list_2_righttext">日志文件</td>
+			         <td>
+			            <r:validatebox  name="binlogFiles" style="width:400px;" readonly="true"/>
+	                 </td>
+			      </tr>			      
+			       <tr>
+			         <td class="frame_table_list_2_righttext">开始时间</td>
+			         <td>
+			            <r:validatebox  name="timeBegin" style="width:400px;" readonly="true"/>
+	                 </td>
+			      </tr>
+			      <tr>
+			         <td class="frame_table_list_2_righttext">结束时间</td>
+			         <td>
+			            <r:validatebox  name="timeEnd" style="width:400px;" readonly="true"/>
+	                 </td>
+			      </tr>
+			      <tr>
+			         <td class="frame_table_list_2_righttext">开始GTID</td>
+			         <td>
+			            <r:validatebox  name="gtidBegin" style="width:400px;" readonly="true"/>
+	                 </td>
+			      </tr>
+			       <tr>
+			         <td class="frame_table_list_2_righttext">结束GTID</td>
+			         <td>
+			            <r:validatebox  name="gtidEnd" style="width:400px;" readonly="true"/>
+	                 </td>
+			      </tr>
+	     </table> 
+	</form>
+  </r:dialog>
+<script>
+    function showopt(value,row,index){
+	    var downloadNotCan=false;
+	    var delNotCan= false;  
+	    var runbut='<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-role" data-options="disabled:'+downloadNotCan+'" style="margin-right:10px" onclick="runtask(\''+index+'\') ">运行任务</a>';
+		var downloadbut='<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-role" data-options="disabled:'+downloadNotCan+'" style="margin-right:10px" onclick="view(\''+index+'\') ">查看</a>';
+		var delbut='<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-role" data-options="disabled:'+delNotCan+'" style="margin-right:10px" onclick="_doDelete(\''+index+'\') ">删除任务</a>';
+		return runbut+downloadbut+delbut;
+	 }
+	 function runtask(index){
+	    var row=getRow(index);
+        $.rjzjh.confirm('是否要解析此日志文件？需要一些时间。',function(){
+            $.messager.progress({
+		    	title:window.msg.hintwaiting,
+		    	msg:window.msg.hinthandling
+            });
+		   $.post($.rjzjh.packurl('/duckula/offlineParse:runtask'),row,function(data){
+		     $.messager.progress('close');		     
+             $.rjzjh.opt2(data,function(){
+                $.rjzjh.alert(data.msg);
+			    jQuery('#q_grid').datagrid('reload');
+	         }); 
+	       },'json');
+		});
+    }
+	 
+	function getRow(index){
+     	 var rows = jQuery('#q_grid').datagrid('getRows');
+     	 return rows[index];
+    }
+	 
+	 function updateCols(id){
+	    $.post($.rjzjh.packurl('/duckula/offlineParse:updateCols'),{'id':id},function(data){
+	       $.rjzjh.alert("更新成功");
+           jQuery('#q_grid').datagrid('reload');  
+	    },'json');	
+	 }
+	 function view(index){
+	     var rows = jQuery('#q_grid').datagrid('getRows');
+		 jQuery('#viewform').form('load', rows[index]);
+	     $.rjzjh.opendialog2("taskiddialog");  
+	 }
+   
+</script>  
+</body>
+</html>

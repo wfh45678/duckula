@@ -1,0 +1,7 @@
+{
+	"jarpre": "es-",
+	"filterpack":"net.wicp.tams.duckula",
+	"properpre": "es-",
+	"firstConfs": "es-default.properties"
+}
+

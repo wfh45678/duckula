@@ -1,0 +1,16 @@
+{{- if eq .Values.schedule "now" -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ template "duckula.fullname" . }}
+  labels:
+    app: {{ template "duckula.name" . }}
+    chart: {{ template "duckula.chart" . }}
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+spec:
+  backoffLimit: 1
+  template:
+{{ $file := .Files.Get "files/duckula.tpl" }}
+{{ tpl $file . | indent 0 }}
+{{- end -}}

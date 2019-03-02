@@ -1,0 +1,7 @@
+<html  t:type="rjzjh/Layout1" xmlns:t="http://tapestry.apache.org/schema/tapestry_5_4.xsd"
+      xmlns:r="tapestry-library:rjzjh"
+      xmlns:p="tapestry:parameter" isLan="false" iconDir="context|resource/images/tool_ico/" home="main"    modules="[{'id':'taskManager','icon':'sysmanage','alt':'任务管理'},{'id':'esManager','icon':'ma','alt':'ES管理'},{'id':'monitor','icon':'statement','alt':'监控'}]"  dlgs="[{'id':'aboutDlg','name':'关于'}]">
+  <r:dialog id="aboutDlg" title="关于duckula" width="460" height="200"  closable="true">
+    <p style="font-size: 15px; color: #444;margin-top:50px;text-align:center">Duckula是一套关于binlog监听及其配套工具（如ES同步）<br/>的数据实时推送中间件，具有配置灵活，性能较好，高可用<br/>策略合理 等特点</p>
+  </r:dialog>
+</html>

@@ -1,0 +1,29 @@
+{{- if and (ne .Values.schedule "now")  (ne .Values.schedule "nojob") -}}
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ template "duckula.fullname" . }}
+  labels:
+    app: {{ template "duckula.name" . }}
+    chart: {{ template "duckula.chart" . }}
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+spec:
+  schedule: "{{ .Values.schedule }}"
+  successfulJobsHistoryLimit: {{ .Values.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.failedJobsHistoryLimit }}
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    metadata:
+      labels:
+        app: {{ template "duckula.name" . }}
+        chart: {{ template "duckula.chart" . }}
+        cronjob-name: {{ template "duckula.fullname" . }}
+        release: "{{ .Release.Name }}"
+        heritage: "{{ .Release.Service }}"
+    spec:
+      backoffLimit: 1
+      template:
+{{- $file := .Files.Get "files/duckula.tpl" }}
+{{ tpl $file . | indent 4 }}
+{{- end -}}

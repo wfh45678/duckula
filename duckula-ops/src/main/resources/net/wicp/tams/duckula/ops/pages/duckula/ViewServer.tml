@@ -1,0 +1,32 @@
+<html xmlns:t="http://tapestry.apache.org/schema/tapestry_5_4.xsd"
+      xmlns:r="tapestry-library:rjzjh"
+      xmlns:s="tapestry-library:tams"
+      xmlns:p="tapestry:parameter"> 
+<head>
+   <title isMenu="true" module="3">服务器管理</title>
+</head>
+<body>
+   <r:query id="q"  qBlock="query" queryUrl="/duckula/viewserver:query" 
+        columns="[[{field:'ip',width:90,title:'服务器地址'},{field:'name',width:200,title:'服务器名'},{field:'cpuRatio',width:90,title:'cpu使用率'},{field:'am',width:90,title:'总物理内存'},{field:'fm',width:90,title:'剩余内存'}]]" 
+        dialogStyle="width:800px;height:460px;" pagination="false"/>
+   <t:block id="query">
+       <table class="frame_table_list_4">
+		 <tr>
+			    <td class="frame_table_list_4_righttext">服务器地址</td>
+				<td>
+				   <r:validatebox name="ip"/>
+				</td>
+				<td class="frame_table_list_4_righttext"></td>
+			 	<td>
+			 	</td>
+			 	<td class="frame_table_list_4_righttext"></td>			 	    
+			 	<td>
+			 	</td>
+			 	<td class="frame_table_list_4_righttext"></td>
+			 	<td>
+			 	</td>
+		 </tr>
+	  </table>
+   </t:block> 
+</body>
+</html>

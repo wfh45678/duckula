@@ -1,0 +1,114 @@
+@charset "utf-8";
+/* CSS Document */
+
+body{
+	background:#4A60B6;
+	border:none;
+	margin:0px;
+	padding:0px;
+	}
+img{
+	margin:0px;
+	border:none;
+	padding:opx;
+	}
+input{
+	border:none;
+	}
+a{
+	border:none;
+	margin:0px;
+	padding:0px;}
+
+#login_bg_div{
+	margin:5% auto 0px 38%;
+	width:815px;
+	height:575px;
+	background-image:url(../images/login/login_bg.png);
+	background-repeat:no-repeat;
+	}
+	
+	
+
+#login_message_div{
+	position:relative;
+	top:105px;
+	left:45px;
+	width:250px;
+	height:200x;
+	background:url(../images/login/login_message_bg.png);
+	background-repeat:no-repeat;
+	}
+	
+#login_button_div{
+	position:relative;
+	top:135px;
+	left:45px;
+	width:250px;
+	height:50px;
+	}
+	
+	
+#copyright_div{
+	position:relative;
+	top:210px;
+	left:50px;
+	width:400px;
+	height:30px;
+	font-family:"微软雅黑",Arial, Helvetica, sans-serif;
+	font-size:12px;
+	color:#fff;
+	}
+	
+#input_div{		/*文本信息输入框（DIV）*/
+	position:relative;
+	top:18px;
+	left:50px;
+	}
+
+.input_style{	/*表单文本框样式*/
+	width:190px;
+	height:30px;
+	line-height:30px;
+	border:none;
+	color:#999;
+	font-family:Verdana, Geneva, sans-serif;
+	font-size:16px;	
+	}
+.input_style:hover{
+	border:none;
+	padding:0px;
+	margin:0px;	
+	}
+.input_style:active {
+	border:none;
+	padding:0px;
+	margin:0px;	
+	}	
+
+#select_div{
+	position: relative;
+	top:-31px;
+	left:172px;
+	width:20px;
+	height:32px;
+	background: #FEFEFD;
+		}
+.input_button_login{
+	background:url(../images/login/login_button.png);
+	width:240px;
+	height:49px;
+	color:#FFF;
+	font-family:Verdana, Geneva, sans-serif;
+	font-size:20px;
+
+	font-weight:bold;
+	border:none;
+	}
+.input_button_login:hover{
+	background:url(../images/login/login_button_hover.png);
+	width:240px;
+	height:49px;
+	border:none;
+	}
+

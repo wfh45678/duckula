@@ -1,0 +1,41 @@
+#the data images has plugins and logs dir
+FROM alpine:3.8
+# me
+MAINTAINER andy "rjzjh@163.com"
+#
+LABEL version="2.0"
+LABEL location="Shang Hai" author="andy" role="Data"
+
+RUN addgroup -S duckula && adduser -S -G duckula duckula
+RUN set -ex; \
+    mkdir -p /data/duckula-data; \
+    mkdir -p /opt/duckula; \
+    mkdir -p /opt/userconfig; \
+    apk update upgrade; \
+    apk add --no-cache --virtual .must  \
+         'su-exec>=0.2' \
+          bash; \
+    apk add --no-cache --virtual .duckuladepent  \
+          tar;
+COPY ./duckula-data.tar  /data/
+RUN for path in \
+		 /data/duckula-data \
+		 /opt/duckula \
+		 /opt/userconfig \
+	; do \
+		mkdir -p "$path"; \
+		chown -R duckula:duckula "$path"; \
+	done; 
+#    apk del .duckuladepent; 
+VOLUME /data/duckula-data 
+VOLUME /opt/userconfig/
+WORKDIR /data/duckula-data
+ENV DUCKULA_VERSION 1.0.1
+ENV DUCKULA_DATA="/data/duckula-data" \
+	DUCKULA_HOME="/opt/duckula"\
+	metricspath="/data/duckula-data/logs/metrics" 
+	
+COPY ./docker-entrypoint/docker-entrypoint.sh  /
+RUN set -ex; \
+    chmod  +x  /docker-entrypoint.sh;
+ENTRYPOINT ["/docker-entrypoint.sh","/bin/bash"]

@@ -1,0 +1,11 @@
+{{- if .Values.userconfig.kafka }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "duckula.fullname" . }}-kafka
+data:
+{{- range $key, $val := .Values.userconfig.kafka }}
+  {{ $key }}: |-
+{{ $val | indent 4}}
+{{- end }}
+{{- end -}}

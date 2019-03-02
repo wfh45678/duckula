@@ -1,0 +1,65 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ template "duckula.fullname" . }}
+  labels:
+    app: {{ template "duckula.name" . }}
+    chart: {{ template "duckula.chart" . }}
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: {{ template "duckula.fullname" . }}
+        image: '{{ .Values.image }}:{{ .Values.imageTag }}'
+        imagePullPolicy: IfNotPresent        
+        volumeMounts:
+        - name: data
+          mountPath: /data/duckula-data
+      {{- if .Values.userconfig.root }}
+        - name: userconfig-root
+          mountPath: /opt/userconfig
+      {{- end }}
+      {{- if .Values.userconfig.es }}
+        - name: userconfig-es
+          mountPath: /opt/userconfig/es
+      {{- end }}
+      {{- if .Values.userconfig.kafka }}
+        - name: userconfig-kafka
+          mountPath: /opt/userconfig/kafka
+      {{- end }}
+      {{- if .Values.userconfig.redis }}
+        - name: userconfig-redis
+          mountPath: /opt/userconfig/redis
+      {{- end }}
+      volumes:
+      - name: data
+      {{- if and  .Values.persistence.enabled  }}
+        persistentVolumeClaim:
+          claimName: {{ .Values.persistence.existingClaim | default (include "duckula.fullname" .) }}
+      {{- else }}
+        emptyDir: {}
+      {{- end -}} 
+      {{- if .Values.userconfig.root }}
+      - name: userconfig-root
+        configMap:
+          name: {{ template "duckula.fullname" . }}-root
+      {{- end }}
+      {{- if .Values.userconfig.es }}
+      - name: userconfig-es
+        configMap:
+          name: {{ template "duckula.fullname" . }}-es
+      {{- end }}
+      {{- if .Values.userconfig.kafka }}
+      - name: userconfig-kafka
+        configMap:
+          name: {{ template "duckula.fullname" . }}-kafka
+      {{- end }}
+      {{- if .Values.userconfig.redis }}
+      - name: userconfig-redis
+        configMap:
+          name: {{ template "duckula.fullname" . }}-redis
+      {{- end }}
