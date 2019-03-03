@@ -163,7 +163,7 @@ public class ServerManager {
 				log.error("连接服务器失败", e);
 				return TapestryAssist.getTextStreamResponse(Result.getError("连接服务器失败：" + e.getMessage()));
 			}
-			conn.scpDir(System.getenv("DUCKULA_DATA"), IOUtil.mergeFolderAndFilePath(ConfUtil.getDatadir(true), "/conf"), "0744",new String[] {"conf"});// 
+			conn.scpDir(ConfUtil.getDatadir(false), IOUtil.mergeFolderAndFilePath(ConfUtil.getDatadir(true), "/conf"), "0744",new String[] {"conf"});// 
 			server.setSyncConfDate(curdatestr);
 			ZkClient.getInst().createOrUpdateNode(ZkPath.servers.getPath(server.getIp()),
 					JSON.toJSONString(server));
@@ -190,7 +190,6 @@ public class ServerManager {
 			return TapestryAssist.getTextStreamResponse(Result.getError("连接服务器失败：" + e.getMessage()));
 		}
 		
-		log.info("上传init.sh文件成功");
 		// 3、检查是否支持docker
 		YesOrNo checkDocker = conn.checkDocker();
 		if (checkDocker != null && checkDocker == YesOrNo.yes) {
@@ -199,11 +198,12 @@ public class ServerManager {
 			serverParam.setUseDocker(YesOrNo.no);
 		}
 		//4、复制配置信息等
-		String dataHome=ConfUtil.getDatadir(true);
-		conn.scpDir(System.getenv("DUCKULA_DATA"), dataHome, "0744",new String[] {"conf","busi","consumers","sender","serializer"});
+		String dataHome=ConfUtil.getDatadir(true);//服务器上的配置目录
+		String dataHomeOps=ConfUtil.getDatadir(false);//ops的data配置
+		conn.scpDir(dataHomeOps, dataHome, "0744",new String[] {"conf","busi","consumers","sender","serializer"});
 		
 		//5、初始化logs目录
-		File[] logDirs = new File(IOUtil.mergeFolderAndFilePath(System.getenv("DUCKULA_DATA"), "logs")).listFiles();
+		File[] logDirs = new File(IOUtil.mergeFolderAndFilePath(dataHomeOps, "logs")).listFiles();
 		for (File logDir : logDirs) {
 			if(logDir.isDirectory()) {
 				Result creatDir = conn.executeCommand(CommandCentOs.mkdir,null,IOUtil.mergeFolderAndFilePath(dataHome, "logs",logDir.getName()));
@@ -227,11 +227,12 @@ public class ServerManager {
 		// 7、执行shell脚本
 		String hosts = MiddlewareType.getHosts();
 		Result executeCommand = null;
+		String initFilePath = IOUtil.mergeFolderAndFilePath(Conf.get("duckula.ops.homedir"), "/bin/duckula-init.sh");
 		if (StringUtil.isNotNull(hosts)) {
-			executeCommand = conn.executeCommand(String.format("sh /root/duckula-init.sh %s %s \"%s\"",
+			executeCommand = conn.executeCommand(String.format("sh %s %s %s \"%s\"",initFilePath,
 					Conf.get("common.os.ssh.username"), Conf.get("common.os.ssh.pwd"), hosts));
 		} else {
-			executeCommand = conn.executeCommand(String.format("sh /root/duckula-init.sh %s %s",
+			executeCommand = conn.executeCommand(String.format("sh %s %s %s",initFilePath,
 					Conf.get("common.os.ssh.username"), Conf.get("common.os.ssh.pwd")));
 		}
 
