@@ -17,7 +17,7 @@
 				   <r:validatebox name="ip"/>
 				</td>
 				<td class="frame_table_list_4_righttext" colspan="6"><font color="red">
-				 <div align="left">初始化后，如果服务器是非docker模式。请用初始化时创建的用户，把打包后的<br/>duckula-data.tar和duckula.tar上传到对应的服务器,分别解压到 /opt 和 /data 目录下 </div>  </font>
+				 <div align="left">初始化后，如果配置有改动，可以在ops修改完配置文件后，通过“同步配置文件”一键修改，同步需要用新的duckula-data.tar包覆盖ops的resource目录下的同名文件 </div>  </font>
 				</td>
 		 </tr>
 	  </table>
@@ -97,7 +97,12 @@
            pwd=pwd.replace(/^\s+|\s+$/g,"");
            if(gt(pwd.length,0)){
                row.pwd=pwd;
+               $.messager.progress({
+			    	title:window.msg.hintwaiting,
+			    	msg:window.msg.hinthandling
+	            }); 
                $.post($.rjzjh.packurl('/duckula/serverManager:initServer'),row,function(data){
+                 $.messager.progress('close');
 	             $.rjzjh.opt2(data,function(){
 	                $.rjzjh.alert("初始化成功");
 				    jQuery('#q_grid').datagrid('reload');
