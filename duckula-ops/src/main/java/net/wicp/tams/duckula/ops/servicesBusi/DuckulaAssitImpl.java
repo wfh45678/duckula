@@ -78,9 +78,18 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 			List<String> locks = ZkUtil.lockIps(zkPath, childrenId);
 			if (CollectionUtils.isEmpty(locks)) {// 没有启动
 				log.info("类型:{} taskId:[{}]被下线.", commandType.name(), childrenId);
-				Server server = this.selServer(removeIps);// 要剔除的ＩＰ
-				Result result = this.startTask(commandType, childrenId, server, true);
-				log.info("类型:{} taskId:[{}],task试着重启结果{}.", commandType.name(), childrenId, result.getMessage());
+				try {
+					Server server = this.selServer(removeIps);// 要剔除的ＩＰ
+					if(server==null) {
+						log.error("没有可用的服务器运行任务");
+					}else {
+						Result result = this.startTask(commandType, childrenId, server, true);
+						log.info("类型:{} taskId:[{}],task试着重启结果{}.", commandType.name(), childrenId, result.getMessage());
+					}
+				} catch (Throwable e) {
+					log.error("运行任务失败",e);
+				}
+				
 			}
 		}
 	}
