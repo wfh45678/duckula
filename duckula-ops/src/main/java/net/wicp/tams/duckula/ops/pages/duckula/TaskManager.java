@@ -210,6 +210,8 @@ public class TaskManager {
 		}
 		Stat stat = ZkUtil.exists(ZkPath.tasks, taskparam.getId());
 		if (stat == null) {// 新增
+			taskparam.setClientId(StringUtil.buildPort(taskparam.getId()));//防止报“A slave with the same server_uuid/server_id”			
+			taskparam.setRun(YesOrNo.no);//不立即启动，需要做其它配置
 			ZkClient.getInst().createNode(ZkPath.tasks.getPath(taskparam.getId()), JSONObject.toJSONString(taskparam));
 			PathChildrenCache createPathChildrenCache = ZkClient.getInst()
 					.createPathChildrenCache(ZkPath.tasks.getPath(taskparam.getId()), InitDuckula.haWatcherTask);
@@ -347,7 +349,7 @@ public class TaskManager {
 
 		// 等待一段时间，为启动各个task留点时间
 		long curtime2 = System.currentTimeMillis();
-		while ((curtime2 - curtime1) < 8000) {
+		while ((curtime2 - curtime1) < 10000) {
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {

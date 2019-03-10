@@ -344,6 +344,7 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 	public Result stopTaskForK8s(CommandType commandType, String taskId) {
 		String idfull = commandType.getK8sId(taskId);
 		Result deleteChart = TillerClient.getInst().deleteChart(idfull);
+		 waitUnLock(commandType, taskId,120000);
 		return deleteChart;
 	}
 
@@ -475,10 +476,30 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 		} else {
 			if (isAuto) {
 				setAuto(commandType, taskId, YesOrNo.yes);
-			}
+			}	
+		  waitUnLock(commandType, taskId,120000);
 		}
 		// DuckulaUtils.returnConn(server, conn);
 		return result;
+	}
+
+	private void waitUnLock(CommandType commandType, String taskId,long waitTime) {
+		//释放锁不成功，不在当前线程，只能等锁节点消失
+		long begintime=System.currentTimeMillis();
+		while (true) {
+			List<String> taskLocks = ZkClient.getInst().getChildren(commandType.getZkPath().getPath(taskId));
+			if(CollectionUtils.isNotEmpty(taskLocks)) {
+				try {
+					Thread.sleep(500);
+				} catch (InterruptedException e) {					
+				}
+				if(System.currentTimeMillis()-begintime>waitTime) {
+					break;
+				}
+			}else {
+				break;
+			}				
+		}
 	}
 
 	private void setAuto(CommandType commandType, String taskId, YesOrNo isOpen) {

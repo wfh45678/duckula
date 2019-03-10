@@ -13,13 +13,13 @@ import net.wicp.tams.common.constant.JvmStatus;
 
 @Slf4j
 public enum CommandType {
-	task("在线监听任务", "run", "duckula-task.properties", "duckula-task.jar", "docker-run.sh", "t-%s", "nojob"),
+	task("在线监听任务", "run", "duckula-task.properties", "duckula-task.jar", "docker-run.sh", "t-%s", "nojob",ZkPath.tasks),
 
 	dump("全量导入处理任务", "dump", "duckula-dump-elasticsearch.properties", "duckula-dump-elasticsearch.jar",
-			"docker-dump.sh", "d-%s", "now"),
+			"docker-dump.sh", "d-%s", "now",ZkPath.dumps),
 
 	consumer("kafka监听任务", "consumer", "duckula-kafka-consumer.properties", "duckula-kafka-consumer.jar",
-			"docker-consumer.sh", "c-%s", "nojob");
+			"docker-consumer.sh", "c-%s", "nojob",ZkPath.consumers);
 
 	private final String desc;
 	private final String commonPath;
@@ -28,6 +28,11 @@ public enum CommandType {
 	private final String k8scmd;
 	private final String k8sFormate;// 以什么样的id形式出现在k8s集群
 	private final String k8sSchedule;// 默认的k8s调度模式
+	private final ZkPath zkPath;
+
+	public ZkPath getZkPath() {
+		return zkPath;
+	}
 
 	public String getK8sSchedule() {
 		return k8sSchedule;
@@ -55,7 +60,7 @@ public enum CommandType {
 	}
 
 	private CommandType(String desc, String commonPath, String propNamme, String jarName, String k8scmd,
-			String k8sFormate, String k8sSchedule) {
+			String k8sFormate, String k8sSchedule,ZkPath zkPath) {
 		this.desc = desc;
 		this.commonPath = commonPath;
 		this.propNamme = propNamme;
@@ -63,6 +68,7 @@ public enum CommandType {
 		this.k8scmd = k8scmd;
 		this.k8sFormate = k8sFormate;
 		this.k8sSchedule = k8sSchedule;
+		this.zkPath=zkPath;
 	}
 
 	public String getDesc() {
