@@ -1,5 +1,6 @@
 package net.wicp.tams.duckula.ops.pages.es;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -7,6 +8,7 @@ import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
+import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.tapestry5.annotations.OnEvent;
 import org.apache.tapestry5.ioc.annotations.Inject;
 import org.apache.tapestry5.ioc.internal.util.CollectionFactory;
@@ -14,16 +16,19 @@ import org.apache.tapestry5.json.JSONArray;
 import org.apache.tapestry5.services.Request;
 import org.apache.tapestry5.services.RequestGlobals;
 import org.apache.tapestry5.util.TextStreamResponse;
+import org.apache.zookeeper.data.Stat;
 
 import com.alibaba.fastjson.JSONObject;
 
 import common.kubernetes.constant.ResourcesType;
 import common.kubernetes.tiller.TillerClient;
+import lombok.extern.slf4j.Slf4j;
 import net.wicp.tams.common.Result;
 import net.wicp.tams.common.apiext.CollectionUtil;
 import net.wicp.tams.common.apiext.StringUtil;
 import net.wicp.tams.common.apiext.json.EasyUiAssist;
 import net.wicp.tams.common.callback.IConvertValue;
+import net.wicp.tams.common.constant.dic.YesOrNo;
 import net.wicp.tams.component.services.IReq;
 import net.wicp.tams.component.tools.TapestryAssist;
 import net.wicp.tams.duckula.common.ZkClient;
@@ -35,10 +40,12 @@ import net.wicp.tams.duckula.common.constant.CommandType;
 import net.wicp.tams.duckula.common.constant.TaskPattern;
 import net.wicp.tams.duckula.common.constant.ZkPath;
 import net.wicp.tams.duckula.ops.beans.Server;
+import net.wicp.tams.duckula.ops.services.InitDuckula;
 import net.wicp.tams.duckula.ops.servicesBusi.IDuckulaAssit;
 import net.wicp.tams.duckula.plugin.beans.Rule;
 import net.wicp.tams.duckula.plugin.constant.RuleItem;
 
+@Slf4j
 public class ConsumerManager {
 	@Inject
 	protected RequestGlobals requestGlobals;
@@ -189,13 +196,28 @@ public class ConsumerManager {
 						.format("db:%s,tb:%s,jdbc发送者需要设置dbinstanceid和dbtb", rule.getDbPattern(), rule.getTbPattern())));
 			}
 		}
-		Result createOrUpdateNode = ZkClient.getInst().createOrUpdateNode(
-				ZkPath.consumers.getPath(consumerparam.getId()), JSONObject.toJSONString(consumerparam));
-		return TapestryAssist.getTextStreamResponse(createOrUpdateNode);
+		Stat stat = ZkUtil.exists(ZkPath.consumers, consumerparam.getId());
+		if (stat == null) {// 新增	
+			consumerparam.setRun(YesOrNo.no);//不立即启动，需要做其它配置
+			ZkClient.getInst().createNode(ZkPath.consumers.getPath(consumerparam.getId()), JSONObject.toJSONString(consumerparam));
+			PathChildrenCache createPathChildrenCache = ZkClient.getInst()
+					.createPathChildrenCache(ZkPath.consumers.getPath(consumerparam.getId()), InitDuckula.haWatcherConsumer);
+			InitDuckula.cacheConsumerListener.put(consumerparam.getId(), createPathChildrenCache);
+		} else {
+			ZkClient.getInst().updateNode(ZkPath.consumers.getPath(consumerparam.getId()), JSONObject.toJSONString(consumerparam));
+		}		
+		//Result createOrUpdateNode = ZkClient.getInst().createOrUpdateNode(
+		//		ZkPath.consumers.getPath(consumerparam.getId()), JSONObject.toJSONString(consumerparam));
+		return req.retSuccInfo("保存consumer成功");
 	}
 
 	public TextStreamResponse onDel() {
 		String id = request.getParameter("id");
+		try {
+			InitDuckula.cacheConsumerListener.get(id).close();// 不关闭监听会导致节点删除后再创建新节点的情况
+		} catch (IOException e) {
+			log.error("关闭监听失败", e);
+		}
 		Result del = ZkUtil.del(ZkPath.consumers, id);
 		return TapestryAssist.getTextStreamResponse(del);
 	}
