@@ -85,16 +85,18 @@ public class ConsumerEsImpl extends ConsumerAbs<EsData.Builder> {
 			esDataBuilder.addDatas(esObjBuilder);
 		} else {// 有关联关系且不是根元素
 			String keyColName = rule.getItems().get(RuleItem.relakey);
-			String[] splitAry = keyColName.split("\\|");
 			String keyName = "";
-			if (splitAry.length == 1) {
-				keyName = splitAry[0];
-			} else {
-				for (String ele : splitAry) {
-					String[] tempAry = ele.split(":");
-					if (duckulaEvent.getTb().equalsIgnoreCase(tempAry[0])) {
-						keyName = tempAry[1];
-						break;
+			if(StringUtil.isNotNull(keyColName)) {
+				String[] splitAry = keyColName.split("\\|");			
+				if (splitAry.length == 1) {
+					keyName = splitAry[0];
+				} else {
+					for (String ele : splitAry) {
+						String[] tempAry = ele.split(":");
+						if (duckulaEvent.getTb().equalsIgnoreCase(tempAry[0])) {
+							keyName = tempAry[1];
+							break;
+						}
 					}
 				}
 			}
@@ -106,7 +108,8 @@ public class ConsumerEsImpl extends ConsumerAbs<EsData.Builder> {
 			String[] relaNameAry = relaName.split(":");
 			String parentId = DuckulaAssit.getValueStr(duckulaEvent, relaNameAry[1]);
 			// 找id
-			String idstr = DuckulaAssit.getValueStr(duckulaEvent, keyName);
+			String idstr = DuckulaAssit.getValueStr(duckulaEvent, duckulaEvent.getCols(0));//TODO 子表暂时使用第一个字段， 后续需要改为配置
+			//String idstr = DuckulaAssit.getValueStr(duckulaEvent, keyName);
 			esObjBuilder.setId(String.format("%s:%s", duckulaEvent.getTb(), idstr));// 有可能与主表id相同把主表的ID冲掉
 			if (StringUtils.isBlank(parentId)) {// 关联关系没有parent
 				errorlog.error(esObjBuilder.toString());// 打错误日志跳过
