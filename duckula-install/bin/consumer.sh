@@ -24,7 +24,7 @@ if [ ! -d "$DUCKULA_DATA/logs/gc/$1" ]; then
 fi
 pwd
 #jdk8不支持　-XX:PermSize=32m -XX:MaxPermSize=32m
-JAVA_MEM_OPTS="-Xms1024m -Xmx2048m  -XX:PermSize=32m -XX:MaxPermSize=32m"
+JAVA_MEM_OPTS="-Xms256m -Xmx256m  -XX:PermSize=32m -XX:MaxPermSize=32m"
 #远程调试
 if [ $# -ge 3 ]; then
 	JAVA_DEBUGGER="-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=$3"

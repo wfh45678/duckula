@@ -354,7 +354,7 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 			return Result.getError("没有可用服务");
 		}
 		// TODO 写死linux系统
-		int jmxPort = StringUtil.buildPort(taskId);
+		int jmxPort = StringUtil.buildPort(commandType.name()+"_"+taskId);
 		SSHConnection conn = DuckulaUtils
 				.getConn(Host.builder().hostIp(server.getIp()).port(server.getServerPort()).build());
 		Result result = null;
