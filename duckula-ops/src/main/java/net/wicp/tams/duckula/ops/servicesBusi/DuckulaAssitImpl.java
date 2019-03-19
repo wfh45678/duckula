@@ -382,7 +382,7 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 					new String[] { "-d", "-e \"zk=" + Conf.get("common.others.zookeeper.constr") + "\"",
 							"-e  \"ip=" + server.getLockIp() + "\"", "-p " + jmxPort + ":" + ConfUtil.defaulJmxPort,
 							"-v /data/duckula-data:"+ConfUtil.getDatadir(true), hostsstr });// serverCommon.packAddHostParams()
-			result = conn.executeCommand(startCmd);
+			result = conn.executeCommand(startCmd,600000);//最大允许执行10分钟，用于拉镜像
 		} else {
 			String startCmd = IOUtil.mergeFolderAndFilePath("sh ", Conf.get("duckula.ops.homedir"),
 					commandType.getBatchFile(EPlatform.Linux));

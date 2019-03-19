@@ -17,7 +17,8 @@
 				   <r:validatebox name="ip"/>
 				</td>
 				<td class="frame_table_list_4_righttext" colspan="6"><font color="red">
-				 <div align="left">初始化后，如果配置有改动，可以在ops修改完配置文件后，通过“同步配置文件”一键修改，同步需要用新的duckula-data.tar包覆盖ops的resource目录下的同名文件 </div>  </font>
+				 <div align="left">1、初始化后，如果配置有改动，可以在ops修改完配置文件后，通过“同步配置文件”一键修改，同步需要用新的duckula-data.tar包覆盖ops的resource目录下的同名文件 </div> 
+				 <div align="left">2、如果是docker服务器，在”/etc/docker/“目录下，创建”daemon.json“文件。在文件中写入：{ "insecure-registries":["ip地址:5000"] }</div> </font>
 				</td>
 		 </tr>
 	  </table>
