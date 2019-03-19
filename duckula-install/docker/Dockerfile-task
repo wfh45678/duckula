@@ -5,7 +5,7 @@ FROM rjzjh/jdk8:1
 # me
 MAINTAINER andy "rjzjh@163.com"
 #
-LABEL version="2.0"
+LABEL version="2.0.0"
 LABEL location="Shang Hai" author="andy" role="Task"
 
 
@@ -40,7 +40,7 @@ VOLUME /opt/userconfig/
 WORKDIR /opt/duckula
 ENV PATH /opt/duckula/bin:$PATH
 
-ENV DUCKULA_VERSION 1.0.1
+ENV DUCKULA_VERSION="2.0.0"
 ENV DUCKULA_DATA="/data/duckula-data" \
 	DUCKULA_HOME="/opt/duckula" \
 	metricspath="/data/duckula-data/logs/metrics" 
