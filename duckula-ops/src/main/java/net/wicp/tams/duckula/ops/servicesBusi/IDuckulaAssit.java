@@ -49,15 +49,16 @@ public interface IDuckulaAssit {
 	 * 
 	 * @param commandType
 	 * @param taskId
-	 * @param standalone
-	 *            是否独立启动，true:是独立启动，配置和日志都在本机，重启后将丢失 false:使用“duckula”这个pvc
+	 * 
 	 * @return
 	 */
-	public Result startTaskForK8s(CommandType commandType, String taskId, boolean standalone);
+	public Result startTaskForK8s(CommandType commandType, String taskId);
 
 	public Result stopTask(CommandType commandType, String taskId, Server server, boolean isAuto);
-	//停止k8s服务
+
+	// 停止k8s服务
 	public Result stopTaskForK8s(CommandType commandType, String taskId);
-	//重新启动服务
-	public void reStartTask(CommandType commandType,String childrenId,String... removeIps);
+
+	// 重新启动服务
+	public void reStartTask(CommandType commandType, String childrenId, String... removeIps);
 }

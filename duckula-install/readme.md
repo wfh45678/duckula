@@ -29,3 +29,4 @@ docker安装ops:
 helm下的安装ops：
 1、安装PVC,指定名字： eg:"duckula"
 2、在duckula目录下执行：  helm install --name=duckula --set ***=duckula  ./duckula-install/k8s/duckula_ops
+3、代理tiller端口：kubectl port-forward service/tiller-deploy   44134:44134  -n kube-system

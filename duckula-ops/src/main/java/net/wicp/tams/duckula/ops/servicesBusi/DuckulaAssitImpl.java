@@ -80,16 +80,17 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 				log.info("类型:{} taskId:[{}]被下线.", commandType.name(), childrenId);
 				try {
 					Server server = this.selServer(removeIps);// 要剔除的ＩＰ
-					if(server==null) {
+					if (server == null) {
 						log.error("没有可用的服务器运行任务");
-					}else {
+					} else {
 						Result result = this.startTask(commandType, childrenId, server, true);
-						log.info("类型:{} taskId:[{}],task试着重启结果{}.", commandType.name(), childrenId, result.getMessage());
+						log.info("类型:{} taskId:[{}],task试着重启结果{}.", commandType.name(), childrenId,
+								result.getMessage());
 					}
 				} catch (Throwable e) {
-					log.error("运行任务失败",e);
+					log.error("运行任务失败", e);
 				}
-				
+
 			}
 		}
 	}
@@ -266,8 +267,9 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 
 	// 默认Conf.get("common.kubernetes.apiserver.namespace.default")
 	@Override
-	public Result startTaskForK8s(CommandType commandType, String taskId, boolean standalone) {
+	public Result startTaskForK8s(CommandType commandType, String taskId) {
 		Task buidlTask = QueryTask(commandType, taskId);
+		boolean standalone = Conf.getBoolean("duckula.ops.starttask.standalone");
 		if (buidlTask == null) {
 			return Result.getError("不支持的的类型或taskId不正确");
 		}
@@ -307,7 +309,8 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 		if (!standalone) {// 非独立模式
 			String claimName = Conf.get("duckula.ops.starttask.claimname");
 			if (StringUtil.isNull(claimName)) {
-				return Result.getError("没有设置claimName环境变量，找到OPS使用的PVC，把它设置为claimName环境变量");
+				return Result.getError(
+						"task的非独立模式，需要设置claimName环境变量，找到OPS使用的PVC，把它设置为claimName环境变量或是修改ops的配置：duckula.ops.starttask.claimname");
 			}
 			userList.add("persistence.existingClaim");
 			userList.add(claimName);
@@ -344,7 +347,7 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 	public Result stopTaskForK8s(CommandType commandType, String taskId) {
 		String idfull = commandType.getK8sId(taskId);
 		Result deleteChart = TillerClient.getInst().deleteChart(idfull);
-		 waitUnLock(commandType, taskId,120000);
+		waitUnLock(commandType, taskId, 120000);
 		return deleteChart;
 	}
 
@@ -354,7 +357,7 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 			return Result.getError("没有可用服务");
 		}
 		// TODO 写死linux系统
-		int jmxPort = StringUtil.buildPort(commandType.name()+"_"+taskId);
+		int jmxPort = StringUtil.buildPort(commandType.name() + "_" + taskId);
 		SSHConnection conn = DuckulaUtils
 				.getConn(Host.builder().hostIp(server.getIp()).port(server.getServerPort()).build());
 		Result result = null;
@@ -381,8 +384,8 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 							ConfUtil.defaulJmxPort),
 					new String[] { "-d", "-e \"zk=" + Conf.get("common.others.zookeeper.constr") + "\"",
 							"-e  \"ip=" + server.getLockIp() + "\"", "-p " + jmxPort + ":" + ConfUtil.defaulJmxPort,
-							"-v /data/duckula-data:"+ConfUtil.getDatadir(true), hostsstr });// serverCommon.packAddHostParams()
-			result = conn.executeCommand(startCmd,600000);//最大允许执行10分钟，用于拉镜像
+							"-v /data/duckula-data:" + ConfUtil.getDatadir(true), hostsstr });// serverCommon.packAddHostParams()
+			result = conn.executeCommand(startCmd, 600000);// 最大允许执行10分钟，用于拉镜像
 		} else {
 			String startCmd = IOUtil.mergeFolderAndFilePath("sh ", Conf.get("duckula.ops.homedir"),
 					commandType.getBatchFile(EPlatform.Linux));
@@ -476,29 +479,29 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 		} else {
 			if (isAuto) {
 				setAuto(commandType, taskId, YesOrNo.yes);
-			}	
-		  waitUnLock(commandType, taskId,120000);
+			}
+			waitUnLock(commandType, taskId, 120000);
 		}
 		// DuckulaUtils.returnConn(server, conn);
 		return result;
 	}
 
-	private void waitUnLock(CommandType commandType, String taskId,long waitTime) {
-		//释放锁不成功，不在当前线程，只能等锁节点消失
-		long begintime=System.currentTimeMillis();
+	private void waitUnLock(CommandType commandType, String taskId, long waitTime) {
+		// 释放锁不成功，不在当前线程，只能等锁节点消失
+		long begintime = System.currentTimeMillis();
 		while (true) {
 			List<String> taskLocks = ZkClient.getInst().getChildren(commandType.getZkPath().getPath(taskId));
-			if(CollectionUtils.isNotEmpty(taskLocks)) {
+			if (CollectionUtils.isNotEmpty(taskLocks)) {
 				try {
 					Thread.sleep(500);
-				} catch (InterruptedException e) {					
+				} catch (InterruptedException e) {
 				}
-				if(System.currentTimeMillis()-begintime>waitTime) {
+				if (System.currentTimeMillis() - begintime > waitTime) {
 					break;
 				}
-			}else {
+			} else {
 				break;
-			}				
+			}
 		}
 	}
 

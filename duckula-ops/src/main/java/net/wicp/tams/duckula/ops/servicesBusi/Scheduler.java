@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
 import net.wicp.tams.duckula.common.ZkUtil;
 import net.wicp.tams.duckula.common.constant.CommandType;
+import net.wicp.tams.duckula.common.constant.TaskPattern;
 import net.wicp.tams.duckula.common.constant.ZkPath;
 
 @Component
@@ -26,16 +27,18 @@ public class Scheduler {
 
 	@PostConstruct
 	private void init() {
-		runUnStart();
-		log.info("int exec sucess");
-		ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-		// 第二个参数为首次执行的延时时间，第三个参数为定时执行的间隔时间
-		service.scheduleAtFixedRate(new Runnable() {
-			@Override
-			public void run() {
-				runUnStart();
-			}
-		}, 10, 10, TimeUnit.MINUTES);
+		if (TaskPattern.isNeedServer()) {
+			runUnStart();
+			log.info("int exec sucess");
+			ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+			// 第二个参数为首次执行的延时时间，第三个参数为定时执行的间隔时间
+			service.scheduleAtFixedRate(new Runnable() {
+				@Override
+				public void run() {
+					runUnStart();
+				}
+			}, 10, 10, TimeUnit.MINUTES);
+		}
 	}
 
 	/***

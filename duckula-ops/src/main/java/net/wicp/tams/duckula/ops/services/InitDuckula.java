@@ -168,29 +168,34 @@ public class InitDuckula implements ServletContextListener {
 				ZkClient.getInst().createNode(zkPath.getRoot(), null);
 			}
 		}
-		// task监听
-		List<String> allTaskIds = ZkUtil.findSubNodes(ZkPath.tasks);
-		for (String taskId : allTaskIds) {
-			Task task = ZkUtil.buidlTask(taskId);
-			if (task != null) {// 如里有监听将不能正常删除节点，删除后后重建一个空节点
-				PathChildrenCache createPathChildrenCache = ZkClient.getInst()
-						.createPathChildrenCache(ZkPath.tasks.getPath(taskId), haWatcherTask);
-				cacheTaskListener.put(taskId, createPathChildrenCache);
-				if (task.getPosListener() != null && task.getPosListener() == YesOrNo.no) {
-					noPosListener.add(ZkPath.pos.getPath(task.getId()));
+		
+		if(TaskPattern.isNeedServer()) {
+			// task监听
+			List<String> allTaskIds = ZkUtil.findSubNodes(ZkPath.tasks);
+			for (String taskId : allTaskIds) {
+				Task task = ZkUtil.buidlTask(taskId);
+				if (task != null) {// 如里有监听将不能正常删除节点，删除后后重建一个空节点
+					PathChildrenCache createPathChildrenCache = ZkClient.getInst()
+							.createPathChildrenCache(ZkPath.tasks.getPath(taskId), haWatcherTask);
+					cacheTaskListener.put(taskId, createPathChildrenCache);
+					if (task.getPosListener() != null && task.getPosListener() == YesOrNo.no) {
+						noPosListener.add(ZkPath.pos.getPath(task.getId()));
+					}
+				}
+			}
+			// consumer监听
+			List<String> allConsumersIds = ZkUtil.findSubNodes(ZkPath.consumers);
+			for (String consumerId : allConsumersIds) {
+				Consumer buidlConsumer = ZkUtil.buidlConsumer(consumerId);
+				if (buidlConsumer != null) {// 如里有监听将不能正常删除节点，删除后后重建一个空节点
+					PathChildrenCache createPathChildrenCache = ZkClient.getInst()
+							.createPathChildrenCache(ZkPath.consumers.getPath(consumerId), haWatcherConsumer);
+					cacheConsumerListener.put(consumerId, createPathChildrenCache);
 				}
 			}
 		}
-		// consumer监听
-		List<String> allConsumersIds = ZkUtil.findSubNodes(ZkPath.consumers);
-		for (String consumerId : allConsumersIds) {
-			Consumer buidlConsumer = ZkUtil.buidlConsumer(consumerId);
-			if (buidlConsumer != null) {// 如里有监听将不能正常删除节点，删除后后重建一个空节点
-				PathChildrenCache createPathChildrenCache = ZkClient.getInst()
-						.createPathChildrenCache(ZkPath.consumers.getPath(consumerId), haWatcherConsumer);
-				cacheConsumerListener.put(consumerId, createPathChildrenCache);
-			}
-		}
+		
+		
 
 		// 日志监听
 		if (Conf.getBoolean("duckula.ops.pos.listener.enable")) {
