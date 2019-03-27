@@ -1,6 +1,6 @@
 #           欢迎使用duckula
 
-![图片](images/duckula.jpg)
+![图片](https://github.com/rjzjh/duckula/wiki/images/duckula.jpg)
 
 ## 一个故事
 
