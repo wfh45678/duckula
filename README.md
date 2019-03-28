@@ -36,9 +36,12 @@ duckula专注于数据的实时推送，它分为四大模块：
 - duckula-install ..........................................打包安装模块
 - duckula-ops Tapestry 5 Application .......ops控制台模块
  ## 一此依赖版本(在开发时使用了下面版本，更多的版本未做测试)
- - JDK8
- - kafka 1.0.2
- - es 6.3.2
- - mysql: 5.6
- - k8s   1.10.11
- - docker 18.09.02
+- JDK8
+- zookeeper   3.5.3-beta
+- kafka 1.0.2
+- es 6.3.2
+- mysql: 5.6
+- k8s   1.10.11
+- tiller 2.11.0
+- docker 18.09.02
+
