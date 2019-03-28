@@ -2,7 +2,10 @@
 
 ## duckula能做的事
 <div align=center><img src="https://github.com/rjzjh/duckula/wiki/images/duckula_do.png" width = "600" height = "400" /></div>
-上面的红色线都是duckula能做的活，默认也提供了相关的工具依赖包供业务使用，这样就形成了一个从mysql->kafka->es 功能环。
+上面的红色线都是duckula能做的活，默认也提供了相关的工具依赖包供业务使用，
+
+这样就形成了一个从mysql->kafka->es 功能环。
+
 ## 功能模块简介
 duckula专注于数据的实时推送，它分为四大模块：
 1. binlog在线监听
