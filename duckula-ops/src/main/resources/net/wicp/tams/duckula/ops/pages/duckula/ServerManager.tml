@@ -74,7 +74,7 @@
        	    var update= '<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-edit"  data-options="disabled:'+optCan+'"  style="margin-right:10px" onclick="_doUpdate('+index+') ">'+msg.update+'</a>';
        	    var deletebut= '<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove" data-options="disabled:'+optCan+'" style="margin-right:10px" onclick="_doDelete('+index+') ">'+msg.delete_+'</a>'; 
        	    var viewbut='<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-role" data-options="disabled:'+!optCan+'" style="margin-right:10px" onclick="viewTask(\''+index+'\') ">查看任务</a>';
-       	    var initbut='<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-role" data-options="disabled:'+!initCan+'" style="margin-right:10px" onclick="initServer(\''+index+'\') ">初始化</a>';
+       	    var initbut='<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-role" data-options="disabled:false" style="margin-right:10px" onclick="initServer(\''+index+'\') ">初始化</a>';
 			return update+deletebut+viewbut+initbut;
      }
 
