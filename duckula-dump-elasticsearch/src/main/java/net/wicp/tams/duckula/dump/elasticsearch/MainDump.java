@@ -195,10 +195,11 @@ public class MainDump {
 		///////////////////////////////////////// 发送处理///////////////////////////////////////////////////////////////////////////////
 		busiBarrier = ringBuffer.newBarrier(getSeqAry(busiProcessors));
 		Sequence sendSequence = new Sequence(-1);
-		int sendNum = dump.getSendNum() == null ? 2 : dump.getSendNum();
+		//不需要发送只要一个线程就OK了
+		int sendNum =( dump.getNeedSend()!=null&&dump.getNeedSend()==YesOrNo.no)?1:(dump.getSendNum() == null ? 2 : dump.getSendNum());
 		SendHander[] sendHanders = new SendHander[sendNum];
 		for (int i = 0; i < sendHanders.length; i++) {
-			sendHanders[i] = new SendHander(mapping);
+			sendHanders[i] = new SendHander(mapping,dump.getNeedSend());
 		}
 		@SuppressWarnings("unchecked")
 		WorkProcessor<EventDump>[] sendProcessors = new WorkProcessor[sendNum];

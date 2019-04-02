@@ -2,12 +2,14 @@ package net.wicp.tams.duckula.common.beans;
 
 import lombok.Data;
 import net.wicp.tams.common.apiext.StringUtil;
+import net.wicp.tams.common.constant.dic.YesOrNo;
 
 @Data
 public class Dump {
 	private String id;
 	private String taskOnlineId;
 	private String cluster;// es的集群配置，就是conf下面的配置
+	private YesOrNo needSend=YesOrNo.yes;//是否需要发duckula发送
 	private String mappingId;
 	private String db_tb;
 	private String[] primarys;

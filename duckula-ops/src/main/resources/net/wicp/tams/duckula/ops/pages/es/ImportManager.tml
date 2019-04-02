@@ -49,6 +49,15 @@
 			             <r:combogrid id="busiPluginSel" name="busiPlugin"  columns="[[{field:'id',width:100,title:'id'},{field:'projectName',width:250,title:'项目名称'},{field:'update',width:100,title:'上传人'},{field:'lastUpdateTime',width:150,title:'上传时间'},{field:'pluginFileName',width:250,title:'插件文件名'},{field:'fileExit',width:100,title:'ops存在'},{field:'fileExitServer',width:100,title:'同步状态'}]]" idfield="pluginFileName" panelWidth="1100" panelHeight="300" textfield="pluginFileName" width="200" pagination="false" url="/es/busiPluginManager:query"></r:combogrid>
 	                 </td>
 			      </tr>
+			       <tr>
+			         <td class="frame_table_list_2_righttext">需要发送</td>
+			         <td>
+			              <r:comboboxenum id="needSend_save"  name="needSend" enumClass="net.wicp.tams.common.constant.dic.YesOrNo" required="false"></r:comboboxenum>
+	                 </td>
+			 	  	 <td class="frame_table_list_2_righttext" name="trdb"></td>	                 
+	                 <td>
+			         </td>
+			      </tr>
 			      <tr>
 			         <td class="frame_table_list_2_righttext">es集群</td>
 			         <td>
