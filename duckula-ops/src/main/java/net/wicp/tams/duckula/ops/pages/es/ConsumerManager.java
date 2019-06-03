@@ -88,6 +88,13 @@ public class ConsumerManager {
 				return ret;
 			}
 		});
+		
+		CollectionUtils.filter(retlist, new Predicate() {			
+			@Override
+			public boolean evaluate(Object object) {
+				return object!=null&&StringUtil.isNotNull(((Consumer)object).getId());
+			}
+		});
 
 		String retstr = null;
 		if (isNeedServer()) {
