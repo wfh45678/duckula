@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
+import net.wicp.tams.common.Conf;
 import net.wicp.tams.common.apiext.LoggerUtil;
 import net.wicp.tams.common.apiext.StringUtil;
 import net.wicp.tams.common.constant.JvmStatus;
@@ -34,6 +35,7 @@ public class SerializeProtobuf3 implements ISerializer {
 			build.addColsTypeValue(duckulaPackage.getEventTable().getColsType()[i]);
 		}
 		build.setIsError(duckulaPackage.isError());// 是否错误数据
+		Boolean isSimple = Conf.getBoolean("simple");//是否简化数据，可以提交并发
 		List<SingleRecord> retlist = new ArrayList<>();
 		for (int i = 0; i < duckulaPackage.getRowsNum(); i++) {
 			DuckulaEvent.Builder rowbuilder = build.clone();
@@ -48,7 +50,9 @@ public class SerializeProtobuf3 implements ISerializer {
 				break;
 			case update:
 				initAfter(rowbuilder, duckulaPackage, i);
-				initBefore(rowbuilder, duckulaPackage, i);
+				if(!isSimple) {
+					initBefore(rowbuilder, duckulaPackage, i);
+				}
 				break;
 			default:
 				break;

@@ -3,6 +3,7 @@ package net.wicp.tams.duckula.task;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -17,6 +18,8 @@ import javax.management.ObjectName;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 
+import com.alibaba.fastjson.JSONObject;
+
 import net.wicp.tams.common.Conf;
 import net.wicp.tams.common.apiext.CollectionUtil;
 import net.wicp.tams.common.apiext.LoggerUtil;
@@ -29,6 +32,7 @@ import net.wicp.tams.duckula.common.ZkClient;
 import net.wicp.tams.duckula.common.ZkUtil;
 import net.wicp.tams.duckula.common.beans.Count;
 import net.wicp.tams.duckula.common.constant.CommandType;
+import net.wicp.tams.duckula.common.constant.ZkPath;
 import net.wicp.tams.duckula.task.bean.DuckulaContext;
 import net.wicp.tams.duckula.task.conf.ITaskConf;
 import net.wicp.tams.duckula.task.conf.ZookeeperImpl;
@@ -96,6 +100,13 @@ public class Main {
 		try {
 			taskConf.init(taskId);
 			taskConf.buildTask();
+			//20190613 把task配置存入内存，所有的插件都可以使用
+			JSONObject taskJson = ZkClient.getInst().getZkData(ZkPath.tasks.getPath(taskId));
+			taskJson.put("simple", "true");//TODO 测试
+			Conf.overJson(taskJson);
+			Properties props=new Properties();
+			Conf.overProp(props);
+			
 			taskConf.buildPos();
 			ZkUtil.buildCols(Main.context.buildInstalName());
 			if (context.getTask() == null) {

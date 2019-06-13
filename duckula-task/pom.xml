@@ -48,6 +48,7 @@
 		<dependency>
 			<groupId>net.wicp.tams</groupId>
 			<artifactId>common-apiext</artifactId>
+			<version>3.5.15</version>
 		</dependency>
 		<dependency>
 			<groupId>net.wicp.tams</groupId>
