@@ -103,19 +103,19 @@ public class ParseLogOffline extends BaseLogFetcher {
 						switch (eventType) {
 						case LogEvent.WRITE_ROWS_EVENT_V1:
 						case LogEvent.WRITE_ROWS_EVENT:
-							if (super.gtids != null && parseRowsEvent((WriteRowsLogEvent) event, OptType.insert)) {
+							if (super.gtidBean.getGtids() != null && parseRowsEvent((WriteRowsLogEvent) event, OptType.insert)) {
 								isSel = true;
 							}
 							break;
 						case LogEvent.UPDATE_ROWS_EVENT_V1:
 						case LogEvent.UPDATE_ROWS_EVENT:
-							if (super.gtids != null && parseRowsEvent((UpdateRowsLogEvent) event, OptType.update)) {
+							if (super.gtidBean.getGtids() != null && parseRowsEvent((UpdateRowsLogEvent) event, OptType.update)) {
 								isSel = true;
 							}
 							break;
 						case LogEvent.DELETE_ROWS_EVENT_V1:
 						case LogEvent.DELETE_ROWS_EVENT:
-							if (super.gtids != null && parseRowsEvent((DeleteRowsLogEvent) event, OptType.delete)) {
+							if (super.gtidBean.getGtids() != null && parseRowsEvent((DeleteRowsLogEvent) event, OptType.delete)) {
 								isSel = true;
 							}
 							break;
@@ -123,7 +123,7 @@ public class ParseLogOffline extends BaseLogFetcher {
 							parseQueryEvent((QueryLogEvent) event);
 							break;
 						case LogEvent.XID_EVENT:
-							if (super.gtids != null && isSel) {
+							if (super.gtidBean.getGtids() != null && isSel) {
 								parseXidEvent((XidLogEvent) event);
 								isSel = false;
 							}

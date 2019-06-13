@@ -29,6 +29,7 @@ import net.wicp.tams.duckula.plugin.beans.EventTable;
 import net.wicp.tams.duckula.plugin.beans.Rule;
 import net.wicp.tams.duckula.task.Main;
 import net.wicp.tams.duckula.task.bean.EventPackage;
+import net.wicp.tams.duckula.task.bean.GtidBean;
 
 @Slf4j
 public abstract class BaseLogFetcher {
@@ -36,7 +37,7 @@ public abstract class BaseLogFetcher {
 	protected final IProducer producer;// 在初始化时要初始化它
 	protected String fileName = "mysql-bin.000001";
 	protected Charset charset = Charset.forName("utf-8");
-	protected String gtids;
+	protected GtidBean gtidBean;
 
 	private GrokObj gm = GrokObj.getInstance();
 	{
@@ -75,7 +76,7 @@ public abstract class BaseLogFetcher {
 	}
 
 	protected void parseGtidLogEvent(GtidLogEvent event) throws Exception {
-		this.gtids = event.getGtid();
+		this.gtidBean=GtidBean.builder().gtids(event.getGtid()).commitTime(event.getWhen()).build();
 		parseGtidLogEventSub(event);
 	}
 
@@ -117,16 +118,19 @@ public abstract class BaseLogFetcher {
 		// 组装位点信息
 		Pos pos = new Pos();
 		pos.setFileName(fileName);
-		pos.setGtids(this.gtids);
+		pos.setGtids(this.gtidBean.getGtids());
 		pos.setMasterServerId(Main.context.getParsePos().getMasterServerId());
 		pos.setPos(event.getLogPos());
-		pos.setTime(event.getHeader().getWhen());
+		//20190612使用提交时间，防止位点的回溯
+		//pos.setTime(event.getHeader().getWhen());
+		pos.setTime(this.gtidBean.getCommitTime());
 		eventDbsncBuild.setPos(pos);
 		// 组装公共信息
 		EventTable eventTable = new EventTable();
 		eventTable.setDb(event.getTable().getDbName());
 		eventTable.setTb(event.getTable().getTableName());
-		eventTable.setGtid(this.gtids);
+		eventTable.setGtid(this.gtidBean.getGtids());
+		eventTable.setCommitTime(this.gtidBean.getCommitTime());
 		eventTable.setOptType(optType);
 		eventTable.setColsNum(event.getTable().getColumnCnt());
 		// 设置列名

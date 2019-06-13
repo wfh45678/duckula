@@ -28,6 +28,8 @@ public class SerializeProtobuf3 implements ISerializer {
 		build.setColNum(duckulaPackage.getEventTable().getColsNum());
 		// 列名 TODO 注意，如果表删除时event.getEventTable().getCols()将为空
 		build.addAllCols(Arrays.asList(duckulaPackage.getEventTable().getCols()));
+		//20190613输出commit时间
+		build.setCommitTime(duckulaPackage.getEventTable().getCommitTime());
 		for (int i = 0; i < duckulaPackage.getEventTable().getColsType().length; i++) {// 列类型
 			build.addColsTypeValue(duckulaPackage.getEventTable().getColsType()[i]);
 		}
