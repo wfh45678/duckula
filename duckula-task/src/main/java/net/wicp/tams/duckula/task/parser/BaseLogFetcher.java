@@ -23,6 +23,7 @@ import net.wicp.tams.common.binlog.parser.event.TableMapLogEvent.ColumnInfo;
 import net.wicp.tams.common.binlog.parser.event.XidLogEvent;
 import net.wicp.tams.common.constant.DateFormatCase;
 import net.wicp.tams.common.constant.OptType;
+import net.wicp.tams.common.constant.StrPattern;
 import net.wicp.tams.duckula.common.beans.ColHis;
 import net.wicp.tams.duckula.common.beans.Pos;
 import net.wicp.tams.duckula.plugin.beans.EventTable;
@@ -39,16 +40,25 @@ public abstract class BaseLogFetcher {
 	protected Charset charset = Charset.forName("utf-8");
 	protected GtidBean gtidBean;
 
+
+	
 	private GrokObj gm = GrokObj.getInstance();
 	{
 		gm.addPattern("tb", "[A-Za-z0-9_.-:]+");
 		gm.addPattern("tball", "alter\\s+table\\s+`?%{tb}`?");
+		//
+		gm.addPattern("db", "[A-Za-z0-9_.-:]+");
+		gm.addPattern("tball2", "alter\\s+table\\s+`?%{db}`.`%{tb}`?");
 	}
+	
 
 	protected BaseLogFetcher(IProducer producer) {
 		this.producer = producer;
 	}
 
+
+	
+	
 	protected void parseQueryEvent(QueryLogEvent event) {
 		String db = event.getDbName();
 		String sql = event.getQuery().toLowerCase();
@@ -56,7 +66,12 @@ public abstract class BaseLogFetcher {
 			try {
 				Match match = gm.match("%{tball}", sql);
 				String tb = String.valueOf(match.toMap().get("tb"));
-				tb=tb.replace(db+".", "");//有可能带db进行修改				
+				tb = tb.replace(db + ".", "");// 有可能带db进行修改`binlog_test_db.user_info`
+				if (db.equals(tb)) {
+					// 适合"alter table `binlog_test_db`.`user_info` "情况
+					Match match2 = gm.match("%{tball2}", sql);
+					tb = String.valueOf(match2.toMap().get("tb"));
+				}
 				Rule rule = Main.context.findRule(db, tb);
 				if (rule == null) {// 没有匹配规则，直接跳过
 					return;
@@ -74,6 +89,8 @@ public abstract class BaseLogFetcher {
 			}
 		}
 	}
+	
+	
 
 	protected void parseGtidLogEvent(GtidLogEvent event) throws Exception {
 		this.gtidBean=GtidBean.builder().gtids(event.getGtid()).commitTime(event.getWhen()).build();

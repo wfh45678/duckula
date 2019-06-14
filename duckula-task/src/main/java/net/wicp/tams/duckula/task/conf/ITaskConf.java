@@ -17,6 +17,7 @@ public interface ITaskConf {
 	 * 得到位点信息
 	 */
 	public void buildPos();
+	
 
 	/***
 	 * 更新位点信息

@@ -9,6 +9,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Predicate;
 import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 import org.apache.zookeeper.data.Stat;
 
@@ -17,6 +18,7 @@ import com.alibaba.fastjson.JSONObject;
 
 import lombok.extern.slf4j.Slf4j;
 import net.wicp.tams.common.Result;
+import net.wicp.tams.common.constant.StrPattern;
 import net.wicp.tams.duckula.common.beans.ColHis;
 import net.wicp.tams.duckula.common.beans.Consumer;
 import net.wicp.tams.duckula.common.beans.Count;
@@ -26,6 +28,7 @@ import net.wicp.tams.duckula.common.beans.Pos;
 import net.wicp.tams.duckula.common.beans.Task;
 import net.wicp.tams.duckula.common.beans.TaskOffline;
 import net.wicp.tams.duckula.common.constant.ZkPath;
+import net.wicp.tams.duckula.plugin.beans.Rule;
 
 @Slf4j
 public abstract class ZkUtil {
@@ -157,7 +160,17 @@ public abstract class ZkUtil {
 		return retobj;
 	}
 
-	public static Map<String, SortedSet<ColHis>> buildCols(String dbInstName) {
+	/*
+	 * public static Rule findRule(Task task,String db, String tb) { for (Rule rule
+	 * : task.getRuleList()) { if (!"^*$".equals(rule.getDbPattern())) { boolean
+	 * retdb = StrPattern.checkStrFormat(rule.getDbPattern(), db); if (!retdb) {
+	 * continue; } } if (!"^*$".equals(rule.getTbPattern())) { boolean rettb =
+	 * StrPattern.checkStrFormat(rule.getTbPattern(), tb); if (!rettb) { continue; }
+	 * } return rule; } return null; }
+	 */
+	
+	
+	public static Map<String, SortedSet<ColHis>> buildCols(String dbInstName,Task task) {
 		Map<String, SortedSet<ColHis>> ret = new HashMap<>();
 		try {
 			String dbInstRootPath = ZkPath.cols.getPath(dbInstName);
@@ -169,6 +182,33 @@ public abstract class ZkUtil {
 			if (CollectionUtils.isEmpty(colsTables)) {
 				return ret;
 			}
+			
+			CollectionUtils.filter(colsTables, new Predicate() {				
+				@Override
+				public boolean evaluate(Object object) {
+					String[] splitary=String.valueOf(object).split("\\|");
+					Rule retRule=null;
+					for (Rule rule : task.getRuleList()) {
+						if (!"^*$".equals(rule.getDbPattern())) {
+							boolean retdb = StrPattern.checkStrFormat(rule.getDbPattern().toLowerCase(), splitary[0]);
+							if (!retdb) {
+								continue;
+							}
+						}
+						if (!"^*$".equals(rule.getTbPattern())) {
+							boolean rettb = StrPattern.checkStrFormat(rule.getTbPattern().toLowerCase(), splitary[1]);
+							if (!rettb) {
+								continue;
+							}
+						}
+						retRule=rule;
+						break;
+					}
+					return retRule!=null;
+				}
+			});
+			
+			
 			for (String colsTable : colsTables) {
 				String path = String.format("%s/%s", dbInstRootPath, colsTable);
 				List<ColHis> list = JSONObject.parseArray(ZkClient.getInst().getZkDataStr(path), ColHis.class);

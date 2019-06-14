@@ -3,7 +3,9 @@ package net.wicp.tams.duckula.task;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.SortedSet;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -30,6 +32,7 @@ import net.wicp.tams.common.metrics.utility.TsLogger;
 import net.wicp.tams.duckula.common.ConfUtil;
 import net.wicp.tams.duckula.common.ZkClient;
 import net.wicp.tams.duckula.common.ZkUtil;
+import net.wicp.tams.duckula.common.beans.ColHis;
 import net.wicp.tams.duckula.common.beans.Count;
 import net.wicp.tams.duckula.common.constant.CommandType;
 import net.wicp.tams.duckula.common.constant.ZkPath;
@@ -100,15 +103,18 @@ public class Main {
 		try {
 			taskConf.init(taskId);
 			taskConf.buildTask();
-			//20190613 把task配置存入内存，所有的插件都可以使用
+			// 20190613 把task配置存入内存，所有的插件都可以使用
 			JSONObject taskJson = ZkClient.getInst().getZkData(ZkPath.tasks.getPath(taskId));
-			taskJson.put("simple", "true");//TODO 测试
+			taskJson.put("simple", "true");// TODO 测试
 			Conf.overJson(taskJson);
-			Properties props=new Properties();
+			Properties props = new Properties();
 			Conf.overProp(props);
-			
+
 			taskConf.buildPos();
-			ZkUtil.buildCols(Main.context.buildInstalName());
+			// 20190613设置好col
+			Map<String, SortedSet<ColHis>> buildCols = ZkUtil.buildCols(Main.context.buildInstalName(),
+					Main.context.getTask());
+			Main.context.setColsMap(buildCols);
 			if (context.getTask() == null) {
 				log.error("----------------------没有配置task:[{}]，不能启动监听-------------------------------------", taskId);
 				LoggerUtil.exit(JvmStatus.s15);

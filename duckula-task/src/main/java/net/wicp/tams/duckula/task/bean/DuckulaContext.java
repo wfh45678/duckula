@@ -121,9 +121,11 @@ public class DuckulaContext {
 					return colHis;
 				}
 			}
-			throw new RuntimeException("没有可用的col信息。");//由于第1条时间设置为-1,所以它一般不会被执行
+			// 兼容旧任务,不般不会执行
+			// throw new RuntimeException("没有可用的col信息。");//由于第1条时间设置为-1,所以它一般不会被执行
+			return addCols(db, tb, -1);
 		} else {
-			return addCols(db, tb, getBeginWhen());
+			return addCols(db, tb, -1);
 		}
 	}
 
@@ -189,13 +191,18 @@ public class DuckulaContext {
 			retobj.setColTypes(retType.toArray(new String[retType.size()]));
 			SortedSet<ColHis> templist = colsMap.containsKey(key) ? colsMap.get(key) : new TreeSet<ColHis>();
 			if (!templist.contains(retobj)) {
-				if(templist.size()==0) {
-					retobj.setTime(-1);//20190311 第一条记录设置为-1，全量匹配,防止较早的binlog被延时发送,但有col不匹配的风险
+				if (templist.size() == 0) {
+					retobj.setTime(-1);// 20190311 第一条记录设置为-1，全量匹配,防止较早的binlog被延时发送,但有col不匹配的风险
 				}
 				templist.add(retobj);
 			}
+			// 合并
+			Map<String, SortedSet<ColHis>> buildCols = ZkUtil.buildCols(buildInstalName(), this.task);
+			if (!buildCols.get(key).contains(retobj)) {
+				templist.addAll(buildCols.get(key));
+				ZkUtil.updateCols(buildInstalName(), key, templist);
+			}
 			colsMap.put(key, templist);
-			ZkUtil.updateCols(buildInstalName(), key, templist);
 			return retobj;
 		} catch (Exception e) {
 			log.error("获取cols错误", e);

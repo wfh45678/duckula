@@ -66,6 +66,8 @@ public class ZookeeperImpl extends AbsTaskConf {
 			}
 		}
 	}
+	
+
 
 	@Override
 	public void updatePos(Pos pos) {
@@ -101,5 +103,7 @@ public class ZookeeperImpl extends AbsTaskConf {
 	public Count getCurCount() {
 		return curCount;
 	}
+
+	
 
 }
