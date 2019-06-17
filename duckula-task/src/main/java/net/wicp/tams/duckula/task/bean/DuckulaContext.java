@@ -125,6 +125,7 @@ public class DuckulaContext {
 			// throw new RuntimeException("没有可用的col信息。");//由于第1条时间设置为-1,所以它一般不会被执行
 			return addCols(db, tb, -1);
 		} else {
+			//return addCols(db, tb, getBeginWhen());
 			return addCols(db, tb, -1);
 		}
 	}
