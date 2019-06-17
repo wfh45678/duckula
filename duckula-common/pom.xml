@@ -43,7 +43,6 @@
 		<dependency>
 			<groupId>net.wicp.tams</groupId>
 			<artifactId>duckula-dev-plugin-common</artifactId>
-			<version>2.0.0</version>
 		</dependency>
 	</dependencies>
 </project>

@@ -1,11 +1,12 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>duckula</artifactId>
 	<version>2.0.0</version>
 	<packaging>pom</packaging>
 	<modules>
-		
+
 		<module>duckula-plugin-redis</module>
 		<module>duckula-serializer-protobuf3</module>
 		<module>duckula-serializer-protobuf2</module>
@@ -13,31 +14,31 @@
 		<module>duckula-task</module>
 		<module>duckula-ops</module>
 		<module>duckula-common</module>
-		
+
 		<module>duckula-install</module>
 		<module>duckula-plugin-kafka</module>
-		
-		
+
+
 		<module>duckula-busi-filter</module>
 		<module>duckula-plugin-elasticsearch</module>
 		<module>duckula-dump-elasticsearch</module>
 		<module>duckula-kafka-consumer</module>
-		
+
 	</modules>
 	<parent>
 		<groupId>net.wicp.tams</groupId>
 		<artifactId>parent</artifactId>
-		<version>40</version>
+		<version>42</version>
 	</parent>
 	<properties>
 		<java.version>1.8</java.version>
-		<autoconfig.path>${user.home}/antx-config/${devModel}</autoconfig.path>		
-		<common.apiext.version>3.5.11</common.apiext.version>
+		<autoconfig.path>${user.home}/antx-config/${devModel}</autoconfig.path>
+		<common.apiext.version>3.5.15</common.apiext.version>
 		<common.connector.version>3.5.11</common.connector.version>
 		<common.http.version>3.5.7</common.http.version>
-		<common.metrics.version>3.5.9</common.metrics.version>
+		<common.metrics.version>3.5.14</common.metrics.version>
 		<common.micro.version>4.0.0</common.micro.version>
-		<common.spring.version>3.5.11</common.spring.version>
+		<common.spring.version>3.5.12</common.spring.version>
 		<common.others.version>3.5.9</common.others.version>
 		<common.web.version>3.5.9</common.web.version>
 		<common.grpc.version>3.5.4</common.grpc.version>
@@ -51,11 +52,48 @@
 		<common.redis.version>3.5.11</common.redis.version>
 		<common.es.client.version>3.5.11</common.es.client.version>
 		<common.kubernetes.version>3.5.9</common.kubernetes.version>
+
+		<common.binlog.alone.version>3.5.14</common.binlog.alone.version>
+		<common.flink.source.binlog.version>3.5.14</common.flink.source.binlog.version>
 		<!-- 与parent不同 -->
-		<log4j.version>2.6.2</log4j.version>	
+		<log4j.version>2.6.2</log4j.version>
+		<!-- dev版本 -->
+		<duckula.version>2.0.1</duckula.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
+			<!-- 下版本移动parent 43 -->
+			<dependency>
+				<groupId>net.wicp.tams</groupId>
+				<artifactId>duckula-dev-client-thrift</artifactId>
+				<version>${duckula.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>net.wicp.tams</groupId>
+				<artifactId>duckula-dev-plugin-busi</artifactId>
+				<version>${duckula.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>net.wicp.tams</groupId>
+				<artifactId>duckula-dev-plugin-common</artifactId>
+				<version>${duckula.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>net.wicp.tams</groupId>
+				<artifactId>duckula-dev-plugin-consumer</artifactId>
+				<version>${duckula.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>net.wicp.tams</groupId>
+				<artifactId>duckula-dev-plugin-receiver</artifactId>
+				<version>${duckula.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>net.wicp.tams</groupId>
+				<artifactId>duckula-dev-plugin-serializer</artifactId>
+				<version>${duckula.version}</version>
+			</dependency>
+			<!--end 下版本移动parent 43 -->
 			<dependency>
 				<groupId>net.wicp.tams</groupId>
 				<artifactId>duckula-common</artifactId>
