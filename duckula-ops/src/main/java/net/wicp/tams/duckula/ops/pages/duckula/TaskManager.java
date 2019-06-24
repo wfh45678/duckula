@@ -242,7 +242,7 @@ public class TaskManager {
 		final Task taskparam = TapestryAssist.getBeanFromPage(Task.class, requestGlobals);
 		try {
 			InitDuckula.cacheTaskListener.get(taskparam.getId()).close();// 不关闭监听会导致节点删除后再创建新节点的情况
-		} catch (IOException e) {
+		} catch (Throwable e) {
 			log.error("关闭监听失败", e);
 		}
 		// 删除节点监听

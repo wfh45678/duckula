@@ -20,6 +20,7 @@ import net.wicp.tams.common.apiext.CollectionUtil;
 import net.wicp.tams.common.apiext.IOUtil;
 import net.wicp.tams.common.apiext.LoggerUtil;
 import net.wicp.tams.common.apiext.StringUtil;
+import net.wicp.tams.common.apiext.TimeAssist;
 import net.wicp.tams.common.apiext.jdbc.JdbcAssit;
 import net.wicp.tams.common.apiext.jdbc.MySqlAssit;
 import net.wicp.tams.common.constant.JvmStatus;
@@ -27,6 +28,7 @@ import net.wicp.tams.common.exception.ExceptAll;
 import net.wicp.tams.common.exception.ProjectExceptionRuntime;
 import net.wicp.tams.common.jdbc.DruidAssit;
 import net.wicp.tams.common.others.kafka.IConsumer;
+import net.wicp.tams.common.thread.threadlocal.PerthreadManager;
 import net.wicp.tams.duckula.client.DuckulaAssit;
 import net.wicp.tams.duckula.client.Protobuf3.DuckulaEvent;
 import net.wicp.tams.duckula.client.Protobuf3.OptType;
@@ -46,7 +48,7 @@ public abstract class ConsumerAbs<T> implements IConsumer<byte[]> {
 	private Map<Rule, PreparedStatement> statMap = new HashMap<>();
 	protected Map<String, String[]> primarysMap = new HashMap<>();
 
-	protected static final org.slf4j.Logger errorlog = org.slf4j.LoggerFactory.getLogger("errorBinlog");//需要跳过的错误数据。
+	protected static final org.slf4j.Logger errorlog = org.slf4j.LoggerFactory.getLogger("errorBinlog");// 需要跳过的错误数据。
 
 	@SuppressWarnings("unchecked")
 	public ConsumerAbs(Consumer consumer) {
@@ -56,8 +58,9 @@ public abstract class ConsumerAbs<T> implements IConsumer<byte[]> {
 				String plugDir = consumer.getBusiPlugin().replace(".tar", "");
 				String plugDirSys = IOUtil.mergeFolderAndFilePath(PluginType.consumer.getPluginDir(false), plugDir);
 				ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-				Plugin plugin = pluginAssit.newPlugin(plugDirSys, "net.wicp.tams.duckula.plugin.receiver.consumer.IBusiConsumer",
-						classLoader, "net.wicp.tams.duckula.plugin.receiver.consumer.IBusiConsumer",
+				Plugin plugin = pluginAssit.newPlugin(plugDirSys,
+						"net.wicp.tams.duckula.plugin.receiver.consumer.IBusiConsumer", classLoader,
+						"net.wicp.tams.duckula.plugin.receiver.consumer.IBusiConsumer",
 						"net.wicp.tams.duckula.plugin.receiver.ReceiveAbs");
 				Thread.currentThread().setContextClassLoader(plugin.getLoad().getClassLoader());// 需要加载前设置好classload
 				this.busiEs = (IBusiConsumer<T>) plugin.newObject();
@@ -75,8 +78,8 @@ public abstract class ConsumerAbs<T> implements IConsumer<byte[]> {
 	public abstract T packObj(DuckulaEvent duckulaEvent, Map<String, String> datamap, Rule rule);
 
 	public abstract Result doSend(List<T> datas);
-	
-	public abstract boolean checkDataNull(T data);//判断数据是否为空,true:空 false:不为空
+
+	public abstract boolean checkDataNull(T data);// 判断数据是否为空,true:空 false:不为空
 
 	@Override
 	public Result doWithRecords(List<ConsumerRecord<String, byte[]>> consumerRecords) {
@@ -162,16 +165,16 @@ public abstract class ConsumerAbs<T> implements IConsumer<byte[]> {
 				throw new ProjectExceptionRuntime(ExceptAll.duckula_es_formate);
 			}
 		}
-		if (datas.size() == 0) {//没有可用的数据，有可能是合理跳过了某些数据
+		if (datas.size() == 0) {// 没有可用的数据，有可能是合理跳过了某些数据
 			return Result.getSuc();
-		}else {
-			List<T> removeList=new ArrayList<>();
-			for (T data : datas) {				
-				if(checkDataNull(data)) {
+		} else {
+			List<T> removeList = new ArrayList<>();
+			for (T data : datas) {
+				if (checkDataNull(data)) {
 					removeList.add(data);
 				}
 			}
-			if(datas.size()==removeList.size()) {//没有可用的数据，有可能是合理跳过了某些数据
+			if (datas.size() == removeList.size()) {// 没有可用的数据，有可能是合理跳过了某些数据
 				return Result.getSuc();
 			}
 			datas.removeAll(removeList);
@@ -186,24 +189,34 @@ public abstract class ConsumerAbs<T> implements IConsumer<byte[]> {
 			}
 		}
 
-		try {
-			Result sendResult = doSend(datas);
-			if (sendResult.isSuc()) {
-				MainConsumer.metric.counter_send_es.inc(datas.size());
-				log.info("this batch sended num：{},all num:{}, max record dept:{},offiset：{}", datas.size(),
-						MainConsumer.metric.counter_send_es.getCount(),
-						consumerRecords.get(consumerRecords.size() - 1).partition(),
-						consumerRecords.get(consumerRecords.size() - 1).offset());
-				return Result.getSuc();
-			} else {
-				log.error("发送失败，原因:{}", sendResult.getMessage());
-				LoggerUtil.exit(JvmStatus.s15);
-				return sendResult;
+		// 20190624 增加重试机制
+		while (true) {
+			try {
+				Result sendResult = doSend(datas);
+				if (sendResult.isSuc()) {
+					MainConsumer.metric.counter_send_es.inc(datas.size());
+					log.info("this batch sended num：{},all num:{}, max record dept:{},offiset：{}", datas.size(),
+							MainConsumer.metric.counter_send_es.getCount(),
+							consumerRecords.get(consumerRecords.size() - 1).partition(),
+							consumerRecords.get(consumerRecords.size() - 1).offset());
+					TimeAssist.reDoWaitInit("tams-consumer");
+					return Result.getSuc();
+				} else {
+					log.error("发送失败，原因:{}", sendResult.getMessage());
+					boolean reDoWait = TimeAssist.reDoWait("tams-consumer", 8);
+					if (reDoWait) {
+						LoggerUtil.exit(JvmStatus.s15);// 达到了最大值，退出
+						return sendResult;
+					}
+				}
+			} catch (Throwable e) {
+				log.error("发送异常", e);
+				boolean reDoWait = TimeAssist.reDoWait("tams-consumer", 8);
+				if (reDoWait) {
+					LoggerUtil.exit(JvmStatus.s15);// 达到了最大值，退出
+					throw new ProjectExceptionRuntime(ExceptAll.duckula_es_batch);
+				}
 			}
-		} catch (Throwable e) {
-			log.error("发送异常", e);
-			LoggerUtil.exit(JvmStatus.s15);
-			throw new ProjectExceptionRuntime(ExceptAll.duckula_es_batch);
 		}
 	}
 

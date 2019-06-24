@@ -139,15 +139,23 @@ public class ConsumerManager {
 				@Override
 				public String getStr(String taskOnlineId) {
 					Task buidlTask = ZkUtil.buidlTask(taskOnlineId);
-					return buidlTask.getImageVersion();
+					if(buidlTask==null) {
+						return "找不到关联的task";
+					}else {
+						return buidlTask.getImageVersion();
+					}
 				}
 			};
 			
 			IConvertValue<String> namespaceConv = new IConvertValue<String>() {
 				@Override
 				public String getStr(String taskOnlineId) {
-					Task buidlTask = ZkUtil.buidlTask(taskOnlineId);
-					return buidlTask.getNamespace();
+					Task buidlTask = ZkUtil.buidlTask(taskOnlineId);					
+					if(buidlTask==null) {
+						return "找不到关联的task";
+					}else {
+						return buidlTask.getNamespace();
+					}					
 				}
 			};
 			Map<String, IConvertValue<String>> convertsMap = new HashMap<>();
