@@ -199,7 +199,9 @@ public class DuckulaContext {
 			}
 			// 合并
 			Map<String, SortedSet<ColHis>> buildCols = ZkUtil.buildCols(buildInstalName(), this.task);
-			if (!buildCols.get(key).contains(retobj)) {
+			if(buildCols.get(key)==null) {
+				ZkUtil.updateCols(buildInstalName(), key, templist);
+			}else if (buildCols.get(key).contains(retobj)) {
 				templist.addAll(buildCols.get(key));
 				ZkUtil.updateCols(buildInstalName(), key, templist);
 			}
