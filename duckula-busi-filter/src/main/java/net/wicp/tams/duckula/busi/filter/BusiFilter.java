@@ -1,23 +1,27 @@
 package net.wicp.tams.duckula.busi.filter;
 
 import java.io.File;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang3.ArrayUtils;
 
 import lombok.extern.slf4j.Slf4j;
 import net.wicp.tams.common.Conf;
 import net.wicp.tams.common.apiext.IOUtil;
 import net.wicp.tams.common.apiext.NumberUtil;
+import net.wicp.tams.common.apiext.jdbc.JdbcAssit;
 import net.wicp.tams.common.constant.OptType;
 import net.wicp.tams.common.constant.StrPattern;
 import net.wicp.tams.common.exception.ExceptAll;
 import net.wicp.tams.common.exception.ProjectException;
+import net.wicp.tams.common.jdbc.DruidAssit;
 import net.wicp.tams.duckula.plugin.beans.DuckulaPackage;
 import net.wicp.tams.duckula.plugin.beans.Rule;
 import net.wicp.tams.duckula.plugin.busi.IBusi;
@@ -25,26 +29,37 @@ import net.wicp.tams.duckula.plugin.busi.IBusi;
 @Slf4j
 public class BusiFilter implements IBusi {
 
-	private String[][] filterRules;
+	// private String[][] filterRules;
+	// key:库名|表名 value:key:字段名 value[0]模式 value[1]模式值
+	private Map<String, Map<String, String[]>> filterRules = new HashMap<String, Map<String, String[]>>();
+	private final String db_tb_formart = "%s|%s";
 
-	@SuppressWarnings({ "unchecked" })
 	public BusiFilter() {
-		Properties props = IOUtil.fileToProperties(new File(
-				IOUtil.mergeFolderAndFilePath(System.getenv("DUCKULA_DATA"), "/conf/plugin/duckula-busi-filter.properties")));
+		Properties props = IOUtil.fileToProperties(new File(IOUtil.mergeFolderAndFilePath(System.getenv("DUCKULA_DATA"),
+				"/conf/plugin/duckula-busi-filter.properties")));
 		Conf.overProp(props);
-		Map<String, String> propmap = Conf.getPre("duckula.busi.filter.filtered", true);
-
-		List<String> keys = (List<String>) CollectionUtils.select(propmap.keySet(), new Predicate() {
-			@Override
-			public boolean evaluate(Object object) {
-				String key = String.valueOf(object);
-				return StrPattern.checkStrFormat("^key[0-9]*$", key);
+		Map<String, String> propmap = Conf.getPre("duckula.busi.filter", true);
+		for (String key : propmap.keySet()) {
+			String[] tempKeyAry = key.split("\\.");// 库、表、字段、模式
+			String db_tb = String.format(db_tb_formart, tempKeyAry[0], tempKeyAry[1]);
+			Map<String, String[]> tempmap = filterRules.get(db_tb);
+			if (tempmap == null) {
+				tempmap = new HashMap<String, String[]>();
+				filterRules.put(db_tb, tempmap);
 			}
-		});
-		filterRules = new String[keys.size()][2];
-		for (int i = 0; i < keys.size(); i++) {
-			String key = keys.get(i);
-			filterRules[i] = new String[] { propmap.get(key), propmap.get(key + ".pattern") };
+
+			Pattern pattern = Pattern.valueOf(tempKeyAry[3]);
+			String value = propmap.get(key);
+			switch (pattern) {
+			case regular:
+				break;
+			case sql:
+				break;
+			default:
+				break;
+			}
+			tempmap.put(tempKeyAry[2], new String[] { pattern.name(), value });
+
 		}
 		log.info("---------------------初始化完成-----------------------");
 	}
@@ -52,21 +67,58 @@ public class BusiFilter implements IBusi {
 	@Override
 	public void doWith(DuckulaPackage duckulaPackage, Rule rule) throws ProjectException {
 		List<Integer> remove = new ArrayList<>();
-		for (String[] filterRule : filterRules) {
-			int indexOf = ArrayUtils.indexOf(duckulaPackage.getEventTable().getCols(), filterRule[0]);
-			if (indexOf >= 0) {
-				String[][] valuestrue = OptType.delete == duckulaPackage.getEventTable().getOptType()
-						? duckulaPackage.getBefores()
-						: duckulaPackage.getAfters();
+		Map<String, String[]> filters = filterRules.get(String.format(db_tb_formart,
+				duckulaPackage.getEventTable().getDb(), duckulaPackage.getEventTable().getTb()));
+		if (filters != null) {
+			String[][] valuestrue = OptType.delete == duckulaPackage.getEventTable().getOptType()
+					? duckulaPackage.getBefores()
+					: duckulaPackage.getAfters();
+
+			for (String col : filters.keySet()) {
+				int indexOf = "_".equals(col) ? -2 : ArrayUtils.indexOf(duckulaPackage.getEventTable().getCols(), col);//
+				String[] vals = filters.get(col);
+				Pattern pattern = Pattern.valueOf(vals[0]);
+				String value = vals[1];
 				for (int i = 0; i < valuestrue.length; i++) {
 					String[] values = valuestrue[i];
-					boolean checkResult = StrPattern.checkStrFormat(filterRule[1], values[indexOf]);
-					if (!checkResult) {
-						remove.add(i);
+					switch (pattern) {
+					case regular:
+						boolean checkResult = StrPattern.checkStrFormat(value, values[indexOf]);
+						if (!checkResult) {
+							remove.add(i);
+						}
+						break;
+					case sql:
+						String[] colNameFormSql = getColNameFormSql(value);
+						String sql = value;
+						for (String tempCol : colNameFormSql) {
+							sql = sql.replace(String.format("${%s}", tempCol), "?");
+						}
+						String[] queryParams = new String[colNameFormSql.length];
+						for (int j = 0; j < colNameFormSql.length; j++) {
+							int indexOf2 = ArrayUtils.indexOf(duckulaPackage.getEventTable().getCols(),
+									colNameFormSql[j]);
+							queryParams[j] = values[indexOf2];
+						}
+						try {
+							Connection conn = DruidAssit.getInst().getConnection();
+							PreparedStatement prst = conn.prepareStatement(sql);
+							JdbcAssit.setPreParam(prst, queryParams);
+							ResultSet rs = prst.executeQuery();
+							if (!rs.next()) {
+								remove.add(i);
+							}
+						} catch (Exception e) {
+							log.error("查询error", e);
+						}
+						break;
+					default:
+						break;
 					}
 				}
 			}
 		}
+
 		int[] array = NumberUtil.toArray(remove);
 		if (array.length > 0) {
 			if (duckulaPackage.getBefores() != null) {
@@ -85,4 +137,26 @@ public class BusiFilter implements IBusi {
 			}
 		}
 	}
+
+	private String[] getColNameFormSql(String sql) {
+		List<String> retlist = new ArrayList<String>();
+		int i = 0;
+		while (true) {
+			int j = sql.indexOf("${", i);
+			if (j > 0) {
+				int k = sql.indexOf("}", j);
+				String temp = sql.substring(j + 2, k);
+				i = k + 1;
+				retlist.add(temp);
+			} else {
+				break;
+			}
+		}
+		return retlist.toArray(new String[retlist.size()]);
+	}
+	/*
+	 * public static void main(String[] args) { String[] colNameFormSql =
+	 * getColNameFormSql("select 1 from athena.t_preinvoice where PRE_INVOICE_ID=${PRE_INVOICE_ID} and abc=${ddd} and SELLER_TENANT_CODE='Walmart' limit 1"
+	 * ); System.out.println(colNameFormSql); }
+	 */
 }
