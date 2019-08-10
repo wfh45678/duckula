@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -22,6 +24,7 @@ import net.wicp.tams.common.constant.StrPattern;
 import net.wicp.tams.common.exception.ExceptAll;
 import net.wicp.tams.common.exception.ProjectException;
 import net.wicp.tams.common.jdbc.DruidAssit;
+import net.wicp.tams.common.thread.ThreadPool;
 import net.wicp.tams.duckula.plugin.beans.DuckulaPackage;
 import net.wicp.tams.duckula.plugin.beans.Rule;
 import net.wicp.tams.duckula.plugin.busi.IBusi;
@@ -47,7 +50,6 @@ public class BusiFilter implements IBusi {
 				tempmap = new HashMap<String, String[]>();
 				filterRules.put(db_tb, tempmap);
 			}
-
 			Pattern pattern = Pattern.valueOf(tempKeyAry[3]);
 			String value = propmap.get(key);
 			switch (pattern) {
@@ -79,42 +81,27 @@ public class BusiFilter implements IBusi {
 				String[] vals = filters.get(col);
 				Pattern pattern = Pattern.valueOf(vals[0]);
 				String value = vals[1];
+				final CountDownLatch latch = new CountDownLatch(valuestrue.length);
 				for (int i = 0; i < valuestrue.length; i++) {
-					String[] values = valuestrue[i];
-					switch (pattern) {
-					case regular:
-						boolean checkResult = StrPattern.checkStrFormat(value, values[indexOf]);
-						if (!checkResult) {
-							remove.add(i);
-						}
-						break;
-					case sql:
-						String[] colNameFormSql = getColNameFormSql(value);
-						String sql = value;
-						for (String tempCol : colNameFormSql) {
-							sql = sql.replace(String.format("${%s}", tempCol), "?");
-						}
-						String[] queryParams = new String[colNameFormSql.length];
-						for (int j = 0; j < colNameFormSql.length; j++) {
-							int indexOf2 = ArrayUtils.indexOf(duckulaPackage.getEventTable().getCols(),
-									colNameFormSql[j]);
-							queryParams[j] = values[indexOf2];
-						}
-						try {
-							Connection conn = DruidAssit.getInst().getConnection();
-							PreparedStatement prst = conn.prepareStatement(sql);
-							JdbcAssit.setPreParam(prst, queryParams);
-							ResultSet rs = prst.executeQuery();
-							if (!rs.next()) {
-								remove.add(i);
+					final int index = i;
+					ThreadPool.getDefaultPool().submit(new Runnable() {
+						@Override
+						public void run() {
+							try {
+								filter(duckulaPackage, remove, valuestrue, indexOf, pattern, value, index);
+							} catch (Exception e) {
+								log.error("过滤失败:"+duckulaPackage.getEventTable().getTb()+":"+ valuestrue[index][0], e);
+							} finally {
+								latch.countDown();
 							}
-						} catch (Exception e) {
-							log.error("查询error", e);
 						}
-						break;
-					default:
-						break;
-					}
+					});
+				}
+				try {
+					// latch.await(60, TimeUnit.SECONDS);
+					latch.await();
+				} catch (InterruptedException e) {
+					log.error("等待CountDownLatch超时", e);
 				}
 			}
 		}
@@ -135,6 +122,58 @@ public class BusiFilter implements IBusi {
 				}
 				duckulaPackage.setAfters(valuesTrue);
 			}
+		}
+	}
+
+	private void filter(DuckulaPackage duckulaPackage, List<Integer> remove, String[][] valuestrue, int indexOf,
+			Pattern pattern, String value, int i) {
+		String[] values = valuestrue[i];
+		switch (pattern) {
+		case regular:
+			boolean checkResult = StrPattern.checkStrFormat(value, values[indexOf]);
+			if (!checkResult) {
+				remove.add(i);
+			}
+			break;
+		case sql:
+			String[] colNameFormSql = getColNameFormSql(value);
+			String sql = value;
+			for (String tempCol : colNameFormSql) {
+				sql = sql.replace(String.format("${%s}", tempCol), "?");
+			}
+			String[] queryParams = new String[colNameFormSql.length];
+			for (int j = 0; j < colNameFormSql.length; j++) {
+				int indexOf2 = ArrayUtils.indexOf(duckulaPackage.getEventTable().getCols(), colNameFormSql[j]);
+				queryParams[j] = values[indexOf2];
+			}
+			Connection conn = null;
+			PreparedStatement prst = null;
+			try {
+				conn = DruidAssit.getInst().getConnection();
+				prst = conn.prepareStatement(sql);
+				JdbcAssit.setPreParam(prst, queryParams);
+				ResultSet rs = prst.executeQuery();
+				if (!rs.next()) {
+					remove.add(i);
+				}
+				rs.close();
+			} catch (Exception e) {
+				log.error("查询error", e);
+			} finally {
+				try {
+					if (prst != null) {
+						prst.close();
+					}
+					if (conn != null) {
+						conn.close();
+					}
+				} catch (Exception e2) {
+					log.error("close conn error", e2);
+				}
+			}
+			break;
+		default:
+			break;
 		}
 	}
 
