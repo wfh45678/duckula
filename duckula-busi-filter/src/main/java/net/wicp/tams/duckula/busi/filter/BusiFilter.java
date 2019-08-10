@@ -98,8 +98,8 @@ public class BusiFilter implements IBusi {
 					});
 				}
 				try {
-					// latch.await(60, TimeUnit.SECONDS);
-					latch.await();
+					latch.await(120, TimeUnit.SECONDS);
+					//latch.await();
 				} catch (InterruptedException e) {
 					log.error("等待CountDownLatch超时", e);
 				}
