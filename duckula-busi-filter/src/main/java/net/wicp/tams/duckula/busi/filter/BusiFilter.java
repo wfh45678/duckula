@@ -17,7 +17,6 @@ import org.apache.commons.lang3.ArrayUtils;
 import lombok.extern.slf4j.Slf4j;
 import net.wicp.tams.common.Conf;
 import net.wicp.tams.common.apiext.IOUtil;
-import net.wicp.tams.common.apiext.NumberUtil;
 import net.wicp.tams.common.apiext.StringUtil;
 import net.wicp.tams.common.apiext.jdbc.JdbcAssit;
 import net.wicp.tams.common.constant.OptType;
@@ -69,23 +68,28 @@ public class BusiFilter implements IBusi {
 
 	@Override
 	public void doWith(DuckulaPackage duckulaPackage, Rule rule) throws ProjectException {
-		List<Integer> remove = new ArrayList<>();
+		// List<Integer> remove = new ArrayList<>();
+		Map<Integer, Boolean> remove = new HashMap<Integer, Boolean>();
+		// Map<Integer, Boolean> remove = new ConcurrentHashMap<Integer, Boolean>();
 		Map<String, String[]> filters = filterRules.get(String.format(db_tb_formart,
 				duckulaPackage.getEventTable().getDb(), duckulaPackage.getEventTable().getTb()));
 		if (filters != null) {
 			String[][] valuestrue = OptType.delete == duckulaPackage.getEventTable().getOptType()
 					? duckulaPackage.getBefores()
 					: duckulaPackage.getAfters();
-
 			for (String col : filters.keySet()) {
+				// remove.clear();如果有多个过滤条件，是叠加，不要clear
 				int indexOf = "_".equals(col) ? -2 : ArrayUtils.indexOf(duckulaPackage.getEventTable().getCols(), col);//
 				String[] vals = filters.get(col);
 				Pattern pattern = Pattern.valueOf(vals[0]);
 				String value = vals[1];
 				final CountDownLatch latch = new CountDownLatch(valuestrue.length);
 				for (int i = 0; i < valuestrue.length; i++) {
+					filter(duckulaPackage, remove, valuestrue, indexOf, pattern, value, i);
+					// log.info("filter 后:{},i:{}",remove.size(),i);
 					final int index = i;
 					ThreadPool.getDefaultPool().submit(new Runnable() {
+
 						@Override
 						public void run() {
 							try {
@@ -100,41 +104,58 @@ public class BusiFilter implements IBusi {
 					});
 				}
 				try {
-					latch.await(240, TimeUnit.SECONDS);
-					// latch.await();
+					latch.await(240, TimeUnit.SECONDS); // latch.await();
+					// log.info("remove:" + remove.size());
 				} catch (InterruptedException e) {
 					log.error("等待CountDownLatch超时", e);
 				}
+
 			}
 		}
 
-		int[] array = NumberUtil.toArray(remove);
-		if (array.length > 0) {
+		if (remove.size() > 0) {
+			int[] array = new int[remove.size()]; // remove.keySet() .toArray(new Integer[remove.size()]);
+			int tempindex = 0;
+			for (Integer i : remove.keySet()) {
+				array[tempindex++] = i.intValue();
+			}
+			boolean isnull = false;
 			if (ArrayUtils.isNotEmpty(duckulaPackage.getBefores())) {
+				int tempsize = duckulaPackage.getBefores().length;
 				String[][] valuesTrue = ArrayUtils.removeAll(duckulaPackage.getBefores(), array);
-				if (valuesTrue.length == 0) {
-					throw new ProjectException(ExceptAll.duckula_nodata, "过滤后没有数据");
-				}
+				// log.info("before:{},remove:{},valuesTrue:{}", tempsize, array.length,
+				// valuesTrue.length);
 				duckulaPackage.setBefores(valuesTrue);
+				if (valuesTrue.length == 0) {
+					isnull = true;
+					// throw new ProjectException(ExceptAll.duckula_nodata, "过滤后没有数据");
+				}
 			}
 			if (ArrayUtils.isNotEmpty(duckulaPackage.getAfters())) {
+				int tempsize = duckulaPackage.getAfters().length;
 				String[][] valuesTrue = ArrayUtils.removeAll(duckulaPackage.getAfters(), array);
-				if (valuesTrue.length == 0) {
-					throw new ProjectException(ExceptAll.duckula_nodata, "过滤后没有数据");
-				}
+				// log.info("after:{},remove:{},valuesTrue:{}", tempsize, array.length,
+				// valuesTrue.length);
 				duckulaPackage.setAfters(valuesTrue);
+				if (valuesTrue.length == 0) {
+					isnull = true;
+					// throw new ProjectException(ExceptAll.duckula_nodata, "过滤后没有数据");
+				}
+			}
+			if (isnull) {
+				throw new ProjectException(ExceptAll.duckula_nodata, "过滤后没有数据");
 			}
 		}
 	}
 
-	private void filter(DuckulaPackage duckulaPackage, List<Integer> remove, String[][] valuestrue, int indexOf,
+	private void filter(DuckulaPackage duckulaPackage, Map<Integer, Boolean> remove, String[][] valuestrue, int indexOf,
 			Pattern pattern, String value, int i) {
 		String[] values = valuestrue[i];
 		switch (pattern) {
 		case regular:
 			boolean checkResult = StrPattern.checkStrFormat(value, values[indexOf]);
 			if (!checkResult) {
-				remove.add(i);
+				remove.put(i, true);
 			}
 			break;
 		case sql:
@@ -146,10 +167,10 @@ public class BusiFilter implements IBusi {
 			String[] queryParams = new String[colNameFormSql.length];
 			for (int j = 0; j < colNameFormSql.length; j++) {
 				int indexOf2 = ArrayUtils.indexOf(duckulaPackage.getEventTable().getCols(), colNameFormSql[j]);
-				if(StringUtil.isNull(values[indexOf2])) {//20190813 如果有值为空就直接过滤
-					remove.add(i);
+				if (StringUtil.isNull(values[indexOf2])) {// 20190813 如果有值为空就直接过滤
+					remove.put(i, true);
 					return;
-				}else {
+				} else {
 					queryParams[j] = values[indexOf2];
 				}
 			}
@@ -161,7 +182,10 @@ public class BusiFilter implements IBusi {
 				JdbcAssit.setPreParam(prst, queryParams);
 				ResultSet rs = prst.executeQuery();
 				if (!rs.next()) {
-					remove.add(i);
+					remove.put(i, true);
+					// log.info("remo:{}", i);
+				} else {
+					log.info("need send:{},remove:{}", i, remove.size());
 				}
 				rs.close();
 			} catch (Exception e) {

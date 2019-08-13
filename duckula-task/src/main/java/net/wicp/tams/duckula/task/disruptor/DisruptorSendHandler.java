@@ -9,6 +9,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.commons.lang3.ArrayUtils;
+
 import com.alibaba.fastjson.JSONObject;
 import com.lmax.disruptor.EventHandler;
 
@@ -116,13 +118,16 @@ public class DisruptorSendHandler implements EventHandler<EventPackage> {
 			Main.context.setSendXid(event.getXid());// 不能在此处判断 overXid是否相等而关闭虚拟机，因为它会比 setOverXid先执行。
 			return;
 		}
+		// log.info("send
+		// status:{},record:{}",event.isOver(),ArrayUtils.isEmpty(event.getAfters())?"":event.getAfters()[0][0]);
 		if (event.isOver()) {// 处理的时候出现问题或无需处理，一般为业务处理失败
 			if (curPos != null) {
 				Main.context.setPos(curPos);
 				updatePos(event, false);// 20190813 没有记录也得更新位点
-				return;
 			}
+			return;
 		}
+		// log.info("send:{}", event.getRowsNum());
 		// 真正发送
 		int sendNum = 0;
 		if (isSync) {

@@ -42,8 +42,9 @@ public class DisruptorHandler implements WorkHandler<EventPackage> {
 		if (event.getXid() > 0 || busi == null) {
 			return;
 		}
+		event.setOver(false);
 		try {
-			this.busi.doWith(event, event.getRule());
+			this.busi.doWith(event, event.getRule());			
 		} catch (ProjectException e) {
 			event.setOver(true);
 			if (e.getExcept() != ExceptAll.duckula_nodata) {
