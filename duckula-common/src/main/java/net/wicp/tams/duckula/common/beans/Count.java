@@ -15,6 +15,7 @@ public class Count {
 	private long insertNum;
 	private long updateNum;
 	private long deleteNum;
+	private long filterNum;
 
 	private long allPack;
 
@@ -28,12 +29,13 @@ public class Count {
 	public Count() {
 	}
 
-	public Count(long insertNum, long updateNum, long deleteNum, long allPack, long parserPack, long parserEvent,
-			long sendEvent, long ringbuffPack, long ringbuffEvent) {
+	public Count(long insertNum, long updateNum, long deleteNum, long filterNum, long allPack, long parserPack,
+			long parserEvent, long sendEvent, long ringbuffPack, long ringbuffEvent) {
 		super();
 		this.insertNum = insertNum;
 		this.updateNum = updateNum;
 		this.deleteNum = deleteNum;
+		this.filterNum = filterNum;
 		this.allPack = allPack;
 		this.parserPack = parserPack;
 		this.parserEvent = parserEvent;

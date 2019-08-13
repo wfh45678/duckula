@@ -8,6 +8,7 @@ public class CountShow {
 	private long insertNum;
 	private long updateNum;
 	private long deleteNum;
+	private long filterNum;
 
 	private long allPack;
 

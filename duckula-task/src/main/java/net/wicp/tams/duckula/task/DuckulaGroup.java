@@ -25,6 +25,9 @@ public class DuckulaGroup extends TsMetricAbstractGroup {
 
 	// 新增记录数
 	public final Meter meter_sender_event_add = newMeter(this.getClass(), "meter_sender_event_add");
+	
+	// 过滤记录数
+	public final Meter meter_sender_event_filter = newMeter(this.getClass(), "meter_sender_event_filter");
 
 	// 删除记录数
 	public final Meter meter_sender_event_del = newMeter(this.getClass(), "meter_sender_event_del");

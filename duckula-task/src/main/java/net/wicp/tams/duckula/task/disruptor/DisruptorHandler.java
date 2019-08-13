@@ -11,6 +11,7 @@ import net.wicp.tams.common.exception.ProjectException;
 import net.wicp.tams.duckula.plugin.pluginAssit;
 import net.wicp.tams.duckula.plugin.busi.BusiAssit;
 import net.wicp.tams.duckula.plugin.busi.IBusi;
+import net.wicp.tams.duckula.task.DuckulaGroup;
 import net.wicp.tams.duckula.task.Main;
 import net.wicp.tams.duckula.task.bean.EventPackage;
 
@@ -47,6 +48,9 @@ public class DisruptorHandler implements WorkHandler<EventPackage> {
 			event.setOver(true);
 			if (e.getExcept() != ExceptAll.duckula_nodata) {
 				log.error("处理时异常", e);
+			} else {
+				// 过滤数据
+				Main.metric.meter_sender_event_filter.mark(event.getRowsNum());
 			}
 		} catch (Throwable e) {
 			log.error("未知的异常", e);

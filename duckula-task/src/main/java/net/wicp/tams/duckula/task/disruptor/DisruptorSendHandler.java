@@ -56,7 +56,8 @@ public class DisruptorSendHandler implements EventHandler<EventPackage> {
 			serializerPlugin = pluginAssit.newPlugin(
 					IOUtil.mergeFolderAndFilePath(rootDir.getPath(),
 							Main.context.getTask().getSerializerEnum().getPluginJar()),
-					"net.wicp.tams.duckula.plugin.serializer.ISerializer", classLoader, "net.wicp.tams.duckula.plugin.serializer.ISerializer");
+					"net.wicp.tams.duckula.plugin.serializer.ISerializer", classLoader,
+					"net.wicp.tams.duckula.plugin.serializer.ISerializer");
 			Thread.currentThread().setContextClassLoader(serializerPlugin.getLoad().getClassLoader());// 需要加载前设置好classload
 			this.serialize = SerializerAssit.loadSerialize(serializerPlugin);
 		} else {
@@ -75,7 +76,7 @@ public class DisruptorSendHandler implements EventHandler<EventPackage> {
 			LoggerUtil.exit(JvmStatus.s15);
 		}
 
-		if (!receive.isSync()) {//不是中间存储，是最终存储，现在只有ES
+		if (!receive.isSync()) {// 不是中间存储，是最终存储，现在只有ES
 			isSync = true;
 			exec = null;
 			ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
@@ -112,12 +113,13 @@ public class DisruptorSendHandler implements EventHandler<EventPackage> {
 				curPos.setIshalf(false);
 				Main.context.setPos(curPos);
 			}
-			Main.context.setSendXid(event.getXid());//不能在此处判断 overXid是否相等而关闭虚拟机，因为它会比 setOverXid先执行。
+			Main.context.setSendXid(event.getXid());// 不能在此处判断 overXid是否相等而关闭虚拟机，因为它会比 setOverXid先执行。
 			return;
 		}
 		if (event.isOver()) {// 处理的时候出现问题或无需处理，一般为业务处理失败
 			if (curPos != null) {
 				Main.context.setPos(curPos);
+				updatePos(event, false);// 20190813 没有记录也得更新位点
 				return;
 			}
 		}
@@ -128,15 +130,15 @@ public class DisruptorSendHandler implements EventHandler<EventPackage> {
 			while (true) {
 				long timeBegin = System.currentTimeMillis();
 				try {
-					Boolean retvalue = null;					
+					Boolean retvalue = null;
 					if (serialize == null) {
-						retvalue= receive.receiveMsg(event, event.getRule());
+						retvalue = receive.receiveMsg(event, event.getRule());
 					} else {
-						retvalue= receive.receiveMsg(serialize.serialize(event, event.getRule().getSplitKey()),
+						retvalue = receive.receiveMsg(serialize.serialize(event, event.getRule().getSplitKey()),
 								event.getRule());
 					}
 					if (retvalue != null && retvalue.booleanValue()) {
-						updatePos(event);
+						updatePos(event, true);
 						sendBeginTime = 0;// 不进入计时阶段
 						return;
 					} else if (sendNum < sendAll) {
@@ -147,7 +149,7 @@ public class DisruptorSendHandler implements EventHandler<EventPackage> {
 							log.error("总共发送[{}]次失败，发送内容[{}] 系统将停止此服务，在另一台机上重试发送", sendAll, event);
 							LoggerUtil.exit(JvmStatus.s15);
 						} else {
-							updatePos(event);
+							updatePos(event, true);
 							sendBeginTime = 0;
 							errorBinlog.error(curPos.toString());
 							return;
@@ -183,7 +185,7 @@ public class DisruptorSendHandler implements EventHandler<EventPackage> {
 				}
 
 				if (retvalue != null && retvalue.booleanValue()) {
-					updatePos(event);
+					updatePos(event, true);
 					break;
 				} else if (sendNum < sendAll) {
 					log.error("第[{}]次发送失败，等待时间：[{}].请联系相关人员。", sendNum, timeout);
@@ -193,7 +195,7 @@ public class DisruptorSendHandler implements EventHandler<EventPackage> {
 						log.error("总共发送[{}]次失败，发送内容[{}] 系统将停止此服务，在另一台机上重试发送", sendAll, event);
 						LoggerUtil.exit(JvmStatus.s15);
 					} else {
-						updatePos(event);
+						updatePos(event, true);
 						errorBinlog.error(curPos.toString());
 						break;
 					}
@@ -203,7 +205,7 @@ public class DisruptorSendHandler implements EventHandler<EventPackage> {
 
 	}
 
-	private void updatePos(final EventPackage event) {
+	private void updatePos(final EventPackage event, boolean suc) {
 		curPos = event.getPos();
 		Main.context.getPos().setFileName(event.getPos().getFileName());
 		Main.context.getPos().setPos(event.getPos().getPos());
@@ -216,22 +218,23 @@ public class DisruptorSendHandler implements EventHandler<EventPackage> {
 		Main.metric.meter_sender_pack.mark();
 		Main.metric.meter_sender_event.mark(event.getRowsNum());
 
-		switch (event.getEventTable().getOptType()) {
-		case insert:
-			Main.metric.meter_sender_event_add.mark(event.getRowsNum());
-			break;
+		if (suc) {
+			switch (event.getEventTable().getOptType()) {
+			case insert:
+				Main.metric.meter_sender_event_add.mark(event.getRowsNum());
+				break;
 
-		case delete:
-			Main.metric.meter_sender_event_del.mark(event.getRowsNum());
-			break;
+			case delete:
+				Main.metric.meter_sender_event_del.mark(event.getRowsNum());
+				break;
 
-		case update:
-			Main.metric.meter_sender_event_update.mark(event.getRowsNum());
-			break;
+			case update:
+				Main.metric.meter_sender_event_update.mark(event.getRowsNum());
+				break;
 
-		default:
-			break;
+			default:
+				break;
+			}
 		}
-
 	}
 }

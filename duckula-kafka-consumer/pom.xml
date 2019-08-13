@@ -63,6 +63,11 @@
 			<groupId>net.wicp.tams</groupId>
 			<artifactId>duckula-dev-client-protobuf3</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>net.wicp.tams</groupId>
+			<artifactId>common-apiext</artifactId>
+			<version>3.6.3</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<finalName>duckula-kafka-consumer</finalName>

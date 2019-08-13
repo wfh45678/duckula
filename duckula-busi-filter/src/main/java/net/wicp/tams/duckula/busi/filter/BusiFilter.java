@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.wicp.tams.common.Conf;
 import net.wicp.tams.common.apiext.IOUtil;
 import net.wicp.tams.common.apiext.NumberUtil;
+import net.wicp.tams.common.apiext.StringUtil;
 import net.wicp.tams.common.apiext.jdbc.JdbcAssit;
 import net.wicp.tams.common.constant.OptType;
 import net.wicp.tams.common.constant.StrPattern;
@@ -90,7 +91,8 @@ public class BusiFilter implements IBusi {
 							try {
 								filter(duckulaPackage, remove, valuestrue, indexOf, pattern, value, index);
 							} catch (Exception e) {
-								log.error("过滤失败:"+duckulaPackage.getEventTable().getTb()+":"+ valuestrue[index][0], e);
+								log.error("过滤失败:" + duckulaPackage.getEventTable().getTb() + ":" + valuestrue[index][0],
+										e);
 							} finally {
 								latch.countDown();
 							}
@@ -98,8 +100,8 @@ public class BusiFilter implements IBusi {
 					});
 				}
 				try {
-					latch.await(120, TimeUnit.SECONDS);
-					//latch.await();
+					latch.await(240, TimeUnit.SECONDS);
+					// latch.await();
 				} catch (InterruptedException e) {
 					log.error("等待CountDownLatch超时", e);
 				}
@@ -108,14 +110,14 @@ public class BusiFilter implements IBusi {
 
 		int[] array = NumberUtil.toArray(remove);
 		if (array.length > 0) {
-			if (duckulaPackage.getBefores() != null) {
+			if (ArrayUtils.isNotEmpty(duckulaPackage.getBefores())) {
 				String[][] valuesTrue = ArrayUtils.removeAll(duckulaPackage.getBefores(), array);
 				if (valuesTrue.length == 0) {
 					throw new ProjectException(ExceptAll.duckula_nodata, "过滤后没有数据");
 				}
 				duckulaPackage.setBefores(valuesTrue);
 			}
-			if (duckulaPackage.getAfters() != null) {
+			if (ArrayUtils.isNotEmpty(duckulaPackage.getAfters())) {
 				String[][] valuesTrue = ArrayUtils.removeAll(duckulaPackage.getAfters(), array);
 				if (valuesTrue.length == 0) {
 					throw new ProjectException(ExceptAll.duckula_nodata, "过滤后没有数据");
@@ -144,7 +146,12 @@ public class BusiFilter implements IBusi {
 			String[] queryParams = new String[colNameFormSql.length];
 			for (int j = 0; j < colNameFormSql.length; j++) {
 				int indexOf2 = ArrayUtils.indexOf(duckulaPackage.getEventTable().getCols(), colNameFormSql[j]);
-				queryParams[j] = values[indexOf2];
+				if(StringUtil.isNull(values[indexOf2])) {//20190813 如果有值为空就直接过滤
+					remove.add(i);
+					return;
+				}else {
+					queryParams[j] = values[indexOf2];
+				}
 			}
 			Connection conn = null;
 			PreparedStatement prst = null;

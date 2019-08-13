@@ -33,28 +33,29 @@
 	<properties>
 		<java.version>1.8</java.version>
 		<autoconfig.path>${user.home}/antx-config/${devModel}</autoconfig.path>
-		<common.apiext.version>3.5.15</common.apiext.version>
-		<common.connector.version>3.5.11</common.connector.version>
-		<common.http.version>3.5.7</common.http.version>
-		<common.metrics.version>3.5.14</common.metrics.version>
+		<common.apiext.version>3.6.3</common.apiext.version>
+		<common.connector.version>3.6.3</common.connector.version>
+		<common.http.version>3.6.0</common.http.version>
+		<common.metrics.version>3.6.3</common.metrics.version>
 		<common.micro.version>4.0.0</common.micro.version>
-		<common.spring.version>3.5.12</common.spring.version>
-		<common.others.version>3.5.9</common.others.version>
-		<common.web.version>3.5.9</common.web.version>
-		<common.grpc.version>3.5.4</common.grpc.version>
-		<common.binlog.version>3.5.0</common.binlog.version>
-		<common.binlog.self.version>3.5.0</common.binlog.self.version>
-		<common.tracer.version>3.5.0</common.tracer.version>
-		<common.hadoop.version>3.5.0</common.hadoop.version>
-		<common.scala.version>3.5.0</common.scala.version>
-		<common.jdbc.version>3.5.11</common.jdbc.version>
-		<common.os.version>3.5.11</common.os.version>
-		<common.redis.version>3.5.11</common.redis.version>
-		<common.es.client.version>3.5.11</common.es.client.version>
-		<common.kubernetes.version>3.5.9</common.kubernetes.version>
-
-		<common.binlog.alone.version>3.5.14</common.binlog.alone.version>
-		<common.flink.source.binlog.version>3.5.14</common.flink.source.binlog.version>
+		<common.spring.version>3.6.1</common.spring.version>
+		<common.others.version>3.6.0</common.others.version>
+		<common.web.version>3.6.0</common.web.version>
+		<common.grpc.version>3.6.0</common.grpc.version>
+		<common.binlog.version>3.6.0</common.binlog.version>
+		<common.binlog.self.version>3.6.0</common.binlog.self.version>
+		<common.tracer.version>3.6.0</common.tracer.version>
+		<common.hadoop.version>3.6.0</common.hadoop.version>
+		<common.scala.version>3.6.0</common.scala.version>
+		<common.jdbc.version>3.6.3</common.jdbc.version>
+		<common.os.version>3.6.0</common.os.version>
+		<common.redis.version>3.6.3</common.redis.version>
+		<common.es.client.version>3.6.0</common.es.client.version>
+		<common.kubernetes.version>3.6.0</common.kubernetes.version>
+		<common.binlog.alone.version>3.6.3</common.binlog.alone.version>
+		<common.flink.source.binlog.version>3.6.3</common.flink.source.binlog.version>
+		<common.flink.sink.influxdb.version>3.6.3</common.flink.sink.influxdb.version>
+		<common.spring.autoconfig.version>3.6.3</common.spring.autoconfig.version>
 		<!-- 与parent不同 -->
 		<log4j.version>2.6.2</log4j.version>
 		<!-- dev版本 -->

@@ -232,6 +232,7 @@ public class Main {
 			Count.CountBuilder build = Count.builder().insertNum(metric.meter_sender_event_add.getCount());
 			build.updateNum(metric.meter_sender_event_update.getCount());
 			build.deleteNum(metric.meter_sender_event_del.getCount());
+			build.filterNum(metric.meter_sender_event_filter.getCount());
 			build.allPack(metric.meter_parser_pack_all.getCount());
 			build.parserPack(metric.meter_parser_pack_row.getCount());
 			build.parserEvent(metric.meter_parser_event.getCount());
