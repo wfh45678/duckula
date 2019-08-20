@@ -33,13 +33,13 @@
 	<properties>
 		<java.version>1.8</java.version>
 		<autoconfig.path>${user.home}/antx-config/${devModel}</autoconfig.path>
-		<common.apiext.version>3.6.3</common.apiext.version>
+		<common.apiext.version>3.6.4</common.apiext.version>
 		<common.connector.version>3.6.3</common.connector.version>
 		<common.http.version>3.6.0</common.http.version>
 		<common.metrics.version>3.6.3</common.metrics.version>
 		<common.micro.version>4.0.0</common.micro.version>
 		<common.spring.version>3.6.1</common.spring.version>
-		<common.others.version>3.6.0</common.others.version>
+		<common.others.version>3.6.4</common.others.version>
 		<common.web.version>3.6.0</common.web.version>
 		<common.grpc.version>3.6.0</common.grpc.version>
 		<common.binlog.version>3.6.0</common.binlog.version>
@@ -55,7 +55,7 @@
 		<common.binlog.alone.version>3.6.3</common.binlog.alone.version>
 		<common.flink.source.binlog.version>3.6.3</common.flink.source.binlog.version>
 		<common.flink.sink.influxdb.version>3.6.3</common.flink.sink.influxdb.version>
-		<common.spring.autoconfig.version>3.6.3</common.spring.autoconfig.version>
+		<common.spring.autoconfig.version>3.6.4</common.spring.autoconfig.version>
 		<!-- 与parent不同 -->
 		<log4j.version>2.6.2</log4j.version>
 		<!-- dev版本 -->

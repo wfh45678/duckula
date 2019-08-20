@@ -56,13 +56,14 @@ public class ReceiveKafka extends ReceiveAbs {
 		final CountDownLatch latch = new CountDownLatch(duckulaPackage.getRowsNum());
 		for (int i = 0; i < duckulaPackage.getRowsNum(); i++) {
 			Map<String, Map<String, String>> dataMap = pluginAssit.getAllData(duckulaPackage, i);
-			String splitValue = dataMap.get(dataMap.containsKey(pluginAssit.colAfter) ? pluginAssit.colAfter : pluginAssit.colBefore)
+			String splitValue = dataMap
+					.get(dataMap.containsKey(pluginAssit.colAfter) ? pluginAssit.colAfter : pluginAssit.colBefore)
 					.get(splitKey);
 			final String key = String.format("%s|%s|%s", splitValue, duckulaPackage.getEventTable().getDb(),
 					duckulaPackage.getEventTable().getTb());
 			try {
 				ProducerRecord<String, byte[]> message = new ProducerRecord<String, byte[]>(topic,
-						partitions < 2 ? 0 : partition(splitValue, partitions), key,
+						partitions < 2 ? 0 : Math.abs(partition(splitValue, partitions)), key,
 						JSONObject.toJSONString(dataMap).getBytes("UTF-8"));
 				producer.send(message, new Callback() {
 					@Override
