@@ -35,8 +35,8 @@ userconfig:
       common.http.connpool.defaultconn.connecttimeout=50000
       common.http.connpool.defaultconn.requesttimeout=50000
       #阿里云
-      common.others.aliyun.server.accesskey=LTAIwzNMCeiZDmtx
-      common.others.aliyun.server.secretkey=tZummSzWVeQ86ZRckX4ocYBkwx71XA
+      common.others.aliyun.server.accesskey=abc
+      common.others.aliyun.server.secretkey=edf
       duckula.ops.listener.enable=false
       #ssh代理
       common.apiext.ssh.host=ssh-jump
