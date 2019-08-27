@@ -24,7 +24,9 @@ public enum ZkPath {
 
 	consumers("kafka监听任务"),
 
-	busiplugins("业务插件");
+	busiplugins("业务插件"),
+	
+	filter("过滤配置");
 
 	private final String desc;
 	// private final String path;

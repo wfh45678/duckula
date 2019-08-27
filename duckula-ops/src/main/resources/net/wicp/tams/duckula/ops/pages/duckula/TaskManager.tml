@@ -8,7 +8,7 @@
 <body>
    <r:query id="q"  qBlock="query" queryUrl="/duckula/taskManager:query" uBlock="save"   saveUrl="/duckula/taskManager:save" deleteUrl="/duckula/taskManager:del" opFormatter="showopt" 
         columns="[[{field:'id',width:250,title:'任务ID'},{field:'senderEnum1',width:80,title:'发送者'}, {field:'ip',width:300,title:'数据库'},{field:'rules',width:400,title:'规则模式'},${ColDifferent},{field:'op',width:350,title:'操作'}]]" 
-        dialogStyle="width:800px;height:600px;" initAddHandle="initAdd" saveCheckHandle="saveCheck" pagination="false"/>
+        dialogStyle="width:800px;height:580px;" initAddHandle="initAdd" saveCheckHandle="saveCheck" pagination="false"/>
    <t:block id="query">
        <table class="frame_table_list_4">
 		 <tr>
@@ -25,9 +25,7 @@
 			 	   <r:validatebox name="rules"/>
 			 	</td>
 			 	<td class="frame_table_list_4_righttext"></td>
-			 	<td>
-			 	   
-			 	</td>
+			 	<td></td>
 		 </tr>
 	  </table>
    </t:block>
@@ -45,7 +43,7 @@
 			      <tr>
 			         <td class="frame_table_list_2_righttext">任务Id</td>
 			         <td colspan="3">
-			            <r:validatebox name="id" style="width:650px;" required="true"/>
+			            <r:validatebox  id="update_taskId"  name="id" style="width:650px;" required="true"/>
 			            <input type="hidden" name="clientId"/>
 	                 </td>
 			 	  	
@@ -141,11 +139,11 @@
 			       <tr>
 			         <td class="frame_table_list_2_righttext">业务处理</td>
 			 	     <td>
-			 	      <r:comboboxenum id="busiClass_save"  name="busiEnum" enumClass="net.wicp.tams.duckula.common.constant.BusiEnum" required="true" changeHandle="changeBusi"></r:comboboxenum>
+			 	         <r:comboboxenum id="busiClass_save"  name="busiEnum" enumClass="net.wicp.tams.duckula.common.constant.BusiEnum" required="true" changeHandle="changeBusi"></r:comboboxenum>
 			 	     </td>
 			 	  	 <td  name="otherbusi" class="frame_table_list_2_righttext">其它业务处理</td>
 			 	     <td name="otherbusi">
-			 	        <r:validatebox name="busiPluginDir" style="width:250px;" required="false"/>
+			 	        <r:validatebox id="busiPluginDir" name="busiPluginDir" style="width:250px;" required="false"/>			 	        
 			 	     </td>
 			      </tr>
 			      
@@ -158,13 +156,18 @@
 			       <tr>
 			         <td class="frame_table_list_2_righttext">备注</td>
 			         <td colspan="3">
-			            <input  name="remark" class="easyui-textbox" data-options="multiline:true,height:80,width:650"/>
+			            <input  name="remark" class="easyui-textbox" data-options="multiline:true,height:40,width:650"/>
 	                 </td>
 			      </tr>
 	 </table>
    </t:block>
 
    <r:dialogtree id="server_dialog" treeLoadUrl="/duckula/taskManager:QueryTree" title="指派服务器" width="600" sucHandle="doSuc" checkHandle="doCheck"></r:dialogtree>   
+   
+   <r:dialog id="inputFilter" title="请填写过滤规则" width="1150" height="520"  closable="true"   toolbar="[{'id':'saveFilterBut','iconCls':'icon-save','text':'保存','plain':true}]">
+      <input id="filterContext"  name="filterContext" class="easyui-textbox" data-options="multiline:true"  style="height:100%;width:100%"/>     
+   </r:dialog>
+   
 <script>
      var needServer=${needServer};
      function showopt(value,row,index){
@@ -261,7 +264,15 @@
      }
      
      function changeBusi(val){
-        if("custom"===val){
+        if("filter"==val){
+           $.rjzjh.opendialog2("inputFilter");
+           $('td[name="otherbusi"]').css({"visibility":"hidden"});
+           var taskId=$('#update_taskId').val();
+           $.post($.rjzjh.packurl('/duckula/taskManager:getFilter'),{'taskId':taskId},function(data){	
+	          $('#filterContext').textbox('setText',data);
+	       });
+           
+        }else if("custom"===val){
            $('td[name="otherbusi"]').css({"visibility":"visible"});
         }else{
            $('td[name="otherbusi"]').css({"visibility":"hidden"});
@@ -337,6 +348,18 @@
          $('tr[name="trdb"]').css({"visibility":"hidden"});//display:none
       }
    }
+   
+   $(function(){
+      $('#saveFilterBut').click(function(){
+          var filterContext= $('#filterContext').textbox('getText');
+          var taskId=$('#update_taskId').val();
+          $.post($.rjzjh.packurl('/duckula/taskManager:saveFilter'),{'filterContext':filterContext,'taskId':taskId},function(data){
+			  $('#inputFilter').dialog('close');
+	          $.rjzjh.opt(data);
+	      },'json');
+          
+      });      
+   });
 </script>
 </body>
 </html>

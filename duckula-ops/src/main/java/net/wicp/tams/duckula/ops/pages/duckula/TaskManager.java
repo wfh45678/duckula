@@ -17,6 +17,7 @@ import org.apache.tapestry5.json.JSONArray;
 import org.apache.tapestry5.services.Request;
 import org.apache.tapestry5.services.RequestGlobals;
 import org.apache.tapestry5.util.TextStreamResponse;
+import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.data.Stat;
 
 import com.alibaba.fastjson.JSONObject;
@@ -373,6 +374,21 @@ public class TaskManager {
 			curtime2 = new Date().getTime();
 		}
 		return TapestryAssist.getTextStreamResponse(ret);
+	}
+	
+	public TextStreamResponse onSaveFilter() throws KeeperException, InterruptedException {
+		String filterContext = request.getParameter("filterContext");
+		String taskId=request.getParameter("taskId");
+		System.out.println(filterContext);
+		ZkClient.getInst().createOrUpdateNode(ZkPath.filter.getPath(taskId),
+				filterContext);
+		return req.retSuccInfo("保存过滤成功");
+	}
+	
+	public TextStreamResponse onGetFilter() throws KeeperException, InterruptedException {
+		String taskId=request.getParameter("taskId");
+		String zkDataStr = ZkClient.getInst().getZkDataStr(ZkPath.filter.getPath(taskId));
+		return TapestryAssist.getTextStreamResponse(zkDataStr);
 	}
 
 	public TextStreamResponse onStopTask() {
