@@ -134,9 +134,9 @@ public class ServerManager {
 		};
 
 		String retstr = EasyUiAssist.getJsonForGrid(retlist,
-				new String[] { "ip", "name", "serverPort", "lockIp", "remark", "isInit", "useDocker","syncConfDate", "ip,taskNum",
+				new String[] { "ip", "name", "serverPort", "lockIp", "remark", "isInit", "useDocker","syncConfDate","os", "ip,taskNum",
 						"ip,tasktail" },
-				new IConvertValue[] { null, null, null, null, null, null, null,null, taskNum, taskDetail }, retlist.size());
+				new IConvertValue[] { null, null, null, null, null, null, null,null,null,taskNum, taskDetail }, retlist.size());
 		return TapestryAssist.getTextStreamResponse(retstr);
 	}
 

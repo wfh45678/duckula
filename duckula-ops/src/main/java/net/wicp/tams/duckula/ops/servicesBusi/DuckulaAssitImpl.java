@@ -1,10 +1,16 @@
 package net.wicp.tams.duckula.ops.servicesBusi;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -27,6 +33,7 @@ import net.wicp.tams.common.constant.dic.YesOrNo;
 import net.wicp.tams.common.os.bean.DockContainer;
 import net.wicp.tams.common.os.pool.SSHConnection;
 import net.wicp.tams.common.os.tools.DockerAssit;
+import net.wicp.tams.common.thread.ThreadPool;
 import net.wicp.tams.duckula.common.ConfUtil;
 import net.wicp.tams.duckula.common.ZkClient;
 import net.wicp.tams.duckula.common.ZkUtil;
@@ -356,7 +363,10 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 		if (server == null) {
 			return Result.getError("没有可用服务");
 		}
-		// TODO 写死linux系统
+		// 调试用
+		if (server.getOs() != null && server.getOs() == EPlatform.Windows) {
+			return startWindows(commandType, taskId);
+		}
 		int jmxPort = StringUtil.buildPort(commandType.name() + "_" + taskId);
 		SSHConnection conn = DuckulaUtils
 				.getConn(Host.builder().hostIp(server.getIp()).port(server.getServerPort()).build());
@@ -403,6 +413,41 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 			}
 		}
 		return result;
+	}
+
+	public Result startWindows(CommandType commandType, String taskId) {
+		String cmd = IOUtil.mergeFolderAndFilePath(System.getenv("DUCKULA_HOME"),
+				commandType.getBatchFile(EPlatform.Windows));
+		int jmxPort = StringUtil.buildPort(taskId);
+		String startCmd = String.format("cmd /c start %s %s %s", cmd, taskId, jmxPort);
+		try {
+			final Process ps = Runtime.getRuntime().exec(startCmd);
+			ps.waitFor(3, TimeUnit.SECONDS);
+			// String instr = IOUtil.slurp(ps.getInputStream(),
+			// Conf.getSystemEncode());//会无限等待
+			Future<String> query = (Future<String>) ThreadPool.getDefaultPool().submit(new Callable<String>() {
+				@Override
+				public String call() throws Exception {
+					String errstr = IOUtil.slurp(ps.getErrorStream(), Conf.getSystemEncode());
+					return errstr;
+				}
+			});
+			try {
+				String retstr = query.get(10, TimeUnit.SECONDS);
+				log.error("启动失败,原因:[{}]", retstr);
+				return Result.getError(retstr);
+			} catch (Exception e) {
+				log.info("超时获得错误流，意味着命令没问题");
+				return Result.getSuc();
+			}
+
+		} catch (IOException ioe) {
+			log.error("IO异常，文件有误", ioe);
+			return Result.getError(ioe.getMessage());
+		} catch (InterruptedException e) {
+			log.error("中断异常", e);
+			return Result.getError(e.getMessage());
+		}
 	}
 
 	/**

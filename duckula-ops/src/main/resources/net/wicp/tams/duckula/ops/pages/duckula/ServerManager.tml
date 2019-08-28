@@ -52,6 +52,15 @@
 			 	     </td>
 			 	     
 			      </tr>
+			      <tr>			      
+			         <td class="frame_table_list_2_righttext">操作系统</td>
+			         <td>
+			            <r:comboboxenum id="os_save"  name="os" enumClass="net.wicp.tams.common.constant.EPlatform" required="false" include="Linux,Windows" panelHeight="50" value="literal:Linux"></r:comboboxenum>
+	                 </td>			        
+			 	  	 <td class="frame_table_list_2_righttext"></td>
+			 	     <td>
+			 	     </td>			 	     
+			      </tr>
 			       <tr>
 			         <td class="frame_table_list_2_righttext">备注</td>
 			         <td colspan="3">
@@ -79,7 +88,7 @@
      }
 
    function initAdd(){
-     
+      $('#os_save').combobox('setValue','Linux');
    }
    function initUpdate(){
       $('#ip2').textbox('readonly',true);
