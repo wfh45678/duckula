@@ -140,6 +140,7 @@
 			         <td class="frame_table_list_2_righttext">业务处理</td>
 			 	     <td>
 			 	         <r:comboboxenum id="busiClass_save"  name="busiEnum" enumClass="net.wicp.tams.duckula.common.constant.BusiEnum" required="true" changeHandle="changeBusi"></r:comboboxenum>
+			 	         <a id="filterAlterBut" href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-edit"    style="margin-right:10px" onclick="changeBusi('filter') ">修改规则</a>
 			 	     </td>
 			 	  	 <td  name="otherbusi" class="frame_table_list_2_righttext">其它业务处理</td>
 			 	     <td name="otherbusi">
@@ -264,18 +265,25 @@
      }
      
      function changeBusi(val){
-        if("filter"==val){
-           $.rjzjh.opendialog2("inputFilter");
+        if("filter"==val){          
            $('td[name="otherbusi"]').css({"visibility":"hidden"});
+           $('#filterAlterBut').css({"visibility":"visible"});    
            var taskId=$('#update_taskId').val();
+           if(taskId==''){
+             // $.rjzjh.alert("没有获得任务ID");
+              return;
+           }
            $.post($.rjzjh.packurl('/duckula/taskManager:getFilter'),{'taskId':taskId},function(data){	
 	          $('#filterContext').textbox('setText',data);
-	       });
-           
+	          $.rjzjh.opendialog2("inputFilter");
+	       }); 
+	             
         }else if("custom"===val){
            $('td[name="otherbusi"]').css({"visibility":"visible"});
+           $('#filterAlterBut').css({"visibility":"hidden"});          
         }else{
            $('td[name="otherbusi"]').css({"visibility":"hidden"});
+           $('#filterAlterBut').css({"visibility":"hidden"}); 
         }
      }
      
@@ -318,7 +326,7 @@
       $('#busiClass_save').combobox('setValue','no');
       $('#imageVersion_save').val('${defaultImageVersion}');
       $('#namespace_save').val('${defaultNamespace}');
-      
+      $('#filterContext').textbox('setText','');
    }
    
 

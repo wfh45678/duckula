@@ -1,6 +1,5 @@
 package net.wicp.tams.duckula.busi.filter;
 
-import java.io.File;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -17,14 +16,19 @@ import org.apache.commons.lang3.ArrayUtils;
 import lombok.extern.slf4j.Slf4j;
 import net.wicp.tams.common.Conf;
 import net.wicp.tams.common.apiext.IOUtil;
+import net.wicp.tams.common.apiext.LoggerUtil;
 import net.wicp.tams.common.apiext.StringUtil;
 import net.wicp.tams.common.apiext.jdbc.JdbcAssit;
+import net.wicp.tams.common.constant.JvmStatus;
 import net.wicp.tams.common.constant.OptType;
 import net.wicp.tams.common.constant.StrPattern;
 import net.wicp.tams.common.exception.ExceptAll;
 import net.wicp.tams.common.exception.ProjectException;
 import net.wicp.tams.common.jdbc.DruidAssit;
 import net.wicp.tams.common.thread.ThreadPool;
+import net.wicp.tams.common.thread.threadlocal.PerthreadManager;
+import net.wicp.tams.duckula.common.ZkClient;
+import net.wicp.tams.duckula.common.constant.ZkPath;
 import net.wicp.tams.duckula.plugin.beans.DuckulaPackage;
 import net.wicp.tams.duckula.plugin.beans.Rule;
 import net.wicp.tams.duckula.plugin.busi.IBusi;
@@ -38,8 +42,17 @@ public class BusiFilter implements IBusi {
 	private final String db_tb_formart = "%s|%s";
 
 	public BusiFilter() {
-		Properties props = IOUtil.fileToProperties(new File(IOUtil.mergeFolderAndFilePath(System.getenv("DUCKULA_DATA"),
-				"/conf/plugin/duckula-busi-filter.properties")));
+		String taskId = PerthreadManager.getInstance().createValue("duckula-taskId", String.class).get("");
+		if (StringUtil.isNull(taskId)) {
+			log.error("busiFilter不能获取taskId");
+			LoggerUtil.exit(JvmStatus.s15);
+		}
+		String filterStr = ZkClient.getInst().getZkDataStr(ZkPath.filter.getPath(taskId));
+		Properties props = IOUtil.StringToProperties(filterStr);
+		if (props == null) {
+			log.error("busiFilter过滤文件转换失败");
+			LoggerUtil.exit(JvmStatus.s15);
+		}
 		Conf.overProp(props);
 		Map<String, String> propmap = Conf.getPre("duckula.busi.filter", true);
 		for (String key : propmap.keySet()) {
@@ -61,7 +74,6 @@ public class BusiFilter implements IBusi {
 				break;
 			}
 			tempmap.put(tempKeyAry[2], new String[] { pattern.name(), value });
-
 		}
 		log.info("---------------------初始化完成-----------------------");
 	}

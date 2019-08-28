@@ -387,8 +387,13 @@ public class TaskManager {
 	
 	public TextStreamResponse onGetFilter() throws KeeperException, InterruptedException {
 		String taskId=request.getParameter("taskId");
-		String zkDataStr = ZkClient.getInst().getZkDataStr(ZkPath.filter.getPath(taskId));
-		return TapestryAssist.getTextStreamResponse(zkDataStr);
+		Stat stat = ZkClient.getInst().exists(ZkPath.filter.getPath(taskId));
+		if(stat!=null) {
+			String zkDataStr = ZkClient.getInst().getZkDataStr(ZkPath.filter.getPath(taskId));
+			return TapestryAssist.getTextStreamResponse(zkDataStr);
+		}else {
+			return TapestryAssist.getTextStreamResponse("");
+		}
 	}
 
 	public TextStreamResponse onStopTask() {

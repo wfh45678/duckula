@@ -8,10 +8,11 @@ import net.wicp.tams.common.apiext.IOUtil;
 import net.wicp.tams.common.apiext.StringUtil;
 import net.wicp.tams.common.exception.ExceptAll;
 import net.wicp.tams.common.exception.ProjectException;
+import net.wicp.tams.common.thread.threadlocal.PerThreadValue;
+import net.wicp.tams.common.thread.threadlocal.PerthreadManager;
 import net.wicp.tams.duckula.plugin.pluginAssit;
 import net.wicp.tams.duckula.plugin.busi.BusiAssit;
 import net.wicp.tams.duckula.plugin.busi.IBusi;
-import net.wicp.tams.duckula.task.DuckulaGroup;
 import net.wicp.tams.duckula.task.Main;
 import net.wicp.tams.duckula.task.bean.EventPackage;
 
@@ -28,6 +29,11 @@ public class DisruptorHandler implements WorkHandler<EventPackage> {
 					"net.wicp.tams.duckula.plugin.busi.IBusi", Thread.currentThread().getContextClassLoader(),
 					"net.wicp.tams.duckula.plugin.busi.IBusi");
 			Thread.currentThread().setContextClassLoader(busiPlugin.getLoad().getClassLoader());// 需要加载前设置好classload
+			// 设置ClientId 20190827
+			PerThreadValue<String> createValue = PerthreadManager.getInstance().createValue("duckula-taskId",
+					String.class);
+			createValue.set(Main.context.getTask().getId());
+			// .get(Main.context.getTask().getId());
 			this.busi = BusiAssit.loadBusi(busiPlugin);
 		} else {
 			this.busi = null;
@@ -44,7 +50,7 @@ public class DisruptorHandler implements WorkHandler<EventPackage> {
 		}
 		event.setOver(false);
 		try {
-			this.busi.doWith(event, event.getRule());			
+			this.busi.doWith(event, event.getRule());
 		} catch (ProjectException e) {
 			event.setOver(true);
 			if (e.getExcept() != ExceptAll.duckula_nodata) {
