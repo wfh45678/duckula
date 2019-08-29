@@ -120,12 +120,14 @@ public class InitDuckula implements ServletContextListener {
 			LoggerUtil.exit(JvmStatus.s9);
 		}
 		log.info("use  env:{}", duckulaData);
-
-		try {
-			initOps(duckulaData, paramServletContextEvent);
-		} catch (Exception e) {
-			log.error("初始化data数据失败", e);
-			LoggerUtil.exit(JvmStatus.s9);
+		
+		if(TaskPattern.isNeedServer()) {//只有在需要服务时才初始化DuckulaData
+			try {
+				initOps(duckulaData, paramServletContextEvent);
+			} catch (Exception e) {
+				log.error("初始化data数据失败", e);
+				LoggerUtil.exit(JvmStatus.s9);
+			}
 		}
 
 		CommandType.setZkProps();

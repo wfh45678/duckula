@@ -161,7 +161,7 @@
 	<build>
 		<finalName>duckula-ops</finalName>
 		<plugins>
-			<!-- 打包资源 -->
+			<!-- 打包资源,如果是k8s的方式可以不用它 -->
 			<plugin>
 				<artifactId>maven-resources-plugin</artifactId>
 				<version>2.5</version>
