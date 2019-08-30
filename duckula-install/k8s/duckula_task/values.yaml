@@ -1,4 +1,4 @@
-image: rjzjh/duckula
+image: registry.choerodon.xforceplus.com/rjzjh/duckula
 imageTaskTag: task.2.0.0
 imagePullPolicy: IfNotPresent
 #运行的命令 docker-run.sh:监听mysql  docker-consumer.sh：kafka监听  docker-dump.sh: 全量导入

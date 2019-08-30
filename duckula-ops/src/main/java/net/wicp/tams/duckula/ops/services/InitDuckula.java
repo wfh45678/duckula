@@ -93,7 +93,7 @@ public class InitDuckula implements ServletContextListener {
 		if (StringUtil.isNull(duckulaData)) {
 			// 设置环境变量
 			String cmdtrue = "";
-			duckulaData="/data/duckula-data";
+			duckulaData = "/data/duckula-data";
 			if (OSinfo.getOSname() == EPlatform.Windows) {
 				cmdtrue = "setx DUCKULA_DATA " + duckulaData;
 			} else if (OSinfo.getOSname() == EPlatform.Linux) {
@@ -106,7 +106,7 @@ public class InitDuckula implements ServletContextListener {
 			try {
 				final Process ps = Runtime.getRuntime().exec(cmdtrue);
 				ps.waitFor(3, TimeUnit.SECONDS);
-				 IOUtil.slurp(ps.getInputStream(), Conf.getSystemEncode());
+				IOUtil.slurp(ps.getInputStream(), Conf.getSystemEncode());
 			} catch (IOException ioe) {
 				log.error("IO异常，文件有误", ioe);
 				log.error("没有设置环境变量，请手动设置：DUCKULA_DATA");
@@ -116,12 +116,12 @@ public class InitDuckula implements ServletContextListener {
 				log.error("没有设置环境变量，请手动设置：DUCKULA_DATA");
 				LoggerUtil.exit(JvmStatus.s9);
 			}
-			log.error("已设置环境变量：DUCKULA_DATA="+duckulaData+"，请重新启动。");
+			log.error("已设置环境变量：DUCKULA_DATA=" + duckulaData + "，请重新启动。");
 			LoggerUtil.exit(JvmStatus.s9);
 		}
 		log.info("use  env:{}", duckulaData);
-		
-		if(TaskPattern.isNeedServer()) {//只有在需要服务时才初始化DuckulaData
+
+		if (TaskPattern.isNeedServer()) {// 只有在需要服务时才初始化DuckulaData
 			try {
 				initOps(duckulaData, paramServletContextEvent);
 			} catch (Exception e) {
@@ -129,7 +129,6 @@ public class InitDuckula implements ServletContextListener {
 				LoggerUtil.exit(JvmStatus.s9);
 			}
 		}
-
 		CommandType.setZkProps();
 		Properties opsProp = IOUtil
 				.fileToProperties(new File(String.format("%s/conf/duckula-ops.properties", duckulaData)));
@@ -149,6 +148,13 @@ public class InitDuckula implements ServletContextListener {
 		log.info("task启动模式：", taskPattern);
 		Properties newProps = new Properties();
 		newProps.put("duckula.ops.starttask.pattern", taskPattern.name());
+		if (TaskPattern.tiller == TaskPattern.getCurTaskPattern()
+				&& StringUtil.isNull(Conf.get("common.kubernetes.tiller.serverip"))) {// 是tiller方式部署且没有配置serverip
+			newProps.put("common.kubernetes.tiller.serverip", "tiller-deploy.kube-system");
+			newProps.put("common.kubernetes.tiller.port",
+					StringUtil.hasNull(Conf.get("common.kubernetes.tiller.port"), "44134"));
+		}
+
 		Conf.overProp(newProps);
 		// 3、 使用的磁盘 claimName，启动task时需要它传入
 		String claimName = System.getenv("claimname");
@@ -170,8 +176,8 @@ public class InitDuckula implements ServletContextListener {
 				ZkClient.getInst().createNode(zkPath.getRoot(), null);
 			}
 		}
-		
-		if(TaskPattern.isNeedServer()) {
+
+		if (TaskPattern.isNeedServer()) {
 			// task监听
 			List<String> allTaskIds = ZkUtil.findSubNodes(ZkPath.tasks);
 			for (String taskId : allTaskIds) {
@@ -196,8 +202,6 @@ public class InitDuckula implements ServletContextListener {
 				}
 			}
 		}
-		
-		
 
 		// 日志监听
 		if (Conf.getBoolean("duckula.ops.pos.listener.enable")) {

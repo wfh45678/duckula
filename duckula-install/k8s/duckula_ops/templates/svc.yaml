@@ -10,13 +10,9 @@ metadata:
 spec:
   type: {{ .Values.service.type }}
   ports:
-  - name: duckula
+  - name: ops
     port: {{ .Values.service.port }}
-    targetPort: ops
-    {{- if .Values.service.nodePort }}
-    nodePort: {{ .Values.service.nodePort }}
-    {{- end }}
   selector:
     app: {{ template "duckula.name" . }}
-    release: {{ .Release.Name }}
+    component: ops
     

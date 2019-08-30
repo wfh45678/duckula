@@ -12,6 +12,8 @@ spec:
     metadata:
       labels:
         app: {{ template "duckula.fullname" . }}
+        release: {{ .Release.Name }}
+        component: ops
 {{- with .Values.podAnnotations }}
       annotations:
 {{ toYaml . | indent 8 }}
