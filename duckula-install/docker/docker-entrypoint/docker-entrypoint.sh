@@ -34,6 +34,10 @@ else
    #复制文件，为了修复上面命令的不足
    cp -f  /opt/userconfig/*.properties   /data/duckula-data/conf
 fi
+#helm不支持“_”的方式，丑陋的hack
+echo "192.168.18.34 kafka_hp_01" >> /etc/hosts
+echo "192.168.18.33 kafka_hp_02" >> /etc/hosts
+echo "192.168.18.35 kafka_hp_03" >> /etc/hosts
 
 
 set -- duckula "$@"
