@@ -154,8 +154,6 @@ public class InitDuckula implements ServletContextListener {
 			newProps.put("common.kubernetes.tiller.port",
 					StringUtil.hasNull(Conf.get("common.kubernetes.tiller.port"), "44134"));
 		}
-
-		Conf.overProp(newProps);
 		// 3、 使用的磁盘 claimName，启动task时需要它传入
 		String claimName = System.getenv("claimname");
 		if (StringUtil.isNull(claimName)) {
@@ -164,6 +162,7 @@ public class InitDuckula implements ServletContextListener {
 		if (StringUtil.isNotNull(claimName)) {// ops必须要，但task可以不用设置
 			newProps.put("duckula.ops.starttask.claimname", claimName);
 		}
+		Conf.overProp(newProps);
 
 		// 初始化目录
 		Stat stat = ZkClient.getInst().exists(Conf.get("duckula.zk.rootpath"));

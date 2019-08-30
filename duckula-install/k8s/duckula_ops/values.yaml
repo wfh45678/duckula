@@ -1,10 +1,10 @@
 image: registry.choerodon.xforceplus.com/rjzjh/duckula
-imageOpsTag: ops.2.0.2
+imageOpsTag: ops.2.0.3
 imageDataTag: data.2.0.2
 imagePullPolicy: IfNotPresent
 env:
   zk: 192.168.11.80:2181
-  rootpath: duckula-k8s
+  rootpath: /duckula-k8s
 service:
   type: ClusterIP
   port: 8080
