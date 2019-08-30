@@ -55,6 +55,8 @@ spec:
         env:
         - name: zk
           value: {{ .Values.env.zk }}
+        - name: rootpath
+          value: {{ .Values.env.rootpath }}          
         - name: taskpattern
           value: tiller
         {{- if  .Values.persistence.enabled }}

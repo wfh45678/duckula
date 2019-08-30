@@ -113,6 +113,11 @@ public enum CommandType {
 		if (StringUtil.isNotNull(zk)) {
 			zkprops.put("common.others.zookeeper.constr", zk);
 		}
+		//duckula.zk.rootpath支持环境变量配置，独立启动模式需要传入duckula.zk.rootpath
+		String rootpath = System.getenv("rootpath");
+		if (StringUtil.isNotNull(rootpath)) {
+			zkprops.put("duckula.zk.rootpath", rootpath);
+		}
 		if (StringUtil.isNull(zkprops.get("common.others.zookeeper.constr"))) {
 			log.error("需要zk的连接地址，可以在环境变量'zk'设置，也可以在zk.properties设置common.others.zookeeper.constr");
 			LoggerUtil.exit(JvmStatus.s15);

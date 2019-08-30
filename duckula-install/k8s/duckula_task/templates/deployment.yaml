@@ -40,6 +40,10 @@ spec:
         - name: zk
           value: {{ .Values.env.zk }}
         {{- end }}
+        {{- if .Values.env.rootpath  }} 
+        - name: rootpath
+          value: {{ .Values.env.rootpath }}
+        {{- end }}
         - name: taskid
           value: {{ .Values.env.taskid }}
         - name: taskpattern

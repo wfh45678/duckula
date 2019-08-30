@@ -294,7 +294,10 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 		userList.add("env.taskid");
 		userList.add(taskId);
 		userList.add("env.zk");
-		userList.add(Conf.get("common.others.zookeeper.constr"));
+		userList.add(Conf.get("common.others.zookeeper.constr"));		
+		userList.add("env.rootpath");//设置zk的root目录
+		userList.add(Conf.get("duckula.zk.rootpath"));
+		log.info("-----------taskId:{},zk:{},rootpath:{}-----------",taskId,Conf.get("common.others.zookeeper.constr"),Conf.get("duckula.zk.rootpath"));
 		// 设置hosts
 		Map<String, String[]> hosts = buidlTask.getMiddlewareType().getHostMap(buidlTask.getMiddlewareInst());
 		if (MapUtils.isNotEmpty(hosts)) {
