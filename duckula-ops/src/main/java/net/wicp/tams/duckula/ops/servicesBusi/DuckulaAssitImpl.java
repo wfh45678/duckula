@@ -317,6 +317,7 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 		}
 
 		if (!standalone) {// 非独立模式
+			//eg:"default/mypvc"
 			String claimName = Conf.get("duckula.ops.starttask.claimname");
 			if (StringUtil.isNull(claimName)) {
 				return Result.getError(

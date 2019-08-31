@@ -36,8 +36,17 @@
 			<Policies>
 				<OnStartupTriggeringPolicy />
 				<SizeBasedTriggeringPolicy size="30 MB" />
-				<TimeBasedTriggeringPolicy />
+				<TimeBasedTriggeringPolicy interval="3" modulate="true"/>
+				<!--
+				<CronTriggeringPolicy schedule="0/5 * * * * ?"/>
+				-->
 			</Policies>
+			<DefaultRolloverStrategy>
+                <Delete basePath="${sys:logRoot}" maxDepth="1">
+                    <IfFileName glob="other-*.log" />
+                    <IfLastModified age="3d" />
+                </Delete>
+            </DefaultRolloverStrategy>
 		</RollingFile>
 	</appenders>
 	<loggers>
