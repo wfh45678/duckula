@@ -87,6 +87,8 @@ userconfig:
       #duckula.task.image.name=192.168.137.100:5000/rjzjh/duckula
       duckula.task.image.name=registry.choerodon.xforceplus.com/rjzjh/duckula
       duckula.task.image.tag=task.2.0.2
+      #位点保留最大天数
+      duckula.ops.pos.maxsize=7
   es:
     es-dev.properties: |-
       #此配置为示例，请修改为实际中使用的配置,对于k8s，在各相关的configmap中进行配置，

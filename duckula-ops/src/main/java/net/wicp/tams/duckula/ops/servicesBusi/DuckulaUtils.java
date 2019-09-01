@@ -23,6 +23,7 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import lombok.extern.slf4j.Slf4j;
+import net.wicp.tams.common.Conf;
 import net.wicp.tams.common.apiext.IOUtil;
 import net.wicp.tams.common.apiext.StringUtil;
 import net.wicp.tams.common.beans.Host;
@@ -87,9 +88,10 @@ public abstract class DuckulaUtils {
 		if (!hasLoggers.contains(masterId)) {
 			String logRoot = System.getenv("DUCKULA_DATA") + "/logs/pos";
 			final String filepath = "%s/%s/pos%s.log";
+			String maxsize = StringUtil.hasNull(Conf.get("duckula.ops.pos.maxsize"), "7");
 			RollingFileAppender<ILoggingEvent> fileAppender = LogBackUtil.newFileAppender(
 					String.format(filepath, logRoot, masterId, ""), "%msg%n",
-					String.format(filepath, logRoot, masterId, "-%d{yyyy-MM-dd}"), 30);
+					String.format(filepath, logRoot, masterId, "-%d{yyyy-MM-dd}"), Integer.parseInt(maxsize));
 			logger = (Logger) LoggerFactory.getLogger(String.valueOf(masterId));// za_sleuth
 			logger.addAppender(fileAppender);
 			logger.setLevel(Level.INFO);

@@ -19,9 +19,8 @@
 			<onMismatch>DENY</onMismatch>
 		</filter> 
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<fileNamePattern>${log.dir}/${projectname}_${HOSTNAME}-%d{yyyy-MM-dd}.log
-			</fileNamePattern>
-			<maxHistory>30</maxHistory>
+			<fileNamePattern>${log.dir}/${projectname}_${HOSTNAME}-%d{yyyy-MM-dd}-%i.log</fileNamePattern>
+			<maxHistory>7</maxHistory>
 		</rollingPolicy>
 		<encoder charset="UTF-8">
 			<pattern>%d [%thread] %-5p [%c] [%F:%L] [msg=%X{msg:-}]- %msg%n</pattern>
@@ -34,9 +33,8 @@
 			<level>WARN</level>
 		</filter>
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<fileNamePattern>${log.dir}/${projectname}_${HOSTNAME}_error-%d{yyyy-MM-dd}.log
-			</fileNamePattern>
-			<maxHistory>30</maxHistory>
+			<fileNamePattern>${log.dir}/${projectname}_${HOSTNAME}_error-%d{yyyy-MM-dd}-%i.log</fileNamePattern>
+			<maxHistory>7</maxHistory>
 		</rollingPolicy>
 		<encoder charset="UTF-8">
 			<pattern>%d [%thread] %-5p [%c] [%F:%L] [msg=%X{msg:-}]- %msg%n</pattern>
@@ -44,8 +42,10 @@
 	</appender>	
 	<root>
 		 <level value="INFO" />
-		<appender-ref ref="errorAppender" />
+		<!--只保留控制台
+		 <appender-ref ref="errorAppender" />
 		<appender-ref ref="infoAppender" />
+		-->
 		<appender-ref ref="STDOUT" />
 	</root>
 </configuration>
