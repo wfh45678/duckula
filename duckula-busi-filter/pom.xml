@@ -20,12 +20,10 @@
 		<dependency>
 			<groupId>net.wicp.tams</groupId>
 			<artifactId>common-jdbc</artifactId>
-			<version>3.6.0</version>
 		</dependency>
 		<dependency>
 			<groupId>net.wicp.tams</groupId>
 			<artifactId>duckula-common</artifactId>
-			<version>2.0.0</version>
 		</dependency>
 	</dependencies>
 	<build>

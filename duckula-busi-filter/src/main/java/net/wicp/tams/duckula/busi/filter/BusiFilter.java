@@ -189,7 +189,7 @@ public class BusiFilter implements IBusi {
 			Connection conn = null;
 			PreparedStatement prst = null;
 			try {
-				conn = DruidAssit.getInst().getConnection();
+				conn = DruidAssit.getConnection();
 				prst = conn.prepareStatement(sql);
 				JdbcAssit.setPreParam(prst, queryParams);
 				ResultSet rs = prst.executeQuery();
