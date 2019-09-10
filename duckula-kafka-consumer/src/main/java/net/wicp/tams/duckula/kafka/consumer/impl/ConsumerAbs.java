@@ -44,7 +44,7 @@ import net.wicp.tams.duckula.plugin.receiver.consumer.IBusiConsumer;
 public abstract class ConsumerAbs<T> implements IConsumer<byte[]> {
 	protected final Consumer consumer;
 	protected final IBusiConsumer<T> busiEs;
-	protected Connection connection = DruidAssit.getInst().getConnection();// TODO 每线程一个连接
+	protected Connection connection = DruidAssit.getConnection();// TODO 每线程一个连接
 	private Map<Rule, PreparedStatement> statMap = new HashMap<>();
 	protected Map<String, String[]> primarysMap = new HashMap<>();
 

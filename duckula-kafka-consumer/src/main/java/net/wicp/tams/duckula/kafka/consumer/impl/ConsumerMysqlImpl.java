@@ -50,18 +50,18 @@ public class ConsumerMysqlImpl extends ConsumerAbs<JdbcDatas.Builder> {
 					String dbInstanceId = rule.getItems().get(RuleItem.dbinstanceid);
 					DbInstance dbInstance = JSONObject.toJavaObject(
 							ZkClient.getInst().getZkData(ZkPath.dbinsts.getPath(dbInstanceId)), DbInstance.class);
-					copyProperties.put("common.jdbc.datasource.host", dbInstance.getUrl());
-					copyProperties.put("common.jdbc.datasource.port", dbInstance.getPort());
-					copyProperties.put("common.jdbc.datasource.username", dbInstance.getUser());
-					copyProperties.put("common.jdbc.datasource.password", dbInstance.getPwd());
+					copyProperties.put("host", dbInstance.getUrl());
+					copyProperties.put("port", dbInstance.getPort());
+					copyProperties.put("username", dbInstance.getUser());
+					copyProperties.put("password", dbInstance.getPwd());
 					// 防止com.mysql.jdbc.exceptions.jdbc4.CommunicationsException: Communications
 					// link failure
-					copyProperties.put("common.jdbc.datasource.urlparam",
+					copyProperties.put("urlparam",
 							"useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&failOverReadOnly=false");
 					// 打开pschche
-					copyProperties.put("common.jdbc.datasource.maxPoolPreparedStatementPerConnectionSize", 200);
-					copyProperties.put("common.jdbc.datasource.filters", "stat");
-					DataSource newDataSource = DruidAssit.getInst().newDataSource(copyProperties);
+					copyProperties.put("maxPoolPreparedStatementPerConnectionSize", 200);
+					copyProperties.put("filters", "stat");
+					DataSource newDataSource = DruidAssit.getDataSourceNoConf("consumer_"+dbInstanceId, copyProperties);
 					dsmap.put(rule, newDataSource);
 				}
 			}

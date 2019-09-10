@@ -47,7 +47,7 @@
 		<common.tracer.version>3.6.0</common.tracer.version>
 		<common.hadoop.version>3.6.0</common.hadoop.version>
 		<common.scala.version>3.6.0</common.scala.version>
-		<common.jdbc.version>3.6.3</common.jdbc.version>
+		<common.jdbc.version>3.6.4</common.jdbc.version>
 		<common.os.version>3.6.0</common.os.version>
 		<common.redis.version>3.6.3</common.redis.version>
 		<common.es.client.version>3.6.4</common.es.client.version>

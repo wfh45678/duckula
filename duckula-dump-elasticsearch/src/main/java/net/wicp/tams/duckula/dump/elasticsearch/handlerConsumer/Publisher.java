@@ -71,7 +71,7 @@ public class Publisher implements Runnable {
 					if (this.stmt != null && this.stmt.isClosed()) {
 						this.stmt.close();
 					}
-					this.connection = DruidAssit.getInst().getConnection();
+					this.connection = DruidAssit.getConnection();
 					this.stmt = connection.prepareStatement(this.temp);
 					this.stmt.setFetchSize(numBatch);
 				}

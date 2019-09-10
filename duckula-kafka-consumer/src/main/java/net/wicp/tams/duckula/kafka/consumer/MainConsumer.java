@@ -90,23 +90,23 @@ public class MainConsumer {
 		Properties kafkaProp = ConfUtil.configMiddleware(MiddlewareType.kafka, task.getMiddlewareInst());
 		Conf.overProp(kafkaProp);
 		Properties props = new Properties();
-		props.put("common.jdbc.datasource.host", task.getIp());
+		props.put("common.jdbc.datasource.default.host", task.getIp());
 		if (StringUtil.isNotNull(task.getDefaultDb())) {
-			props.put("common.jdbc.datasource.defaultdb", task.getDefaultDb());
+			props.put("common.jdbc.datasource.default.defaultdb", task.getDefaultDb());
 		} else {
-			props.put("common.jdbc.datasource.defaultdb", "none");
+			props.put("common.jdbc.datasource.default.defaultdb", "null");
 		}
 		if (task.getIsSsh() != null && task.getIsSsh() == YesOrNo.yes) {
 			props.put("common.jdbc.ssh.enable", "true");
 		} else {
 			props.put("common.jdbc.ssh.enable", "false");
 		}
-		props.put("common.jdbc.datasource.port", String.valueOf(task.getPort()));
-		props.put("common.jdbc.datasource.username", task.getUser());
-		props.put("common.jdbc.datasource.password", task.getPwd());
+		props.put("common.jdbc.datasource.default.port", String.valueOf(task.getPort()));
+		props.put("common.jdbc.datasource.default.username", task.getUser());
+		props.put("common.jdbc.datasource.default.password", task.getPwd());
 		// 默认不创建连接
-		props.put("common.jdbc.datasource.initialSize", 0);
-		props.put("common.jdbc.datasource.maxActive", 32);// 最多32分区，32个线程
+		props.put("common.jdbc.datasource.default.initialSize", 0);
+		props.put("common.jdbc.datasource.default.maxActive", 32);// 最多32分区，32个线程
 		
 	    //设置consumer配置
 		props.put("common.others.kafka.consumer.batch.num", consumer.getBatchNum());

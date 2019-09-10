@@ -90,7 +90,7 @@ public class BaseDataHander implements WorkHandler<EventDump> {
 	 */
 	private String[] filterColName() {
 		String[] indexColNames = mapping.findColNames();
-		Connection tempConn = DruidAssit.getInst().getConnection();
+		Connection tempConn = DruidAssit.getConnection();
 		String[][] cols = MySqlAssit.getCols(tempConn, dbtb[0], dbtb[1], YesOrNo.yes);
 		try {
 			tempConn.close();
@@ -175,7 +175,7 @@ public class BaseDataHander implements WorkHandler<EventDump> {
 					if (this.stmt != null && this.stmt.isClosed()) {
 						this.stmt.close();
 					}
-					this.connection = DruidAssit.getInst().getConnection();
+					this.connection = DruidAssit.getConnection();
 					this.stmt = this.connection.prepareStatement(this.temp);
 					this.stmt.setFetchSize(Publisher.numDuan);
 				}

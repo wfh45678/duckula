@@ -124,20 +124,20 @@ public class MainDump {
 		
 		Task task = ZkUtil.buidlTask(dump.getTaskOnlineId());
 		Properties props = new Properties();
-		props.put("common.jdbc.datasource.host", task.getIp());
+		props.put("common.jdbc.datasource.default.host", task.getIp());
 		if (StringUtil.isNotNull(task.getDefaultDb())) {
-			props.put("common.jdbc.datasource.defaultdb", task.getDefaultDb());
+			props.put("common.jdbc.datasource.default.defaultdb", task.getDefaultDb());
 		} else {
-			props.put("common.jdbc.datasource.defaultdb", "none");
+			props.put("common.jdbc.datasource.default.defaultdb", "none");
 		}
 		if (task.getIsSsh() != null && task.getIsSsh() == YesOrNo.yes) {
 			props.put("common.jdbc.ssh.enable", "true");
 		} else {
 			props.put("common.jdbc.ssh.enable", "false");
 		}
-		props.put("common.jdbc.datasource.port", String.valueOf(task.getPort()));
-		props.put("common.jdbc.datasource.username", task.getUser());
-		props.put("common.jdbc.datasource.password", task.getPwd());
+		props.put("common.jdbc.datasource.default.port", String.valueOf(task.getPort()));
+		props.put("common.jdbc.datasource.default.username", task.getUser());
+		props.put("common.jdbc.datasource.default.password", task.getPwd());
 		Conf.overProp(props);
 		log.info("----------------------启动Disruptor-------------------------------------");
 		String startId = args.length > 1 ? args[1] : null;
