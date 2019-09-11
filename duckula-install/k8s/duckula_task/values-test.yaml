@@ -1,13 +1,11 @@
-image: rjzjh/duckula
-imageTaskTag: task.2.0.0
+image: registry.choerodon.xforceplus.com/rjzjh/duckula
+imageTaskTag: task.2.0.5
 imagePullPolicy: IfNotPresent
 #运行的命令 docker-run.sh:监听mysql  docker-consumer.sh：kafka监听  docker-dump.sh: 全量导入
 cmd:  docker-run.sh
 #zk与taskid都是必填的
 env:
-  zk: 47.99.35.252:2181,47.99.45.41:2181,116.62.124.249:2181
-  taskid: binlog_test_db-user_info
-  #taskpattern: tiller
+  #taskid: demo-docker
   
 ## set to `now` to get a one time job, or a cronjob schedule like `0 0 * * *`
 ## set to `nojob`  不是job
@@ -19,8 +17,14 @@ successfulJobsHistoryLimit: 2
 failedJobsHistoryLimit: 2
 
 hosts:
-- {ip: 120.27.209.9,host: [kafka-dev] }
-- {ip: 120.27.209.11,host: [kafka-test]}
+- {ip: 192.168.11.61,host: [zk-kafka-01]}
+- {ip: 192.168.11.58,host: [zk-kafka-02]}
+- {ip: 192.168.11.60,host: [zk-kafka-03]}
+- {ip: 192.168.11.59,host: [zk-kafka-04]}
+
+- {ip: 192.168.11.116,host: [node-es1]}
+- {ip: 192.168.11.117,host: [node-es2]}
+- {ip: 192.168.11.118,host: [node-es3]}
  
 service:
   type: ClusterIP
@@ -40,39 +44,52 @@ persistence:
 userconfig:
   root:
     zk.properties: |-
-      common.others.zookeeper.constr=null
+      common.others.zookeeper.constr=192.168.11.80:2181
+      #二次重试眨眼时间
       common.others.zookeeper.sleepTimeMs=1000
+      #最大重试次数
       common.others.zookeeper.maxRetries=5
       common.others.zookeeper.sessionTimeoutMs=9000
       common.others.zookeeper.connectionTimeoutMs=60000
+      #duckula使用的根目录
+      duckula.zk.rootpath=/duckula2
   es:
     es-dev.properties: |-
-      common.es.host.name=101.37.152.91
+      #此配置为示例，请修改为实际中使用的配置,对于k8s，在各相关的configmap中进行配置，
+      common.es.host.name=node-es1,node-es2,node-es3
       common.es.cluster.name=es-test
       common.es.host.port.rest=9200
       common.es.host.port.transport=9300
       common.es.host.scheme=http
+      #ping命令响应的超时时间
       common.es.client.transport.ping_timeout=5s
+      #检查节点可用性的时间间隔
       common.es.client.transport.nodes_sampler_interval=5s
       common.es.http.head=header=value&
+      #The default value is 30 seconds 与socket timeout相同，如果socket timeout设置了，则它失效
       common.es.http.maxRetryTimeoutMillis=30000
       common.es.http.connectTimeout=1000
       common.es.http.socketTimeout=30000
       common.es.http.connectionRequestTimeout=500
+      #查询时的超时
       common.es.query.timeout=5000
+      #以下为默认值，如果在api中没有设置相关值，则默认值起做用
       common.es.query.index=none
       common.es.query.type=_doc
       common.es.http.aync.maxConnTotal=100
       common.es.http.aync.maxConnPerRoute=100
   kafka:
     kafka-dev.properties: |-
-      common.others.kafka.common.bootstrap.servers=kafka-dev:9092
+      #kafka示例配置，请修改为实际中使用的配置,对于k8s，在各相关的configmap中进行配置，
+      common.others.kafka.common.bootstrap.servers=zk-kafka-01:9092,zk-kafka-02:9092,zk-kafka-03:9092,zk-kafka-04:9092
+      #kafka producer props
       common.others.kafka.producer.acks=1
       common.others.kafka.producer.retries=2147483647
       common.others.kafka.producer.max.block.ms=9223372036854775807L
       common.others.kafka.producer.max.in.flight.requests.per.connection=1
       common.others.kafka.producer.linger.ms=10
       common.others.kafka.producer.batch.size=102400
+      #32M
       common.others.kafka.producer.buffer.memory=33554432
       common.others.kafka.producer.compression.type=none
       common.others.kafka.producer.max.request.size=1048576
@@ -80,21 +97,32 @@ userconfig:
       common.others.kafka.producer.request.timeout.ms=30000
       common.others.kafka.producer.send.buffer.bytes=131072
       common.others.kafka.producer.connections.max.idle.ms=540000
+      #kafka consumer props
       common.others.kafka.consumer.group.id=tams-group
       common.others.kafka.consumer.enable.auto.commit=true
       common.others.kafka.consumer.auto.commit.interval.ms=1000
       common.others.kafka.consumer.session.timeout.ms=30000
-      common.others.kafka.consumer.auto.offset.reset=earliest 
+      common.others.kafka.consumer.auto.offset.reset=earliest
   redis:
     redis-dev.properties: |-
-      common.redis.redisserver.timeout=2000  
+      #Redis配置示例，请修改为实际中使用的配置,对于k8s，在各相关的configmap中进行配置，
+      #common.redis.redisserver.host=localhost
+      #common.redis.redisserver.port=6379
+      #创建池的超时时间
+      common.redis.redisserver.timeout=2000
+      #获取Jedis连接的最大等待时间（10秒）   
       common.redis.redisserver.maxWaitMillis=10000
+      #设置最大连接数
       common.redis.redisserver.maxTotal=200
+      #最大空闲连接数 
       common.redis.redisserver.maxIdle=20
+      #在将连接放回池中前
       common.redis.redisserver.testOnBorrow=true
+      #自动测试池中的空闲连接是否都是可用连接  
       common.redis.redisserver.testWhileIdle=true
       common.redis.redisserver.defaultDb=0
       common.redis.redisserver.password=null
+      #最小连接数
       common.redis.redisserver.minIdle=0
       common.redis.redisserver.minEvictableIdleTimeMillis=13000
       common.redis.redisserver.softMinEvictableIdleTimeMillis=13000
@@ -102,8 +130,11 @@ userconfig:
       common.redis.redisserver.testOnReturn=false
       common.redis.redisserver.timeBetweenEvictionRunsMillis=60000
       common.redis.redisserver.blockWhenExhausted=true
+      #是否要治理连接汇漏
       common.redis.redisserver.leak.enable=false
+      #设置客户端名称
       common.redis.redisserver.clientName=tams
+      #cachecloud配置
       common.redis.cachecloud.client_version = 1.2.0
       common.redis.cachecloud.domain_url = http://118.31.67.136:9218
       common.redis.cachecloud.redis_cluster_suffix = /cache/client/redis/cluster/%s.json?clientVersion=
@@ -111,8 +142,7 @@ userconfig:
       common.redis.cachecloud.redis_standalone_suffix = /cache/client/redis/standalone/%s.json?clientVersion=
       common.redis.cachecloud.cachecloud_report_url = /cachecloud/client/reportData.json
     
-   
-
+    
 podAnnotations: {}
 
 livenessProbe:
