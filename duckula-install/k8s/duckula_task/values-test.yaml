@@ -6,6 +6,8 @@ cmd:  docker-run.sh
 #zk与taskid都是必填的
 env:
   #taskid: demo-docker
+  #rootpath: /duckula-k8s
+  #zk: localhost:2181
   
 ## set to `now` to get a one time job, or a cronjob schedule like `0 0 * * *`
 ## set to `nojob`  不是job
@@ -38,7 +40,7 @@ service:
 persistence:
   enabled: false
   #设置ops的持久化卷，必须设置，如果enabled为fals将是全新安装不能与ops建立连接
-  existingClaim: duckula
+  #existingClaim: duckula
   annotations: {}  
   
 userconfig:
@@ -144,6 +146,15 @@ userconfig:
     
     
 podAnnotations: {}
+
+#dump请调整此资源
+resources:
+  requests:
+    memory: 320Mi
+    cpu: 1000m
+  limits:
+    memory: 512Mi
+    cpu:  1000m
 
 livenessProbe:
   initialDelaySeconds: 30

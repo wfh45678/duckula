@@ -1,5 +1,7 @@
 package net.wicp.tams.duckula.ops.servicesBusi;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,6 +17,7 @@ import java.util.concurrent.TimeoutException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.collections.Predicate;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 
 import com.alibaba.fastjson.JSONArray;
@@ -283,10 +286,7 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 		String chartsDirPath = IOUtil.mergeFolderAndFilePath(System.getenv("DUCKULA_DATA"), "/k8s/duckula_task");
 		List<Object> userList = new ArrayList<>();
 		userList.add("imageTaskTag");
-
 		userList.add(buidlTask.getImageVersion());
-		userList.add("persistence.enabled");
-		userList.add(!standalone);
 		userList.add("cmd");
 		userList.add(commandType.getK8scmd());
 		userList.add("schedule");
@@ -294,10 +294,25 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 		userList.add("env.taskid");
 		userList.add(taskId);
 		userList.add("env.zk");
-		userList.add(Conf.get("common.others.zookeeper.constr"));		
-		userList.add("env.rootpath");//设置zk的root目录
+		userList.add(Conf.get("common.others.zookeeper.constr"));
+		userList.add("env.rootpath");// 设置zk的root目录
 		userList.add(Conf.get("duckula.zk.rootpath"));
-		log.info("-----------taskId:{},zk:{},rootpath:{}-----------",taskId,Conf.get("common.others.zookeeper.constr"),Conf.get("duckula.zk.rootpath"));
+		log.info("-----------taskId:{},zk:{},rootpath:{}-----------", taskId,
+				Conf.get("common.others.zookeeper.constr"), Conf.get("duckula.zk.rootpath"));
+		String idfull = commandType.getK8sId(taskId);
+		String name = idfull.length() <= 63 ? idfull : idfull.substring(0, 63);
+		// 跨名称空间部署
+		String defaultNamespace = Conf.get("common.kubernetes.apiserver.namespace.default");
+		if (!defaultNamespace.equals(buidlTask.getNamespace())) {
+			userList.add("persistence.enabled");
+			userList.add(false);
+			String poststr = Conf.get("common.kubernetes.apiserver.namespace.valuepost");
+			Object[] userConfig = userList.toArray(new Object[userList.size()]);
+			Result installDirChart = TillerClient.getInst().installDirChart(name, buidlTask.getNamespace(),
+					chartsDirPath, String.format("values-%s.yaml", poststr), userConfig);
+			return installDirChart;
+		}
+
 		// 设置hosts
 		Map<String, String[]> hosts = buidlTask.getMiddlewareType().getHostMap(buidlTask.getMiddlewareInst());
 		if (MapUtils.isNotEmpty(hosts)) {
@@ -316,8 +331,10 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 			userList.add(hostAry);
 		}
 
+		userList.add("persistence.enabled");
+		userList.add(!standalone);
 		if (!standalone) {// 非独立模式
-			//eg:"default/mypvc"
+			// eg:"default/mypvc"
 			String claimName = Conf.get("duckula.ops.starttask.claimname");
 			if (StringUtil.isNull(claimName)) {
 				return Result.getError(
@@ -325,11 +342,12 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 			}
 			userList.add("persistence.existingClaim");
 			userList.add(claimName);
+		} else {
+
 		}
 		Object[] userConfig = userList.toArray(new Object[userList.size()]);
-		String idfull = commandType.getK8sId(taskId);
-		Result installDirChart = TillerClient.getInst().installDirChart(
-				idfull.length() <= 63 ? idfull : idfull.substring(0, 63), buidlTask.getNamespace(), chartsDirPath,
+
+		Result installDirChart = TillerClient.getInst().installDirChart(name, buidlTask.getNamespace(), chartsDirPath,
 				userConfig);
 		return installDirChart;
 	}

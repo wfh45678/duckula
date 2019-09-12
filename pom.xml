@@ -51,7 +51,7 @@
 		<common.os.version>3.6.0</common.os.version>
 		<common.redis.version>3.6.3</common.redis.version>
 		<common.es.client.version>3.6.4</common.es.client.version>
-		<common.kubernetes.version>3.6.0</common.kubernetes.version>
+		<common.kubernetes.version>3.6.4</common.kubernetes.version>
 		<common.binlog.alone.version>3.6.3</common.binlog.alone.version>
 		<common.flink.source.binlog.version>3.6.3</common.flink.source.binlog.version>
 		<common.flink.sink.influxdb.version>3.6.3</common.flink.sink.influxdb.version>

@@ -5,8 +5,9 @@ imagePullPolicy: IfNotPresent
 #cmd:  docker-dump.sh
 #taskid都是必填的 zk：也可以在zk.properties进行配置
 #env:
-  #zk: 47.99.35.252:2181,47.99.45.41:2181,116.62.124.249:2181
+  #zk: localhost:2181
   #taskid: binlog_test_db-user_info-es_b-_doc
+  #rootpath: /duckula-k8s
   
 ## set to `now` to get a one time job, or a cronjob schedule like `0 0 * * *`
 ## set to `nojob`  不是job
@@ -66,10 +67,10 @@ userconfig:
 resources:
   requests:
     memory: 320Mi
-    cpu: 100m
+    cpu: 1000m
   limits:
-    memory: 320Mi
-    cpu:  100m
+    memory: 512Mi
+    cpu:  1000m
 
 livenessProbe:
   initialDelaySeconds: 30
