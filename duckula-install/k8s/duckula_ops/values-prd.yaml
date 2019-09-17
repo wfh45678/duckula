@@ -91,6 +91,7 @@ userconfig:
       duckula.task.image.tag=task.2.0.7
       #位点保留最大天数
       duckula.ops.pos.maxsize=7
+  es:
     es-dev.properties: |-
       #此配置为示例，请修改为实际中使用的配置,对于k8s，在各相关的configmap中进行配置，
       common.es.host.name=node-es1,node-es2,node-es3,node-es4,node-es5
