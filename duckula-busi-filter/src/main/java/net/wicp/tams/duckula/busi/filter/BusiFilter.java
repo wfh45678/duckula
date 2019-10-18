@@ -132,12 +132,15 @@ public class BusiFilter implements IBusi {
 				array[tempindex++] = i.intValue();
 			}
 			boolean isnull = false;
+			int rowsNumRrue = 0;
 			if (ArrayUtils.isNotEmpty(duckulaPackage.getBefores())) {
 				int tempsize = duckulaPackage.getBefores().length;
 				String[][] valuesTrue = ArrayUtils.removeAll(duckulaPackage.getBefores(), array);
 				// log.info("before:{},remove:{},valuesTrue:{}", tempsize, array.length,
 				// valuesTrue.length);
 				duckulaPackage.setBefores(valuesTrue);
+				rowsNumRrue = valuesTrue == null ? 0 : valuesTrue.length;
+				// duckulaPackage.setRowsNum(valuesTrue.length);
 				if (valuesTrue.length == 0) {
 					isnull = true;
 					// throw new ProjectException(ExceptAll.duckula_nodata, "过滤后没有数据");
@@ -149,11 +152,18 @@ public class BusiFilter implements IBusi {
 				// log.info("after:{},remove:{},valuesTrue:{}", tempsize, array.length,
 				// valuesTrue.length);
 				duckulaPackage.setAfters(valuesTrue);
+				//取最小值
+				rowsNumRrue = valuesTrue == null ? 0
+						: ((rowsNumRrue == 0 || (rowsNumRrue > 0 && rowsNumRrue > valuesTrue.length))
+								? valuesTrue.length
+								: rowsNumRrue);
+				// duckulaPackage.setRowsNum(valuesTrue.length);
 				if (valuesTrue.length == 0) {
 					isnull = true;
 					// throw new ProjectException(ExceptAll.duckula_nodata, "过滤后没有数据");
 				}
 			}
+			duckulaPackage.setRowsNum(rowsNumRrue);
 			if (isnull) {
 				throw new ProjectException(ExceptAll.duckula_nodata, "过滤后没有数据");
 			}
