@@ -20,6 +20,7 @@ import net.wicp.tams.common.apiext.StringUtil;
 import net.wicp.tams.common.apiext.json.EasyUiAssist;
 import net.wicp.tams.common.callback.IConvertValue;
 import net.wicp.tams.common.constant.DateFormatCase;
+import net.wicp.tams.common.constant.dic.YesOrNo;
 import net.wicp.tams.component.services.IReq;
 import net.wicp.tams.component.tools.TapestryAssist;
 import net.wicp.tams.duckula.common.ZkUtil;
@@ -87,56 +88,64 @@ public class OpsManager {
 
 	public TextStreamResponse onHealth() throws KeeperException, InterruptedException {
 		List<PosShow> taskPosList = duckulaAssit.findAllPosForTasks();
-		JSONObject retjson=new JSONObject();
+		JSONObject retjson = new JSONObject();
 		JSONObject tasksjson = new JSONObject();
 		boolean issucess = true;
 		List<Server> findAllServers = duckulaAssit.findAllServers();
 		for (PosShow posShow : taskPosList) {
 			List<String> ips = ZkUtil.lockIps(ZkPath.tasks, posShow.getId());
+			Task buidlTask = ZkUtil.buidlTask(posShow.getId());
 			if (CollectionUtils.isEmpty(ips)) {
 				posShow.setHostNum(0);
 			} else {
-				Task buidlTask = ZkUtil.buidlTask(posShow.getId());
 				List<String> lockToServer = duckulaAssit.lockToServer(findAllServers, ZkPath.tasks, buidlTask.getId());
 				posShow.setLockIPs(CollectionUtil.listJoin(lockToServer, ","));
 				posShow.setHostNum(ips.size());
 			}
 			int hostNum = posShow.getHostNum();
-			if (hostNum == 0) {
-				continue;
-			}
 			JSONObject taskobj = new JSONObject();
-			taskobj.put("pos", DateFormatCase.YYYY_MM_DD_hhmmss.getInstanc().format(new Date(posShow.getTime() * 1000)));
-			long defTimes = new Date().getTime() - posShow.getTime() * 1000;
-			if (defTimes >= 1000 * 60 * 10) {
-				taskobj.put("status", "DOWN");
-				long min = defTimes / (1000 * 60);
-				taskobj.put("delay", min + "Minutes");
-				issucess = false;
+			if (hostNum == 0) {
+				if (buidlTask.getRun() == YesOrNo.yes) {
+					taskobj.put("status", "DOWN");
+					taskobj.put("delay", "已停机");
+					taskobj.put("pos", "0");
+					issucess = false;
+					tasksjson.put(posShow.getId(), taskobj);
+				}
 			} else {
-				taskobj.put("status", "UP");
-			}
-			tasksjson.put(posShow.getId(), taskobj);
+				taskobj.put("pos",
+						DateFormatCase.YYYY_MM_DD_hhmmss.getInstanc().format(new Date(posShow.getTime() * 1000)));
+				long defTimes = new Date().getTime() - posShow.getTime() * 1000;
+				if (defTimes >= 1000 * 60 * 10) {
+					taskobj.put("status", "DOWN");
+					long min = defTimes / (1000 * 60);
+					taskobj.put("delay", min + "Minutes");
+					issucess = false;
+				} else {
+					taskobj.put("status", "UP");
+				}
+				tasksjson.put(posShow.getId(), taskobj);
+			}			
 		}
-		tasksjson.put("status", issucess?"UP":"DOWN");
+		tasksjson.put("status", issucess ? "UP" : "DOWN");
 		retjson.put("tasks", tasksjson);
-		
+
 		boolean consumersucess = true;
 		JSONObject consumersjson = new JSONObject();
-		List<Consumer> consumers = ZkUtil.findAllObjs(ZkPath.consumers, Consumer.class);		
+		List<Consumer> consumers = ZkUtil.findAllObjs(ZkPath.consumers, Consumer.class);
 		for (Consumer consumer : consumers) {
 			JSONObject consumerobj = new JSONObject();
 			consumerobj.put("run", consumer.getRun().name());
 			consumerobj.put("groupId", consumer.getGroupId());
 			List<String> serverids = duckulaAssit.lockToServer(findAllServers, ZkPath.consumers, consumer.getId());
 			consumerobj.put("runserver", CollectionUtil.listJoin(serverids, ","));
-			if(CollectionUtils.isEmpty(serverids)) {
-				consumersucess=false;
+			if (CollectionUtils.isEmpty(serverids)) {
+				consumersucess = false;
 			}
 			consumerobj.put("status", CollectionUtils.isNotEmpty(serverids) ? "UP" : "DOWN");
 			consumersjson.put(consumer.getId(), consumerobj);
 		}
-		consumersjson.put("status", consumersucess?"UP":"DOWN");
+		consumersjson.put("status", consumersucess ? "UP" : "DOWN");
 		retjson.put("consumers", consumersjson);
 		return TapestryAssist.getTextStreamResponse(retjson.toJSONString());
 	}
