@@ -1,6 +1,6 @@
 image: registry.choerodon.xforceplus.com/rjzjh/duckula
-imageOpsTag: ops.2.0.7
-imageDataTag: data.2.0.7
+imageOpsTag: ops.2.0.8.1
+imageDataTag: data.2.0.8
 imagePullPolicy: IfNotPresent
 env:
   zk: 192.168.11.80:2181
@@ -88,7 +88,7 @@ userconfig:
       #k8s,此参数需要跟据情况修改为自己的私有镜像库
       #duckula.task.image.name=192.168.137.100:5000/rjzjh/duckula
       duckula.task.image.name=registry.choerodon.xforceplus.com/rjzjh/duckula
-      duckula.task.image.tag=task.2.0.7
+      duckula.task.image.tag=task.2.0.8
       #位点保留最大天数
       duckula.ops.pos.maxsize=7
   es:

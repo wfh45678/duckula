@@ -94,7 +94,23 @@ spec:
           failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
         volumeMounts:
         - name: data
-          mountPath: /data/duckula-data                        
+          mountPath: /data/duckula-data
+      {{- if .Values.userconfig.root }}
+        - name: userconfig-root
+          mountPath: /opt/userconfig
+      {{- end }}
+      {{- if .Values.userconfig.es }}
+        - name: userconfig-es
+          mountPath: /opt/userconfig/es
+      {{- end }}
+      {{- if .Values.userconfig.kafka }}
+        - name: userconfig-kafka
+          mountPath: /opt/userconfig/kafka
+      {{- end }}
+      {{- if .Values.userconfig.redis }}
+        - name: userconfig-redis
+          mountPath: /opt/userconfig/redis
+      {{- end }}                                  
       volumes:
       - name: data
       {{- if and  .Values.persistence.enabled  }}
