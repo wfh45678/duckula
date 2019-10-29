@@ -110,8 +110,8 @@ echo "-------------------------begin--------------------------------------"
 is_empty_dir(){ 
     return `ls -A $1|wc -w`
 }
-
-rm -fr /data/duckula-data/lost+found
+## 为版本升级，故意删除所有数据，重新配置
+rm -fr /data/duckula-data/*
 if is_empty_dir /data/duckula-data
 then
     echo " /data/duckula-data 是空,系统会自动初始化此配置，task的容器需要挂载同样的卷"
