@@ -43,7 +43,8 @@ ENV PATH /opt/duckula/bin:$PATH
 ENV DUCKULA_VERSION="2.0.0"
 ENV DUCKULA_DATA="/data/duckula-data" \
 	DUCKULA_HOME="/opt/duckula" \
-	metricspath="/data/duckula-data/logs/metrics" 
+	metricspath="/data/duckula-data/logs/metrics" \
+	DelLoggerConfig="other"
 
 COPY ./docker-entrypoint/docker-entrypoint.sh  /
 RUN set -ex; \

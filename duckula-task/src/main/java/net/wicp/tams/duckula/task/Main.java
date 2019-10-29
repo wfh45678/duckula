@@ -19,6 +19,11 @@ import javax.management.ObjectName;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.curator.framework.recipes.locks.InterProcessMutex;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.LoggerConfig;
 
 import com.alibaba.fastjson.JSONObject;
 
@@ -35,6 +40,7 @@ import net.wicp.tams.duckula.common.ZkUtil;
 import net.wicp.tams.duckula.common.beans.ColHis;
 import net.wicp.tams.duckula.common.beans.Count;
 import net.wicp.tams.duckula.common.constant.CommandType;
+import net.wicp.tams.duckula.common.constant.TaskPattern;
 import net.wicp.tams.duckula.common.constant.ZkPath;
 import net.wicp.tams.duckula.task.bean.DuckulaContext;
 import net.wicp.tams.duckula.task.conf.ITaskConf;
@@ -54,6 +60,7 @@ public class Main {
 
 	public static void main(String[] args) {
 		Thread.currentThread().setName("Duckula-main");
+		initLog4j2();
 		if (ArrayUtils.isEmpty(args)) {
 			System.err.println("----未传入taskid，不能启动task----");
 			log.error("----未传入taskid，不能启动task----");
@@ -244,6 +251,21 @@ public class Main {
 			// TODO: handle exception
 		}
 
+	}
+
+	// 初始化log4j2，由于在k8s与独立部署的中间件不同，需要做处理
+	private static void initLog4j2() {
+		// https://logging.apache.org/log4j/2.x/manual/customconfig.html
+		final LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+		final Configuration config = ctx.getConfiguration();
+		LoggerConfig loggerConfig = config.getRootLogger();
+		loggerConfig.setLevel(Level.INFO);
+		//是否要删除某个Logger，默认是日志和控制台都打
+		if (StringUtil.isNotNull(System.getenv("DelLoggerConfig"))) {
+			String loggerConfigEnv = System.getenv("DelLoggerConfig");
+			loggerConfig.removeAppender(loggerConfigEnv);
+		}
+		ctx.updateLoggers();
 	}
 
 	private static void initMbean(InterProcessMutex lock, ZookeeperImpl taskConf) throws InstanceAlreadyExistsException,
