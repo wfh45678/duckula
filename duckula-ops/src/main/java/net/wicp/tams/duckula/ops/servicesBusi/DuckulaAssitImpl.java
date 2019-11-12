@@ -277,7 +277,7 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 
 	// 默认Conf.get("common.kubernetes.apiserver.namespace.default")
 	@Override
-	public Result startTaskForK8s(CommandType commandType, String taskId) {
+	public Result startTaskForK8s(CommandType commandType, String taskId, boolean isAuto) {
 		Task buidlTask = QueryTask(commandType, taskId);
 		boolean standalone = Conf.getBoolean("duckula.ops.starttask.standalone");
 		if (buidlTask == null) {
@@ -310,6 +310,13 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 			Object[] userConfig = userList.toArray(new Object[userList.size()]);
 			Result installDirChart = TillerClient.getInst().installDirChart(name, buidlTask.getNamespace(),
 					chartsDirPath, String.format("values-%s.yaml", poststr), userConfig);
+			if (!installDirChart.isSuc()) {
+				log.error("在k8s上启动Task[{}]出错:{}", taskId, installDirChart.getMessage());
+			} else {
+				if (isAuto) {
+					setAuto(commandType, taskId, YesOrNo.yes);
+				}
+			}
 			return installDirChart;
 		}
 
@@ -347,9 +354,16 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 		}
 		Object[] userConfig = userList.toArray(new Object[userList.size()]);
 
-		Result installDirChart = TillerClient.getInst().installDirChart(name, buidlTask.getNamespace(), chartsDirPath,
-				userConfig);
-		return installDirChart;
+		Result result = TillerClient.getInst().installDirChart(name, buidlTask.getNamespace(), chartsDirPath,
+				userConfig);		
+		if (!result.isSuc()) {
+			log.error("在k8s上启动Task[{}]出错:{}", taskId, result.getMessage());
+		} else {
+			if (isAuto) {
+				setAuto(commandType, taskId, YesOrNo.yes);
+			}
+		}
+		return result;
 	}
 
 	private Task QueryTask(CommandType commandType, String taskId) {
@@ -372,11 +386,23 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 		return buidlTask;
 	}
 
+	//isAuto
 	@Override
-	public Result stopTaskForK8s(CommandType commandType, String taskId) {
+	public Result stopTaskForK8s(CommandType commandType, String taskId, boolean isAuto) {
+		if (true) {
+			setAuto(commandType, taskId, YesOrNo.no);
+		}
 		String idfull = commandType.getK8sId(taskId);
 		Result deleteChart = TillerClient.getInst().deleteChart(idfull);
-		waitUnLock(commandType, taskId, 120000);
+
+		if (!deleteChart.isSuc()) {
+			log.error("在k8s上停止Task[{}]出错:{}", taskId, deleteChart.getMessage());
+		} else {
+			if (isAuto) {
+				setAuto(commandType, taskId, YesOrNo.yes);
+				waitUnLock(commandType, taskId, 120000);
+			}
+		}
 		return deleteChart;
 	}
 

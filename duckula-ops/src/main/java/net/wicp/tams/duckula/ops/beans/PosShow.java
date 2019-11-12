@@ -17,6 +17,7 @@ public class PosShow {
 
 	//
 	private String lockIPs;
+	private String podStatus;
 	private int hostNum;// true:在运行 false: 不在运行
 
 	public String getTimeStr() {

@@ -2,6 +2,7 @@ package net.wicp.tams.duckula.ops.pages.duckula;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
@@ -13,6 +14,8 @@ import org.apache.zookeeper.KeeperException;
 
 import com.alibaba.fastjson.JSONObject;
 
+import common.kubernetes.constant.ResourcesType;
+import common.kubernetes.tiller.TillerClient;
 import net.wicp.tams.common.Conf;
 import net.wicp.tams.common.Result;
 import net.wicp.tams.common.apiext.CollectionUtil;
@@ -27,6 +30,8 @@ import net.wicp.tams.duckula.common.ZkUtil;
 import net.wicp.tams.duckula.common.beans.Consumer;
 import net.wicp.tams.duckula.common.beans.Pos;
 import net.wicp.tams.duckula.common.beans.Task;
+import net.wicp.tams.duckula.common.constant.CommandType;
+import net.wicp.tams.duckula.common.constant.TaskPattern;
 import net.wicp.tams.duckula.common.constant.ZkPath;
 import net.wicp.tams.duckula.ops.beans.PosShow;
 import net.wicp.tams.duckula.ops.beans.Server;
@@ -93,23 +98,45 @@ public class OpsManager {
 		boolean issucess = true;
 		List<Server> findAllServers = duckulaAssit.findAllServers();
 		for (PosShow posShow : taskPosList) {
-			List<String> ips = ZkUtil.lockIps(ZkPath.tasks, posShow.getId());
 			Task buidlTask = ZkUtil.buidlTask(posShow.getId());
-			if (CollectionUtils.isEmpty(ips)) {
-				posShow.setHostNum(0);
+			if (TaskPattern.isNeedServer()) {
+				List<String> ips = ZkUtil.lockIps(ZkPath.tasks, posShow.getId());
+				if (CollectionUtils.isEmpty(ips)) {
+					posShow.setHostNum(0);
+				} else {
+					List<String> lockToServer = duckulaAssit.lockToServer(findAllServers, ZkPath.tasks,
+							buidlTask.getId());
+					posShow.setLockIPs(CollectionUtil.listJoin(lockToServer, ","));
+					posShow.setHostNum(ips.size());
+				}
 			} else {
-				List<String> lockToServer = duckulaAssit.lockToServer(findAllServers, ZkPath.tasks, buidlTask.getId());
-				posShow.setLockIPs(CollectionUtil.listJoin(lockToServer, ","));
-				posShow.setHostNum(ips.size());
+				//////////////////////////////////////
+				String keyObj = CommandType.task.getK8sId(posShow.getId());
+				Map<ResourcesType, String> queryStatus = TillerClient.getInst().queryStatus(keyObj);
+				String valueStr = queryStatus.get(ResourcesType.Pod);
+				String colValue = ResourcesType.Pod.getColValue(valueStr, "STATUS");
+				if (StringUtil.isNull(colValue)) {
+					posShow.setHostNum(0);
+				} else if ("Running".equals(colValue)) {// 正在运行
+					posShow.setHostNum(1);
+					posShow.setPodStatus(colValue);
+				} else {
+					posShow.setHostNum(0);
+					posShow.setPodStatus(colValue);
+				}
 			}
 			int hostNum = posShow.getHostNum();
 			JSONObject taskobj = new JSONObject();
+
 			if (hostNum == 0) {
 				if (buidlTask.getRun() == YesOrNo.yes) {
 					taskobj.put("status", "DOWN");
 					taskobj.put("delay", "已停机");
 					taskobj.put("pos", "0");
 					issucess = false;
+					if (!TaskPattern.isNeedServer()) {
+						taskobj.put("podStatus", posShow.getPodStatus());
+					}
 					tasksjson.put(posShow.getId(), taskobj);
 				}
 			} else {
@@ -125,7 +152,7 @@ public class OpsManager {
 					taskobj.put("status", "UP");
 				}
 				tasksjson.put(posShow.getId(), taskobj);
-			}			
+			}
 		}
 		tasksjson.put("status", issucess ? "UP" : "DOWN");
 		retjson.put("tasks", tasksjson);

@@ -362,7 +362,7 @@ public class TaskManager {
 	public TextStreamResponse onStartK8sTask() {
 		long curtime1 = new Date().getTime();
 		String taskid = request.getParameter("taskid");
-		Result ret = duckulaAssit.startTaskForK8s(CommandType.task, taskid);// TODO 非独立模式， pvc的初始化需解决、可以传入参数standalone
+		Result ret = duckulaAssit.startTaskForK8s(CommandType.task, taskid,true);// TODO 非独立模式， pvc的初始化需解决、可以传入参数standalone
 		// 等待一段时间，为启动各个task留点时间
 		long curtime2 = System.currentTimeMillis();
 		while ((curtime2 - curtime1) < 3000) {
@@ -421,7 +421,7 @@ public class TaskManager {
 		String commandtypeStr=request.getParameter("commandtype");		
 		CommandType commandtype=CommandType.valueOf(CommandType.class, commandtypeStr);		
 		String taskid = request.getParameter("taskid");
-		Result ret = duckulaAssit.stopTaskForK8s(commandtype,taskid);
+		Result ret = duckulaAssit.stopTaskForK8s(commandtype,taskid,false);
 		// 等待一段时间，为启动各个task留点时间
 		long curtime2 = System.currentTimeMillis();
 		while ((curtime2 - curtime1) < 3000) {
