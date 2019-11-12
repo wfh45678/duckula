@@ -1,5 +1,5 @@
 image: registry.choerodon.xforceplus.com/rjzjh/duckula
-imageTaskTag: task.2.0.7
+imageTaskTag: task.2.0.9
 imagePullPolicy: IfNotPresent
 #运行的命令 docker-run.sh:监听mysql  docker-consumer.sh：kafka监听  docker-dump.sh: 全量导入
 cmd:  docker-run.sh
@@ -33,7 +33,7 @@ hosts:
 - {ip: 172.18.203.14,host: [seller-node-es2]}
 - {ip: 172.18.203.12,host: [seller-node-es3]}
 - {ip: 172.18.203.13,host: [seller-node-es4]}
-- {ip: 172.18.203.11,host: [seller-node-es5]} 
+- {ip: 172.18.203.11,host: [seller-node-es5]}
  
 service:
   type: ClusterIP

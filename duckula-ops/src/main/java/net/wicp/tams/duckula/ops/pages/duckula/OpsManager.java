@@ -164,12 +164,29 @@ public class OpsManager {
 			JSONObject consumerobj = new JSONObject();
 			consumerobj.put("run", consumer.getRun().name());
 			consumerobj.put("groupId", consumer.getGroupId());
-			List<String> serverids = duckulaAssit.lockToServer(findAllServers, ZkPath.consumers, consumer.getId());
-			consumerobj.put("runserver", CollectionUtil.listJoin(serverids, ","));
-			if (CollectionUtils.isEmpty(serverids)) {
-				consumersucess = false;
+
+			if (TaskPattern.isNeedServer()) {
+				List<String> serverids = duckulaAssit.lockToServer(findAllServers, ZkPath.consumers, consumer.getId());
+				consumerobj.put("runserver", CollectionUtil.listJoin(serverids, ","));
+				if (CollectionUtils.isEmpty(serverids)) {
+					consumersucess = false;
+				}
+				consumerobj.put("status", CollectionUtils.isNotEmpty(serverids) ? "UP" : "DOWN");
+			} else {
+				//////////////////////////////////////
+				String keyObj = CommandType.consumer.getK8sId(consumer.getId());
+				Map<ResourcesType, String> queryStatus = TillerClient.getInst().queryStatus(keyObj);
+				String valueStr = queryStatus.get(ResourcesType.Pod);
+				String colValue = ResourcesType.Pod.getColValue(valueStr, "STATUS");
+				consumerobj.put("podStatus", colValue);
+				if (StringUtil.isNull(colValue)) {
+					consumersucess = false;
+				} else if ("Running".equals(colValue)) {// 正在运行
+					consumersucess = true;
+				} else {
+					consumersucess = false;
+				}
 			}
-			consumerobj.put("status", CollectionUtils.isNotEmpty(serverids) ? "UP" : "DOWN");
 			consumersjson.put(consumer.getId(), consumerobj);
 		}
 		consumersjson.put("status", consumersucess ? "UP" : "DOWN");

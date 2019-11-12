@@ -18,8 +18,7 @@ spec:
       annotations:
 {{ toYaml . | indent 8 }}
 {{- end }}
-    spec:
-    
+    spec:    
     {{- if not .Values.persistence.existingClaim }} 
       initContainers:
       - name: pro-data
@@ -44,7 +43,17 @@ spec:
         - name: userconfig-redis
           mountPath: /opt/userconfig/redis
       {{- end }} 
-     {{- end }}     
+     {{- end }}    
+{{- if .Values.hosts  }} 
+      hostAliases:
+    {{- range $index, $element := .Values.hosts }}
+      - ip: {{ $element.ip | quote }}
+        hostnames: 
+      {{- range $element.host }}
+        - {{ . | quote }}
+       {{- end }}
+    {{- end }} 
+{{- end }}         
       containers:
       - name: {{ template "duckula.fullname" . }}
         image: '{{ .Values.image }}:{{ .Values.imageOpsTag }}'

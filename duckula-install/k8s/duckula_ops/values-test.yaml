@@ -1,10 +1,19 @@
 image: registry.choerodon.xforceplus.com/rjzjh/duckula
-imageOpsTag: ops.2.0.7
-imageDataTag: data.2.0.7
+imageOpsTag: ops.2.0.9.1
+imageDataTag: data.2.0.9
 imagePullPolicy: IfNotPresent
 env:
   zk: 192.168.11.80:2181
   rootpath: /duckula-k8s
+hosts:
+- {ip: 192.168.11.61,host: [zk-kafka-01]}
+- {ip: 192.168.11.58,host: [zk-kafka-02]}
+- {ip: 192.168.11.60,host: [zk-kafka-03]}
+- {ip: 192.168.11.59,host: [zk-kafka-04]}
+
+- {ip: 192.168.11.116,host: [node-es1]}
+- {ip: 192.168.11.117,host: [node-es2]}
+- {ip: 192.168.11.118,host: [node-es3]}    
 service:
   type: ClusterIP
   port: 8080
