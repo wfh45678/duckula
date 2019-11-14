@@ -33,7 +33,7 @@
 	<properties>
 		<java.version>1.8</java.version>
 		<autoconfig.path>${user.home}/antx-config/${devModel}</autoconfig.path>
-		<common.apiext.version>3.6.5</common.apiext.version>
+		<common.apiext.version>3.6.6</common.apiext.version>
 		<common.connector.version>3.6.5</common.connector.version>
 		<common.http.version>3.6.0</common.http.version>
 		<common.metrics.version>3.6.4</common.metrics.version>

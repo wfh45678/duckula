@@ -3,6 +3,7 @@ package net.wicp.tams.duckula.busi.filter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,10 +16,12 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import lombok.extern.slf4j.Slf4j;
 import net.wicp.tams.common.Conf;
+import net.wicp.tams.common.apiext.CollectionUtil;
 import net.wicp.tams.common.apiext.IOUtil;
 import net.wicp.tams.common.apiext.LoggerUtil;
 import net.wicp.tams.common.apiext.StringUtil;
 import net.wicp.tams.common.apiext.jdbc.JdbcAssit;
+import net.wicp.tams.common.apiext.jdbc.MySqlAssit;
 import net.wicp.tams.common.constant.JvmStatus;
 import net.wicp.tams.common.constant.OptType;
 import net.wicp.tams.common.constant.StrPattern;
@@ -39,6 +42,7 @@ public class BusiFilter implements IBusi {
 	// private String[][] filterRules;
 	// key:库名|表名 value:key:字段名 value[0]模式 value[1]模式值
 	private Map<String, Map<String, String[]>> filterRules = new HashMap<String, Map<String, String[]>>();
+	private Map<String, String[]> colNamesMap = new HashMap<String, String[]>();
 	private final String db_tb_formart = "%s|%s";
 
 	public BusiFilter() {
@@ -55,6 +59,7 @@ public class BusiFilter implements IBusi {
 		}
 		Conf.overProp(props);
 		Map<String, String> propmap = Conf.getPre("duckula.busi.filter", true);
+		Connection connection = DruidAssit.getConnection();
 		for (String key : propmap.keySet()) {
 			String[] tempKeyAry = key.split("\\.");// 库、表、字段、模式
 			String db_tb = String.format(db_tb_formart, tempKeyAry[0], tempKeyAry[1]);
@@ -70,10 +75,21 @@ public class BusiFilter implements IBusi {
 				break;
 			case sql:
 				break;
+			case colname:
+				String[] primary = MySqlAssit.getPrimary(connection, tempKeyAry[0], tempKeyAry[1]);
+				String[] colNamesFilterAry = value.split(",");
+				String[] arrayOr = CollectionUtil.arrayOr(String[].class, primary, colNamesFilterAry);
+				colNamesMap.put(db_tb, arrayOr);
+				break;
 			default:
 				break;
 			}
 			tempmap.put(tempKeyAry[2], new String[] { pattern.name(), value });
+		}
+		try {
+			connection.close();
+		} catch (SQLException e) {
+			log.error("关闭connection失败", e);
 		}
 		log.info("---------------------初始化完成-----------------------");
 	}
@@ -83,8 +99,9 @@ public class BusiFilter implements IBusi {
 		// List<Integer> remove = new ArrayList<>();
 		Map<Integer, Boolean> remove = new HashMap<Integer, Boolean>();
 		// Map<Integer, Boolean> remove = new ConcurrentHashMap<Integer, Boolean>();
-		Map<String, String[]> filters = filterRules.get(String.format(db_tb_formart,
-				duckulaPackage.getEventTable().getDb(), duckulaPackage.getEventTable().getTb()));
+		String db_tb = String.format(db_tb_formart,
+				duckulaPackage.getEventTable().getDb(), duckulaPackage.getEventTable().getTb());
+		Map<String, String[]> filters = filterRules.get(db_tb);
 		if (filters != null) {
 			String[][] valuestrue = OptType.delete == duckulaPackage.getEventTable().getOptType()
 					? duckulaPackage.getBefores()
@@ -95,9 +112,13 @@ public class BusiFilter implements IBusi {
 				String[] vals = filters.get(col);
 				Pattern pattern = Pattern.valueOf(vals[0]);
 				String value = vals[1];
+				if (pattern == Pattern.colname) {
+					// 列过滤在后面做，且只会存在一个
+					continue;
+				}
 				final CountDownLatch latch = new CountDownLatch(valuestrue.length);
 				for (int i = 0; i < valuestrue.length; i++) {
-					filter(duckulaPackage, remove, valuestrue, indexOf, pattern, value, i);
+					// filter(duckulaPackage, remove, valuestrue, indexOf, pattern, value, i);
 					// log.info("filter 后:{},i:{}",remove.size(),i);
 					final int index = i;
 					ThreadPool.getDefaultPool().submit(new Runnable() {
@@ -152,7 +173,7 @@ public class BusiFilter implements IBusi {
 				// log.info("after:{},remove:{},valuesTrue:{}", tempsize, array.length,
 				// valuesTrue.length);
 				duckulaPackage.setAfters(valuesTrue);
-				//取最小值
+				// 取最小值
 				rowsNumRrue = valuesTrue == null ? 0
 						: ((rowsNumRrue == 0 || (rowsNumRrue > 0 && rowsNumRrue > valuesTrue.length))
 								? valuesTrue.length
@@ -167,6 +188,41 @@ public class BusiFilter implements IBusi {
 			if (isnull) {
 				throw new ProjectException(ExceptAll.duckula_nodata, "过滤后没有数据");
 			}
+		}
+
+		String[] colFilter = colNamesMap.get(db_tb);
+		if (ArrayUtils.isNotEmpty(colFilter)) {// 处理列过滤
+			List<Integer> removeIndex = new ArrayList<Integer>();
+			for (int i = 0; i < duckulaPackage.getEventTable().getCols().length; i++) {
+				if (!ArrayUtils.contains(colFilter, duckulaPackage.getEventTable().getCols()[i])) {
+					removeIndex.add(i);
+				}
+			}
+			int[] removeIndexAry = new int[removeIndex.size()];
+			for (int i = 0; i < removeIndex.size(); i++) {
+				removeIndexAry[i] = removeIndex.get(i).intValue();
+			}
+
+			String[] cols = ArrayUtils.removeAll(duckulaPackage.getEventTable().getCols(), removeIndexAry);
+			int[] colTypes = ArrayUtils.removeAll(duckulaPackage.getEventTable().getColsType(), removeIndexAry);
+			if (ArrayUtils.isNotEmpty(duckulaPackage.getBefores())) {
+				String[][] beforeTrue = new String[duckulaPackage.getBefores().length][];
+				for (int i = 0; i < duckulaPackage.getBefores().length; i++) {
+					beforeTrue[i] = ArrayUtils.removeAll(duckulaPackage.getBefores()[i], removeIndexAry);
+				}
+				duckulaPackage.setBefores(beforeTrue);
+			}
+
+			if (ArrayUtils.isNotEmpty(duckulaPackage.getAfters())) {
+				String[][] afterTrue = new String[duckulaPackage.getAfters().length][];
+				for (int i = 0; i < duckulaPackage.getAfters().length; i++) {
+					afterTrue[i] = ArrayUtils.removeAll(duckulaPackage.getAfters()[i], removeIndexAry);
+				}
+				duckulaPackage.setAfters(afterTrue);
+			}
+			duckulaPackage.getEventTable().setCols(cols);
+			duckulaPackage.getEventTable().setColsType(colTypes);
+			duckulaPackage.getEventTable().setColsNum(cols.length);
 		}
 	}
 
@@ -224,6 +280,8 @@ public class BusiFilter implements IBusi {
 					log.error("close conn error", e2);
 				}
 			}
+			break;
+		case colname:// 不用处理，这个是需要在第二步处理
 			break;
 		default:
 			break;
