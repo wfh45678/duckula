@@ -31,6 +31,8 @@ import net.wicp.tams.common.jdbc.DruidAssit;
 import net.wicp.tams.common.thread.ThreadPool;
 import net.wicp.tams.common.thread.threadlocal.PerthreadManager;
 import net.wicp.tams.duckula.common.ZkClient;
+import net.wicp.tams.duckula.common.ZkUtil;
+import net.wicp.tams.duckula.common.beans.Task;
 import net.wicp.tams.duckula.common.constant.ZkPath;
 import net.wicp.tams.duckula.plugin.beans.DuckulaPackage;
 import net.wicp.tams.duckula.plugin.beans.Rule;
@@ -51,12 +53,22 @@ public class BusiFilter implements IBusi {
 			log.error("busiFilter不能获取taskId");
 			LoggerUtil.exit(JvmStatus.s15);
 		}
+		// 添加默认配置，由于classload在下层，Conf初始化已在上层做掉了，没办法再次load下层的jar包中的默认配置
+		Properties defaultProps = IOUtil.fileToProperties("/filter-default.properties", BusiFilter.class);
+		Conf.overProp(defaultProps);
+		// zk上的配置
 		String filterStr = ZkClient.getInst().getZkDataStr(ZkPath.filter.getPath(taskId));
 		Properties props = IOUtil.StringToProperties(filterStr);
 		if (props == null) {
 			log.error("busiFilter过滤文件转换失败");
 			LoggerUtil.exit(JvmStatus.s15);
 		}
+		// task的配置
+		Task task = ZkUtil.buidlTask(taskId);
+		props.put("common.jdbc.datasource.default.host", task.getIp());
+		props.put("common.jdbc.datasource.default.port", task.getPort());
+		props.put("common.jdbc.datasource.default.username", task.getUser());
+		props.put("common.jdbc.datasource.default.password", task.getPwd());
 		Conf.overProp(props);
 		Map<String, String> propmap = Conf.getPre("duckula.busi.filter", true);
 		Connection connection = DruidAssit.getConnection();
@@ -99,8 +111,8 @@ public class BusiFilter implements IBusi {
 		// List<Integer> remove = new ArrayList<>();
 		Map<Integer, Boolean> remove = new HashMap<Integer, Boolean>();
 		// Map<Integer, Boolean> remove = new ConcurrentHashMap<Integer, Boolean>();
-		String db_tb = String.format(db_tb_formart,
-				duckulaPackage.getEventTable().getDb(), duckulaPackage.getEventTable().getTb());
+		String db_tb = String.format(db_tb_formart, duckulaPackage.getEventTable().getDb(),
+				duckulaPackage.getEventTable().getTb());
 		Map<String, String[]> filters = filterRules.get(db_tb);
 		if (filters != null) {
 			String[][] valuestrue = OptType.delete == duckulaPackage.getEventTable().getOptType()
