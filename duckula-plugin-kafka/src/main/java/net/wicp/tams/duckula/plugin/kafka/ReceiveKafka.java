@@ -146,7 +146,7 @@ public class ReceiveKafka extends ReceiveAbs {
 
 	@Override
 	public boolean isSync() {
-		return false;
+		return true;// 因为已在具体插件（本类）中实现异步转同步逻辑，所以在主程序中保持同步
 	}
 
 }

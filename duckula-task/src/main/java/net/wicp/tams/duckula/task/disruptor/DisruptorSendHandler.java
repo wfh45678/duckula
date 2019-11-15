@@ -9,8 +9,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.commons.lang3.ArrayUtils;
-
 import com.alibaba.fastjson.JSONObject;
 import com.lmax.disruptor.EventHandler;
 
@@ -41,12 +39,12 @@ public class DisruptorSendHandler implements EventHandler<EventPackage> {
 	private final IReceiver receive;
 	private final ISerializer serialize;
 	private final ExecutorService exec;
-	private final int sendAll = 9;// 总共重试次数 最大256S
+	private final int sendAll = 8;// 总共重试次数 最大128S,总共256S
 	public static File rootDir;
 	static {
 		rootDir = new File(System.getenv("DUCKULA_DATA"));
 	}
-	private final boolean isSync;// 需要同步实现,现只有ES插件需要。
+	//private final boolean isSync;// 需要同步实现,现只有ES插件需要。
 
 	public DisruptorSendHandler(JSONObject params) {
 		Thread.currentThread().setName("duckula-sendHandler");
@@ -78,8 +76,7 @@ public class DisruptorSendHandler implements EventHandler<EventPackage> {
 			LoggerUtil.exit(JvmStatus.s15);
 		}
 
-		if (!receive.isSync()) {// 不是中间存储，是最终存储，现在只有ES
-			isSync = true;
+		if (receive.isSync()) {// 不是中间存储，是最终存储，现在只有ES
 			exec = null;
 			ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 			// 第二个参数为首次执行的延时时间，第三个参数为定时执行的间隔时间
@@ -97,7 +94,6 @@ public class DisruptorSendHandler implements EventHandler<EventPackage> {
 			}, 10, 30, TimeUnit.SECONDS);
 
 		} else {
-			isSync = false;
 			exec = Executors.newFixedThreadPool(1);
 		}
 	}
@@ -130,7 +126,7 @@ public class DisruptorSendHandler implements EventHandler<EventPackage> {
 		// log.info("send:{}", event.getRowsNum());
 		// 真正发送
 		int sendNum = 0;
-		if (isSync) {
+		if (receive.isSync()) {
 			sendBeginTime = System.currentTimeMillis();
 			while (true) {
 				long timeBegin = System.currentTimeMillis();

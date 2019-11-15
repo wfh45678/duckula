@@ -45,7 +45,7 @@ public class ReceiveRedis extends ReceiveAbs {
 				jedis.del(keyValue);
 			} else {
 				jedis.hmset(keyValue, data);
-				//jedis.set(keyValue, JSONObject.toJSONString(data));//
+				// jedis.set(keyValue, JSONObject.toJSONString(data));//
 			}
 		}
 		AbsPool.returnResource(jedis);
@@ -99,6 +99,6 @@ public class ReceiveRedis extends ReceiveAbs {
 
 	@Override
 	public boolean isSync() {
-		return false;
+		return true;
 	}
 }
