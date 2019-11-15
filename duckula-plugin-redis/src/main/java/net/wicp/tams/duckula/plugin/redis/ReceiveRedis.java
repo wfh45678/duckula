@@ -10,6 +10,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import com.alibaba.fastjson.JSONObject;
 
 import net.wicp.tams.common.Conf;
+import net.wicp.tams.common.apiext.CollectionUtil;
 import net.wicp.tams.common.apiext.StringUtil;
 import net.wicp.tams.common.constant.OptType;
 import net.wicp.tams.common.redis.RedisAssit;
@@ -40,6 +41,7 @@ public class ReceiveRedis extends ReceiveAbs {
 		OptType optType = duckulaPackage.getEventTable().getOptType();
 		for (int i = 0; i < duckulaPackage.getRowsNum(); i++) {
 			Map<String, String> data = pluginAssit.getUseData(duckulaPackage, i);
+			CollectionUtil.filterNull(data, 1);// 过滤空值
 			String keyValue = String.format(rule.getItems().get(RuleItem.key), data.get(splitKey));
 			if (optType == OptType.delete) {
 				jedis.del(keyValue);
@@ -52,10 +54,13 @@ public class ReceiveRedis extends ReceiveAbs {
 		return true;
 	}
 
+	private volatile AbsPool absPoolMiddleConf;// 只有在中间件配置起作用时才会用。
+
 	private AbsPool initPool(Rule rule) {
 		String key = String.format("%s-%s", rule.getDbPattern(), rule.getTbPattern());
 		if (!poolmap.containsKey(key)) {
 			String appid = rule.getItems().get(RuleItem.appid);
+			String redisurl = rule.getItems().get(RuleItem.redisurl);
 			AbsPool absPool = null;
 			if (StringUtil.isNotNull(appid)) {// cachecloud
 				String[] splitAppIdAry = RuleItem.splitAppId(appid);
@@ -64,6 +69,15 @@ public class ReceiveRedis extends ReceiveAbs {
 				} else if ("sentinel".equals(splitAppIdAry[0])) {
 					absPool = CacheCloudAssit.sentinel(Long.parseLong(splitAppIdAry[1]));
 				} // TODO 集群模式
+			} else if (StringUtil.isNull(redisurl)) {// redisurl为空,取中间件的配置
+				if (absPoolMiddleConf == null) {
+					synchronized (ReceiveRedis.class) {
+						if (absPoolMiddleConf == null) {
+							absPoolMiddleConf = RedisAssit.getPool();// 兼容standalone和sentinel
+						}
+					}
+				}
+				absPool = absPoolMiddleConf;
 			} else {
 				String redisurlValue = rule.getItems().get(RuleItem.redisurl);
 				String[] hostAryl = RuleItem.splitRedisurl(redisurlValue);
