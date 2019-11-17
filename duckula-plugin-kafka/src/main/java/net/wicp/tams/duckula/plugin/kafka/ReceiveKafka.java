@@ -45,8 +45,7 @@ public class ReceiveKafka extends ReceiveAbs {
 	}
 
 	@Override
-	public boolean receiveMsg(DuckulaPackage duckulaPackage, Rule rule) {
-		String splitKey = rule.getSplitKey() == null ? duckulaPackage.getEventTable().getCols()[0] : rule.getSplitKey();
+	public boolean receiveMsg(DuckulaPackage duckulaPackage, Rule rule, String splitKey) {
 		String topic = rule.getItems().get(RuleItem.topic);
 		if (!topicPartitionsMap.containsKey(topic)) {
 			List<PartitionInfo> partiList = producer.partitionsFor(topic);

@@ -35,7 +35,7 @@ public class ReceiveElasticsearch extends ReceiveAbs {
 	}
 
 	@Override
-	public boolean receiveMsg(DuckulaPackage duckulaPackage, Rule rule) {
+	public boolean receiveMsg(DuckulaPackage duckulaPackage, Rule rule,String splitKey) {
 		String idKey = rule.getItems().get(RuleItem.key) == null ? duckulaPackage.getEventTable().getCols()[0]
 				: rule.getItems().get(RuleItem.key);
 		String index = rule.getItems().get(RuleItem.index);

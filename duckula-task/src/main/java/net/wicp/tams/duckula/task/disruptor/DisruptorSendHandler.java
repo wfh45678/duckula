@@ -20,6 +20,7 @@ import net.wicp.tams.common.constant.JvmStatus;
 import net.wicp.tams.duckula.common.beans.Pos;
 import net.wicp.tams.duckula.common.constant.SerializerEnum;
 import net.wicp.tams.duckula.plugin.pluginAssit;
+import net.wicp.tams.duckula.plugin.constant.RuleItem;
 import net.wicp.tams.duckula.plugin.receiver.IReceiver;
 import net.wicp.tams.duckula.plugin.receiver.ReceiveAbs;
 import net.wicp.tams.duckula.plugin.serializer.ISerializer;
@@ -135,7 +136,7 @@ public class DisruptorSendHandler implements EventHandler<EventPackage> {
 					if (serialize == null) {
 						retvalue = receive.receiveMsg(event, event.getRule());
 					} else {
-						retvalue = receive.receiveMsg(serialize.serialize(event, event.getRule().getSplitKey()),
+						retvalue = receive.receiveMsg(serialize.serialize(event, event.getRule().getItems().get(RuleItem.splitkey)),
 								event.getRule());
 					}
 					if (retvalue != null && retvalue.booleanValue()) {
@@ -169,7 +170,7 @@ public class DisruptorSendHandler implements EventHandler<EventPackage> {
 						if (serialize == null) {
 							return receive.receiveMsg(event, event.getRule());
 						} else {
-							return receive.receiveMsg(serialize.serialize(event, event.getRule().getSplitKey()),
+							return receive.receiveMsg(serialize.serialize(event, event.getRule().getItems().get(RuleItem.splitkey)),
 									event.getRule());
 						}
 					}

@@ -28,7 +28,7 @@
 	<parent>
 		<groupId>net.wicp.tams</groupId>
 		<artifactId>parent</artifactId>
-		<version>42</version>
+		<version>45</version>
 	</parent>
 	<properties>
 		<java.version>1.8</java.version>
@@ -59,7 +59,7 @@
 		<!-- 与parent不同 -->
 		<log4j.version>2.6.2</log4j.version>
 		<!-- dev版本 -->
-		<duckula.version>2.0.2</duckula.version>
+		<duckula.version>2.0.3</duckula.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>

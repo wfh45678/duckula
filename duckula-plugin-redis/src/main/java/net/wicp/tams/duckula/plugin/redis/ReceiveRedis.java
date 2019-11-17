@@ -34,9 +34,8 @@ public class ReceiveRedis extends ReceiveAbs {
 	}
 
 	@Override
-	public boolean receiveMsg(DuckulaPackage duckulaPackage, Rule rule) {
+	public boolean receiveMsg(DuckulaPackage duckulaPackage, Rule rule, String splitKey) {
 		AbsPool absPool = initPool(rule);
-		String splitKey = rule.getSplitKey() == null ? duckulaPackage.getEventTable().getCols()[0] : rule.getSplitKey();
 		Jedis jedis = absPool.getResource();
 		OptType optType = duckulaPackage.getEventTable().getOptType();
 		for (int i = 0; i < duckulaPackage.getRowsNum(); i++) {
