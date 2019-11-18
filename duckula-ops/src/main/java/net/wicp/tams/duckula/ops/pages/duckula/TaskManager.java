@@ -485,7 +485,7 @@ public class TaskManager {
 			}
 			buff.append(JSONObject.toJSONString(jsontrue, SerializerFeature.UseSingleQuotes));
 		}
-		String retstr = buff.substring(1);
+		String retstr = buff.length()>1? buff.substring(1):"";
 		return TapestryAssist.getTextStreamResponse(Result.getSuc(retstr));
 	}
 

@@ -441,6 +441,21 @@
    }
    
  
+      function  updateRuleInput(index,data,changes){
+				   //onSave有时会不起作用，故用onBeforeSave
+				   var dgdata= $('#dg').edatagrid('getData');
+				   var datastr=JSON.stringify(dgdata);	
+				   $.post($.rjzjh.packurl('/duckula/taskManager:dataConvert'),{'saveData':datastr},function(data){
+					  $.rjzjh.opt2(data,function(){
+					    if("操作成功"==data.msg){
+					       jQuery('#rulesEdit').val("");
+					    }else{
+					      jQuery('#rulesEdit').val(data.msg);
+					    }
+			          });
+			       },'json');		   
+				}
+ 
    
    $(function(){
       $('#saveFilterBut').click(function(){
@@ -468,20 +483,12 @@
 					},
 					confirm:{	// when select a row
 						title:'确认',
-						msg:'您确定要删除此行吗?'
+						msg:'您确定要删除此监听规则吗?'
 					}
 				},
 				autoSave: false,
-				onAfterEdit: function(index,data,changes){
-				   //onSave有时会不起作用，故用onBeforeSave
-				   var dgdata= $('#dg').edatagrid('getData');
-				   var datastr=JSON.stringify(dgdata);	
-				   $.post($.rjzjh.packurl('/duckula/taskManager:dataConvert'),{'saveData':datastr},function(data){
-					  $.rjzjh.opt2(data,function(){
-					    jQuery('#rulesEdit').val(data.msg);
-			          });
-			       },'json');		   
-				}
+				onDestroy: updateRuleInput,
+				onAfterEdit: updateRuleInput
       });      
    });
 </script>
