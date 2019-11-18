@@ -19,7 +19,9 @@ import org.apache.tapestry5.util.TextStreamResponse;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.data.Stat;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 
 import common.kubernetes.constant.ResourcesType;
 import common.kubernetes.tiller.TillerClient;
@@ -51,6 +53,8 @@ import net.wicp.tams.duckula.ops.beans.DbInstance;
 import net.wicp.tams.duckula.ops.beans.Server;
 import net.wicp.tams.duckula.ops.services.InitDuckula;
 import net.wicp.tams.duckula.ops.servicesBusi.IDuckulaAssit;
+import net.wicp.tams.duckula.plugin.beans.Rule;
+import net.wicp.tams.duckula.plugin.constant.RuleItem;
 
 @Slf4j
 public class TaskManager {
@@ -72,10 +76,11 @@ public class TaskManager {
 	public boolean isNeedServer() {
 		return TaskPattern.isNeedServer();
 	}
-	
+
 	public String getDefaultImageVersion() {
 		return Conf.get("duckula.task.image.tag");
 	}
+
 	public String getDefaultNamespace() {
 		return Conf.get("common.kubernetes.apiserver.namespace.default");
 	}
@@ -159,18 +164,18 @@ public class TaskManager {
 			};
 			retstr = EasyUiAssist.getJsonForGrid(retlist,
 					new String[] { "id", "ip", "clientId", "port", "user", "pwd", "senderEnum", "receivePluginDir",
-							"params", "threadNum", "dbinst", "rules", "remark", "run", "rds", "serializerEnum","posListener",
-							"busiEnum", "middlewareType", "middlewareInst", "busiPluginDir", "isSsh", "id,hostNum",
-							"id,hosts", "senderEnum,senderEnum1" },
-					new IConvertValue[] { null, null, null, null, null, null, null, null, null, null, null, null, null,null,
-							null, null, null, null, null, null, null, null, hostNumConvert, hostNumList,
+							"params", "threadNum", "dbinst", "rules", "remark", "run", "rds", "serializerEnum",
+							"posListener", "busiEnum", "middlewareType", "middlewareInst", "busiPluginDir", "isSsh",
+							"id,hostNum", "id,hosts", "senderEnum,senderEnum1" },
+					new IConvertValue[] { null, null, null, null, null, null, null, null, null, null, null, null, null,
+							null, null, null, null, null, null, null, null, null, hostNumConvert, hostNumList,
 							new ConvertValueEnum(SenderEnum.class) },
 					retlist.size());
 		} else {
 			IConvertValue<String> podStatus = new IConvertValue<String>() {
 				@Override
 				public String getStr(String keyObj) {
-					keyObj=CommandType.task.getK8sId(keyObj);
+					keyObj = CommandType.task.getK8sId(keyObj);
 					Map<ResourcesType, String> queryStatus = TillerClient.getInst().queryStatus(keyObj);
 					String valueStr = queryStatus.get(ResourcesType.Pod);
 					String colValue = ResourcesType.Pod.getColValue(valueStr, "STATUS");
@@ -179,11 +184,11 @@ public class TaskManager {
 			};
 			retstr = EasyUiAssist.getJsonForGrid(retlist,
 					new String[] { "id", "ip", "clientId", "port", "user", "pwd", "senderEnum", "receivePluginDir",
-							"params", "threadNum", "dbinst", "rules", "remark", "run", "rds", "serializerEnum","posListener",
-							"busiEnum", "middlewareType", "middlewareInst", "busiPluginDir", "isSsh","imageVersion","namespace","id,podStatus",
-							"senderEnum,senderEnum1" },
-					new IConvertValue[] { null, null, null, null, null, null, null, null, null, null, null, null, null,null,null,null,
-							null, null, null, null, null, null, null, null, podStatus,
+							"params", "threadNum", "dbinst", "rules", "remark", "run", "rds", "serializerEnum",
+							"posListener", "busiEnum", "middlewareType", "middlewareInst", "busiPluginDir", "isSsh",
+							"imageVersion", "namespace", "id,podStatus", "senderEnum,senderEnum1" },
+					new IConvertValue[] { null, null, null, null, null, null, null, null, null, null, null, null, null,
+							null, null, null, null, null, null, null, null, null, null, null, podStatus,
 							new ConvertValueEnum(SenderEnum.class) },
 					retlist.size());
 		}
@@ -210,8 +215,9 @@ public class TaskManager {
 		}
 		Stat stat = ZkUtil.exists(ZkPath.tasks, taskparam.getId());
 		if (stat == null) {// 新增
-			taskparam.setClientId(StringUtil.buildPort(taskparam.getId()));//防止报“A slave with the same server_uuid/server_id”			
-			taskparam.setRun(YesOrNo.no);//不立即启动，需要做其它配置
+			taskparam.setClientId(StringUtil.buildPort(taskparam.getId()));// 防止报“A slave with the same
+																			// server_uuid/server_id”
+			taskparam.setRun(YesOrNo.no);// 不立即启动，需要做其它配置
 			ZkClient.getInst().createNode(ZkPath.tasks.getPath(taskparam.getId()), JSONObject.toJSONString(taskparam));
 			PathChildrenCache createPathChildrenCache = ZkClient.getInst()
 					.createPathChildrenCache(ZkPath.tasks.getPath(taskparam.getId()), InitDuckula.haWatcherTask);
@@ -219,11 +225,11 @@ public class TaskManager {
 		} else {
 			ZkClient.getInst().updateNode(ZkPath.tasks.getPath(taskparam.getId()), JSONObject.toJSONString(taskparam));
 		}
-		if(taskparam.getPosListener()==YesOrNo.no) {//不监听pos
+		if (taskparam.getPosListener() == YesOrNo.no) {// 不监听pos
 			InitDuckula.noPosListener.add(ZkPath.pos.getPath(taskparam.getId()));
-		}else {
+		} else {
 			InitDuckula.noPosListener.remove(ZkPath.pos.getPath(taskparam.getId()));
-		}		
+		}
 		return req.retSuccInfo("保存Task成功");
 	}
 
@@ -362,7 +368,8 @@ public class TaskManager {
 	public TextStreamResponse onStartK8sTask() {
 		long curtime1 = new Date().getTime();
 		String taskid = request.getParameter("taskid");
-		Result ret = duckulaAssit.startTaskForK8s(CommandType.task, taskid,true);// TODO 非独立模式， pvc的初始化需解决、可以传入参数standalone
+		Result ret = duckulaAssit.startTaskForK8s(CommandType.task, taskid, true);// TODO 非独立模式，
+																					// pvc的初始化需解决、可以传入参数standalone
 		// 等待一段时间，为启动各个task留点时间
 		long curtime2 = System.currentTimeMillis();
 		while ((curtime2 - curtime1) < 3000) {
@@ -374,31 +381,30 @@ public class TaskManager {
 		}
 		return TapestryAssist.getTextStreamResponse(ret);
 	}
-	
+
 	public TextStreamResponse onSaveFilter() throws KeeperException, InterruptedException {
 		String filterContext = request.getParameter("filterContext");
-		String taskId=request.getParameter("taskId");
+		String taskId = request.getParameter("taskId");
 		System.out.println(filterContext);
-		ZkClient.getInst().createOrUpdateNode(ZkPath.filter.getPath(taskId),
-				filterContext);
+		ZkClient.getInst().createOrUpdateNode(ZkPath.filter.getPath(taskId), filterContext);
 		return req.retSuccInfo("保存过滤成功");
 	}
-	
+
 	public TextStreamResponse onGetFilter() throws KeeperException, InterruptedException {
-		String taskId=request.getParameter("taskId");
+		String taskId = request.getParameter("taskId");
 		Stat stat = ZkClient.getInst().exists(ZkPath.filter.getPath(taskId));
-		if(stat!=null) {
+		if (stat != null) {
 			String zkDataStr = ZkClient.getInst().getZkDataStr(ZkPath.filter.getPath(taskId));
 			return TapestryAssist.getTextStreamResponse(zkDataStr);
-		}else {
+		} else {
 			return TapestryAssist.getTextStreamResponse("");
 		}
 	}
 
 	public TextStreamResponse onStopTask() {
 		long curtime1 = new Date().getTime();
-		String commandtypeStr=request.getParameter("commandtype");
-		CommandType commandtype=CommandType.valueOf(CommandType.class, commandtypeStr);	
+		String commandtypeStr = request.getParameter("commandtype");
+		CommandType commandtype = CommandType.valueOf(CommandType.class, commandtypeStr);
 		String taskid = request.getParameter("taskid");
 		String serverid = request.getParameter("serverid");
 		Server server = JSONObject.toJavaObject(ZkClient.getInst().getZkData(ZkPath.servers.getPath(serverid)),
@@ -417,11 +423,11 @@ public class TaskManager {
 	}
 
 	public TextStreamResponse onStopTaskForK8s() {
-		long curtime1 = new Date().getTime();		
-		String commandtypeStr=request.getParameter("commandtype");		
-		CommandType commandtype=CommandType.valueOf(CommandType.class, commandtypeStr);		
+		long curtime1 = new Date().getTime();
+		String commandtypeStr = request.getParameter("commandtype");
+		CommandType commandtype = CommandType.valueOf(CommandType.class, commandtypeStr);
 		String taskid = request.getParameter("taskid");
-		Result ret = duckulaAssit.stopTaskForK8s(commandtype,taskid,false);
+		Result ret = duckulaAssit.stopTaskForK8s(commandtype, taskid, false);
 		// 等待一段时间，为启动各个task留点时间
 		long curtime2 = System.currentTimeMillis();
 		while ((curtime2 - curtime1) < 3000) {
@@ -432,6 +438,55 @@ public class TaskManager {
 			curtime2 = new Date().getTime();
 		}
 		return TapestryAssist.getTextStreamResponse(ret);
+	}
+
+	public TextStreamResponse onRuleData() {
+		String commandtypeStr = request.getParameter("ruleData");
+		Task temp = new Task();
+		temp.setRules(commandtypeStr);
+		List<Rule> ruleList = temp.getRuleList();
+		com.alibaba.fastjson.JSONArray ary = new com.alibaba.fastjson.JSONArray();
+		for (Rule rule : ruleList) {
+			JSONObject retobj = new JSONObject();
+			retobj.put("db", rule.getDbPattern());
+			retobj.put("tb", rule.getTbPattern());
+			for (RuleItem ruleItem : RuleItem.values()) {
+				if (rule.getItems().containsKey(ruleItem)) {
+					retobj.put(ruleItem.name(), rule.getItems().get(ruleItem));
+				}
+			}
+			ary.add(retobj);
+		}
+		return TapestryAssist.getTextStreamResponse(ary.toJSONString());
+	}
+
+	public TextStreamResponse onDataConvert() {
+		String saveDataStr = request.getParameter("saveData");
+		JSONObject dgAll = JSONObject.parseObject(saveDataStr);
+		com.alibaba.fastjson.JSONArray rows = dgAll.getJSONArray("rows");
+		StringBuffer buff = new StringBuffer();
+		for (int i = 0; i < rows.size(); i++) {
+			buff.append("&");
+			JSONObject tempObj = rows.getJSONObject(i);
+			String db = tempObj.getString("db").replaceAll("\\^", "").replaceAll("\\$", "").replaceAll("\\[0-9\\]\\*",
+					"");
+			String tb = tempObj.getString("tb").replaceAll("\\^", "").replaceAll("\\$", "").replaceAll("\\[0-9\\]\\*",
+					"");
+			buff.append(db + "`");
+			buff.append(tb + "`");
+			tempObj.remove("db");
+			tempObj.remove("tb");
+			tempObj.remove("isNewRecord");// 这个是easyui对于新增用户自动产生的。
+			JSONObject jsontrue = new JSONObject();
+			for (String key : tempObj.keySet()) {
+				if (StringUtil.isNotNull(tempObj.get(key))) {
+					jsontrue.put(key, tempObj.get(key));
+				}
+			}
+			buff.append(JSONObject.toJSONString(jsontrue, SerializerFeature.UseSingleQuotes));
+		}
+		String retstr = buff.substring(1);
+		return TapestryAssist.getTextStreamResponse(Result.getSuc(retstr));
 	}
 
 	private Server selServer(List<Server> allserver, String serverid) {

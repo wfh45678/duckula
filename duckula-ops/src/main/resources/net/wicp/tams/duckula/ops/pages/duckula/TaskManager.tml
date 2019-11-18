@@ -4,11 +4,12 @@
       xmlns:p="tapestry:parameter"> 
 <head>
    <title isMenu="true" module="3">任务管理</title>
+   <script type="text/javascript" src="https://www.jeasyui.com/easyui/jquery.edatagrid.js"></script>
 </head>
 <body>
    <r:query id="q"  qBlock="query" queryUrl="/duckula/taskManager:query" uBlock="save"   saveUrl="/duckula/taskManager:save" deleteUrl="/duckula/taskManager:del" opFormatter="showopt" 
         columns="[[{field:'id',width:250,title:'任务ID'},{field:'senderEnum1',width:80,title:'发送者'}, {field:'ip',width:300,title:'数据库'},{field:'rules',width:400,title:'规则模式'},${ColDifferent},{field:'op',width:350,title:'操作'}]]" 
-        dialogStyle="width:800px;height:580px;" initAddHandle="initAdd" saveCheckHandle="saveCheck" pagination="false"/>
+        dialogStyle="width:800px;height:580px;" initAddHandle="initAdd" initSaveHandle="initUpdate"  saveCheckHandle="saveCheck" pagination="false"/>
    <t:block id="query">
        <table class="frame_table_list_4">
 		 <tr>
@@ -100,12 +101,6 @@
 			 	         <r:comboboxenum id="rds_isSsh"  name="isSsh" enumClass="net.wicp.tams.common.constant.dic.YesOrNo" required="false"></r:comboboxenum>
 			 	     </td>
 			      </tr>
-			       <tr>
-			 	     <td class="frame_table_list_2_righttext">规则</td>
-			 	     <td colspan="3">
-			 	         <r:validatebox  name="rules" style="width:650px;" required="true"/>
-			 	     </td>
-			      </tr>			      
 			      <tr>
 			         <td class="frame_table_list_2_righttext">接收者</td>
 			 	     <td>
@@ -116,6 +111,41 @@
 			 	        <r:validatebox name="receivePluginDir" style="width:250px;" required="false"/>
 			 	     </td>
 			      </tr>
+			      <tr name="showmodel">
+			        <td colspan="4">
+				        <table id="dg" title="规则编辑" style="width:98%;height:160px"
+					            toolbar="#toolbar" pagination="false" idField="id"
+					            rownumbers="false" fitColumns="true" singleSelect="true">
+					        <thead>
+					            <tr>
+					                <th field="db" width="15%" editor="{type:'validatebox',options:{required:true}}">库名模式</th>
+					                <th field="tb" width="30%" editor="{type:'validatebox',options:{required:true}}">表名模式</th>
+					                <th field="topic" width="20%" editor="{type:'validatebox',options:{required:false}}">消息主题</th>
+					                <th field="key" width="15%" editor="{type:'validatebox',options:{required:false}}">主键</th>
+					                <th field="relakey" width="12%" editor="{type:'validatebox',options:{required:false}}">关联字段</th>
+					                <th field="index" width="12%" editor="{type:'validatebox',options:{required:false}}">es索引</th>
+					                <th field="splitkey" width="12%" editor="{type:'validatebox',options:{required:false}}">分隔字段</th>
+					                
+					                <th field="redisurl" width="12%" editor="{type:'validatebox',options:{required:false}}">缓存地址</th>
+					                 <th field="appid" width="12%" editor="{type:'validatebox',options:{required:false}}">appid</th>
+					                <th field="type" width="12%" editor="{type:'validatebox',options:{required:false}}">索引类型</th>
+					                <th field="middleware" width="12%" editor="{type:'validatebox',options:{required:false}}">中间件</th>
+					                <th field="dbinstanceid" width="12%" editor="{type:'validatebox',options:{required:false}}">中间件实例</th>
+					                <th field="dbtb" width="12%" editor="{type:'validatebox',options:{required:false}}">库名表名</th>
+					                <th field="other" width="12%" editor="{type:'validatebox',options:{required:false}}">其它配置</th>
+					            </tr>
+					        </thead>
+					    </table>
+					     <div id="toolbar">
+					        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="javascript:$('#dg').edatagrid('addRow')">新增规则</a>
+					        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="javascript:$('#dg').edatagrid('destroyRow')">删除</a>
+					        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-undo" plain="true" onclick="javascript:$('#dg').edatagrid('cancelRow')">取消</a>
+					        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-save" plain="true" onclick="javascript:$('#dg').edatagrid('saveRow')">保存</a>					        
+					        <r:validatebox id="rulesEdit"  name="rules" style="width:735px;" required="true"/>
+					    </div>
+			        </td>
+			      </tr>			      
+			      
 			      <tr>
 			         <td class="frame_table_list_2_righttext">中间件类型</td>
 			         <td>
@@ -187,6 +217,8 @@
 			   return update+deletebut+k8sbut+stopServer_k8s;
 			}			
      }
+    
+     
      function doServer(index){
          var row=getRow(index);
          require(["component/rjzjh/dialogtree"], function(sel) {
@@ -250,6 +282,21 @@
        });
      }
       
+      
+      var allcolumn=["topic","key","relakey","appid","redisurl","splitkey","index","type","middleware","dbinstanceid","dbtb","other"];
+
+     function showRuleColumn(showcolumns){
+        for (var item of allcolumn) {
+           $('#dg').edatagrid("hideColumn", item);
+		   //$('#dg').edatagrid("showColumn", item);
+		}
+		
+		for (var item of showcolumns) {
+		   $('#dg').edatagrid("showColumn", item);
+		}
+	 }	
+
+      
      function changeSender(val){
         if("no"===val){
            $('td[name="othersender"]').css({"visibility":"visible"});
@@ -262,7 +309,20 @@
           $('td[name="serializerEnum"]').css({"visibility":"hidden"});
           $('#serializerEnum_save').combobox('setValue','no');
         }
+        
+        if('kafka'==val){
+           showRuleColumn(["topic","key"]);
+        }else if('es'==val){
+            showRuleColumn(["index","key"]);
+        }else if('redis'==val){
+            showRuleColumn(["key","appid","redisurl"]);
+        }
+       
      }
+     
+
+     
+     
      
      function changeBusi(val){
         if("filter"==val){          
@@ -320,6 +380,14 @@
         }       
      }
 	
+  function syncRule(){
+	   var rules= $('#rulesEdit').val();
+          $.post($.rjzjh.packurl('/duckula/taskManager:ruleData'),{'ruleData':rules},function(data){
+	         //alert(data);//更新edatagrid
+	         $('#dg').edatagrid("loadData", data);
+	      },'json');
+	}
+	
    function initAdd(){
       $('#port_save').numberbox('setValue',3306);
       $('#dbinst_inst').combobox('setValue','no');     
@@ -327,6 +395,11 @@
       $('#imageVersion_save').val('${defaultImageVersion}');
       $('#namespace_save').val('${defaultNamespace}');
       $('#filterContext').textbox('setText','');
+      $('#dg').edatagrid("loadData", []);
+   }
+   
+   function initUpdate(){
+      syncRule();
    }
    
 
@@ -357,6 +430,8 @@
       }
    }
    
+ 
+   
    $(function(){
       $('#saveFilterBut').click(function(){
           var filterContext= $('#filterContext').textbox('getText');
@@ -366,6 +441,40 @@
 	          $.rjzjh.opt(data);
 	      },'json');
           
+      });
+      $('#rulesEdit').blur(function(){
+          syncRule();
+      });
+      
+      $('#dg').edatagrid({
+			    data: [
+					{db:'value11', tb:'value12'},
+					{db:'value21', tb:'value22'}
+				],
+				destroyMsg: {
+					norecord:{	// when no record is selected
+						title:'警告',
+						msg:'没有选择记录.'
+					},
+					confirm:{	// when select a row
+						title:'确认',
+						msg:'您确定要删除此行吗?'
+					}
+				},
+				autoSave: true,
+				onAfterEdit: function(index,data,changes){
+				   //onSave有时会不起作用，故用onBeforeSave
+				   var dgdata= $('#dg').edatagrid('getData');
+				   var datastr=JSON.stringify(dgdata);	
+				   $.post($.rjzjh.packurl('/duckula/taskManager:dataConvert'),{'saveData':datastr},function(data){
+					  $.rjzjh.opt2(data,function(){
+					    jQuery('#rulesEdit').val(data.msg);
+			          });
+			       },'json');		   
+				},
+                saveUrl: 'save_user.php',
+                updateUrl: 'update_user.php',
+                destroyUrl: 'destroy_user.php'
       });      
    });
 </script>
