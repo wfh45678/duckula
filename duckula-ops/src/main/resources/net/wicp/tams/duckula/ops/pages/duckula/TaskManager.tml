@@ -9,7 +9,7 @@
 <body>
    <r:query id="q"  qBlock="query" queryUrl="/duckula/taskManager:query" uBlock="save"   saveUrl="/duckula/taskManager:save" deleteUrl="/duckula/taskManager:del" opFormatter="showopt" 
         columns="[[{field:'id',width:250,title:'任务ID'},{field:'senderEnum1',width:80,title:'发送者'}, {field:'ip',width:300,title:'数据库'},{field:'rules',width:400,title:'规则模式'},${ColDifferent},{field:'op',width:350,title:'操作'}]]" 
-        dialogStyle="width:800px;height:580px;" initAddHandle="initAdd" initSaveHandle="initUpdate"  saveCheckHandle="saveCheck" pagination="false"/>
+        dialogStyle="width:800px;height:650px;" initAddHandle="initAdd" initSaveHandle="initUpdate"  saveCheckHandle="saveCheck" pagination="false"/>
    <t:block id="query">
        <table class="frame_table_list_4">
 		 <tr>
@@ -184,12 +184,12 @@
 			            <r:validatebox id="params_save" name="params" style="width:650px;"/>
 	                 </td>
 			      </tr>
-			       <tr>
+			       <!--tr>
 			         <td class="frame_table_list_2_righttext">备注</td>
 			         <td colspan="3">
 			            <input  name="remark" class="easyui-textbox" data-options="multiline:true,height:40,width:650"/>
 	                 </td>
-			      </tr>
+			      </tr-->
 	 </table>
    </t:block>
 
