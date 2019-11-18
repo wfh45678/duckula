@@ -201,6 +201,9 @@ public class IndexManager {
 	}
 
 	public TextStreamResponse onQueryMiddlewareType(String middlewareTypeStr) {
+		if(StringUtil.isNull(middlewareTypeStr)) {
+			return TapestryAssist.getTextStreamResponse("[]"); 
+		}
 		MiddlewareType middlewareType = MiddlewareType.valueOf(middlewareTypeStr);
 		String eleJson = middlewareType.getEleJson();
 		return TapestryAssist.getTextStreamResponse(eleJson);

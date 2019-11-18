@@ -149,7 +149,7 @@
 			      <tr>
 			         <td class="frame_table_list_2_righttext">中间件类型</td>
 			         <td>
-			            <r:comboboxenum id="middlewareType_save"  name="middlewareType" enumClass="net.wicp.tams.duckula.common.constant.MiddlewareType" required="false"></r:comboboxenum>
+			            <r:comboboxenum id="middlewareType_save"  name="middlewareType" enumClass="net.wicp.tams.duckula.common.constant.MiddlewareType" required="false" readonly="true"></r:comboboxenum>
 	               </td>
 			 	  	 <td class="frame_table_list_2_righttext">中间件实例</td>
 			 	     <td>
@@ -300,8 +300,10 @@
      function changeSender(val){
         if("no"===val){
            $('td[name="othersender"]').css({"visibility":"visible"});
+           $('#middlewareType_save').combobox('setValue','');
         }else{
            $('td[name="othersender"]').css({"visibility":"hidden"});
+           $('#middlewareType_save').combobox('setValue',val);
         }
         if(or('kafka'==val,'redis'==val)){
           $('td[name="serializerEnum"]').css({"visibility":"visible"});
@@ -317,6 +319,8 @@
         }else if('redis'==val){
             showRuleColumn(["key","appid","redisurl"]);
         }
+        
+         
        
      }
      
@@ -461,7 +465,7 @@
 						msg:'您确定要删除此行吗?'
 					}
 				},
-				autoSave: true,
+				autoSave: false,
 				onAfterEdit: function(index,data,changes){
 				   //onSave有时会不起作用，故用onBeforeSave
 				   var dgdata= $('#dg').edatagrid('getData');
@@ -471,10 +475,7 @@
 					    jQuery('#rulesEdit').val(data.msg);
 			          });
 			       },'json');		   
-				},
-                saveUrl: 'save_user.php',
-                updateUrl: 'update_user.php',
-                destroyUrl: 'destroy_user.php'
+				}
       });      
    });
 </script>
