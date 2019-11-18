@@ -132,6 +132,8 @@
 					                <th field="middleware" width="12%" editor="{type:'validatebox',options:{required:false}}">中间件</th>
 					                <th field="dbinstanceid" width="12%" editor="{type:'validatebox',options:{required:false}}">中间件实例</th>
 					                <th field="dbtb" width="12%" editor="{type:'validatebox',options:{required:false}}">库名表名</th>
+					                <th field="partitions" width="12%" editor="{type:'validatebox',options:{required:false}}">分区数</th>
+					                <th field="copynum" width="12%" editor="{type:'validatebox',options:{required:false}}">复制份数</th>					               
 					                <th field="other" width="12%" editor="{type:'validatebox',options:{required:false}}">其它配置</th>
 					            </tr>
 					        </thead>
@@ -140,7 +142,8 @@
 					        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="javascript:$('#dg').edatagrid('addRow')">新增规则</a>
 					        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="javascript:$('#dg').edatagrid('destroyRow')">删除</a>
 					        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-undo" plain="true" onclick="javascript:$('#dg').edatagrid('cancelRow')">取消</a>
-					        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-save" plain="true" onclick="javascript:$('#dg').edatagrid('saveRow')">保存</a>					        
+					        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-save" plain="true" onclick="javascript:$('#dg').edatagrid('saveRow')">保存</a>	
+					        <font color="red" style="font-weight:bold;"> &emsp;&msp;&emsp;&emsp;&emsp;     请选择接收者，编辑完成后请“保存”,配置以输入框内容为准，界面只是辅助输入	</font>			        
 					        <r:validatebox id="rulesEdit"  name="rules" style="width:735px;" required="true"/>
 					    </div>
 			        </td>
@@ -283,7 +286,7 @@
      }
       
       
-      var allcolumn=["topic","key","relakey","appid","redisurl","splitkey","index","type","middleware","dbinstanceid","dbtb","other"];
+      var allcolumn=["topic","key","relakey","appid","redisurl","splitkey","index","type","middleware","dbinstanceid","dbtb","partitions","copynum","other"];
 
      function showRuleColumn(showcolumns){
         for (var item of allcolumn) {
@@ -315,7 +318,7 @@
         if('kafka'==val){
            showRuleColumn(["topic","splitkey"]);
         }else if('es'==val){
-            showRuleColumn(["index","key"]);
+            showRuleColumn(["index","key","partitions","copynum"]);
         }else if('redis'==val){
             showRuleColumn(["key","splitkey","appid","redisurl"]);
         }

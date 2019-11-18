@@ -1,5 +1,6 @@
 package net.wicp.tams.duckula.ops.pages.duckula;
 
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -7,6 +8,7 @@ import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.tapestry5.annotations.OnEvent;
 import org.apache.tapestry5.annotations.Property;
@@ -30,6 +32,8 @@ import net.wicp.tams.common.Conf;
 import net.wicp.tams.common.Result;
 import net.wicp.tams.common.apiext.CollectionUtil;
 import net.wicp.tams.common.apiext.StringUtil;
+import net.wicp.tams.common.apiext.jdbc.JdbcConnection;
+import net.wicp.tams.common.apiext.jdbc.MySqlAssit;
 import net.wicp.tams.common.apiext.json.EasyUiAssist;
 import net.wicp.tams.common.apiext.json.JSONUtil;
 import net.wicp.tams.common.apiext.json.easyuibean.EasyUINode;
@@ -38,6 +42,11 @@ import net.wicp.tams.common.callback.IConvertValue;
 import net.wicp.tams.common.callback.impl.convertvalue.ConvertValueEnum;
 import net.wicp.tams.common.constant.DateFormatCase;
 import net.wicp.tams.common.constant.dic.YesOrNo;
+import net.wicp.tams.common.es.EsAssit;
+import net.wicp.tams.common.es.bean.IndexBean;
+import net.wicp.tams.common.es.bean.MappingBean;
+import net.wicp.tams.common.es.bean.MappingBean.DataTypes;
+import net.wicp.tams.common.es.client.singleton.ESClientOnlyOne;
 import net.wicp.tams.component.services.IReq;
 import net.wicp.tams.component.tools.TapestryAssist;
 import net.wicp.tams.duckula.common.ZkClient;
@@ -51,6 +60,7 @@ import net.wicp.tams.duckula.common.constant.TaskPattern;
 import net.wicp.tams.duckula.common.constant.ZkPath;
 import net.wicp.tams.duckula.ops.beans.DbInstance;
 import net.wicp.tams.duckula.ops.beans.Server;
+import net.wicp.tams.duckula.ops.pages.es.IndexManager;
 import net.wicp.tams.duckula.ops.services.InitDuckula;
 import net.wicp.tams.duckula.ops.servicesBusi.IDuckulaAssit;
 import net.wicp.tams.duckula.plugin.beans.Rule;
@@ -225,10 +235,54 @@ public class TaskManager {
 		} else {
 			ZkClient.getInst().updateNode(ZkPath.tasks.getPath(taskparam.getId()), JSONObject.toJSONString(taskparam));
 		}
+
 		if (taskparam.getPosListener() == YesOrNo.no) {// 不监听pos
 			InitDuckula.noPosListener.add(ZkPath.pos.getPath(taskparam.getId()));
 		} else {
 			InitDuckula.noPosListener.remove(ZkPath.pos.getPath(taskparam.getId()));
+		}
+		// init Index
+		if (taskparam.getSenderEnum() == SenderEnum.es) {
+			for (Rule rule : taskparam.getRuleList()) {
+				if (StringUtil.isNotNull(rule.getItems().get(RuleItem.copynum))
+						&& StringUtil.isNotNull(rule.getItems().get(RuleItem.partitions))) {
+					String db = rule.getDbPattern().replaceAll("\\^", "").replaceAll("\\$", "")
+							.replaceAll("\\[0-9\\]\\*", "");
+					String tb = rule.getTbPattern().replaceAll("\\^", "").replaceAll("\\$", "")
+							.replaceAll("\\[0-9\\]\\*", "");
+					List<IndexBean> queryIndex = IndexManager.getESClient(taskparam.getMiddlewareInst())
+							.queryIndex(rule.getItems().get(RuleItem.index));
+					if (CollectionUtils.isEmpty(queryIndex) && !db.endsWith("_") && !db.endsWith("_")) {
+						java.sql.Connection conn = JdbcConnection.getConnectionMyql(taskparam.getIp(),
+								taskparam.getPort(), taskparam.getUser(), taskparam.getPwd(), taskparam.getIsSsh());
+						String[][] cols = MySqlAssit.getCols(conn, db, tb, YesOrNo.yes);
+						try {
+							conn.close();
+						} catch (SQLException e1) {
+						}
+						String contentjson = "";
+						if (ArrayUtils.isNotEmpty(cols) && !"_rowkey_".equals(cols[0][0])) {// 有主键
+							contentjson = EsAssit.packIndexContent(cols[0], cols[1]);
+						}
+						if (StringUtil.isNull(contentjson)) {
+							continue;
+						}
+						MappingBean proMappingBean = null;
+						try {
+							proMappingBean = MappingBean.proMappingBean(contentjson);
+						} catch (Exception e) {
+						}
+						if (proMappingBean == null) {
+							continue;
+						}
+						Result indexCreate = ESClientOnlyOne.getInst().getESClient().indexCreate(
+								rule.getItems().get(RuleItem.index), "_doc",
+								Integer.parseInt(rule.getItems().get(RuleItem.partitions)),
+								Integer.parseInt(rule.getItems().get(RuleItem.copynum)), proMappingBean);
+						log.info(rule.getItems().get(RuleItem.index)+"创建结果：" + indexCreate.getMessage());
+					}
+				}
+			}
 		}
 		return req.retSuccInfo("保存Task成功");
 	}
@@ -485,7 +539,7 @@ public class TaskManager {
 			}
 			buff.append(JSONObject.toJSONString(jsontrue, SerializerFeature.UseSingleQuotes));
 		}
-		String retstr = buff.length()>1? buff.substring(1):"";
+		String retstr = buff.length() > 1 ? buff.substring(1) : "";
 		return TapestryAssist.getTextStreamResponse(Result.getSuc(retstr));
 	}
 

@@ -73,7 +73,7 @@ public class IndexManager {
 
 	private static Map<String, ESClient> esclientmap = new HashMap<>();
 
-	private static ESClient getESClient(String cluster) {
+	public static ESClient getESClient(String cluster) {
 		Validate.isTrue(StringUtil.isNotNull(cluster));
 		if (!esclientmap.containsKey(cluster)) {
 			synchronized (IndexManager.class) {
