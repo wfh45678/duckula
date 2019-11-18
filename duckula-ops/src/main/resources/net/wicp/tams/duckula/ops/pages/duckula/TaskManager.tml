@@ -400,6 +400,12 @@
       $('#namespace_save').val('${defaultNamespace}');
       $('#filterContext').textbox('setText','');
       $('#dg').edatagrid("loadData", []);
+     
+     //设置一些默认值
+      $('#rds_save').combobox('setValue','no');   
+      $('#rds_isSsh').combobox('setValue','no');
+      $('#run_save').combobox('setValue','no');
+      $('#serializerEnum_save').combobox('setValue','protobuff3');
    }
    
    function initUpdate(){
