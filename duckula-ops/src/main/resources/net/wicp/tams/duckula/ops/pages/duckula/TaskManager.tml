@@ -317,11 +317,8 @@
         }else if('es'==val){
             showRuleColumn(["index","key"]);
         }else if('redis'==val){
-            showRuleColumn(["key","appid","redisurl"]);
+            showRuleColumn(["key","splitkey","appid","redisurl"]);
         }
-        
-         
-       
      }
      
 
@@ -442,8 +439,33 @@
    
  
       function  updateRuleInput(index,data,changes){
-				   //onSave有时会不起作用，故用onBeforeSave
+      			 var sendClassSel=  $('#senderClass_save').combobox('getValue');
+				   if(sendClassSel==""||"no"===sendClassSel){
+				      $.rjzjh.alert("请选择接收者!");
+				      return false;
+				   }
+				   //数据检查
 				   var dgdata= $('#dg').edatagrid('getData');
+				   for (var row of dgdata.rows) {
+					   if(sendClassSel=='kafka'){
+				           if(row.topic==''){
+				               $.rjzjh.alert('kafka发送类型需要设置topic');
+				               return false;
+				           }
+			           }else if(sendClassSel=='es'){
+			               if(row.index==''||row.key==''){
+				               $.rjzjh.alert('es发送类型需要设置索引和主键');
+				               return false;
+				           }
+			           }else if(sendClassSel=='redis'){
+			               if(row.key==''||lt(row.key.indexOf('%s'),0)){
+				               $.rjzjh.alert('redis发送类型需要设置主键且含有"%s"');
+				               return false;
+				           }
+			           }			           
+				   }
+                   //提交后端进行格式化
+				   //onSave有时会不起作用，故用onBeforeSave
 				   var datastr=JSON.stringify(dgdata);	
 				   $.post($.rjzjh.packurl('/duckula/taskManager:dataConvert'),{'saveData':datastr},function(data){
 					  $.rjzjh.opt2(data,function(){
@@ -454,7 +476,7 @@
 					    }
 			          });
 			       },'json');		   
-				}
+	 }
  
    
    $(function(){
