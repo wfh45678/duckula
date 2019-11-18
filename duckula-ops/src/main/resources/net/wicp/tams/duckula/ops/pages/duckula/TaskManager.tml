@@ -313,7 +313,7 @@
         }
         
         if('kafka'==val){
-           showRuleColumn(["topic","key"]);
+           showRuleColumn(["topic","splitkey"]);
         }else if('es'==val){
             showRuleColumn(["index","key"]);
         }else if('redis'==val){
