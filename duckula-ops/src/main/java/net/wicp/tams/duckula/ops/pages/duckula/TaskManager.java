@@ -52,6 +52,7 @@ import net.wicp.tams.component.tools.TapestryAssist;
 import net.wicp.tams.duckula.common.ZkClient;
 import net.wicp.tams.duckula.common.ZkUtil;
 import net.wicp.tams.duckula.common.beans.Dump;
+import net.wicp.tams.duckula.common.beans.Mapping;
 import net.wicp.tams.duckula.common.beans.Task;
 import net.wicp.tams.duckula.common.beans.TaskOffline;
 import net.wicp.tams.duckula.common.constant.CommandType;
@@ -279,6 +280,21 @@ public class TaskManager {
 								rule.getItems().get(RuleItem.index), "_doc",
 								Integer.parseInt(rule.getItems().get(RuleItem.partitions)),
 								Integer.parseInt(rule.getItems().get(RuleItem.copynum)), proMappingBean);
+						if(indexCreate.isSuc()) {
+							Mapping  mapping=new Mapping();
+							mapping.setId(rule.getItems().get(RuleItem.index)+"-_doc");
+							mapping.setDb(db);
+							mapping.setTb(tb);
+							mapping.setIndex(rule.getItems().get(RuleItem.index));
+							mapping.setType("_doc");
+							mapping.setContent(contentjson);
+							mapping.setShardsNum(Integer.parseInt(rule.getItems().get(RuleItem.partitions)));
+							mapping.setReplicas(Integer.parseInt(rule.getItems().get(RuleItem.copynum)));
+							mapping.setDbinst(taskparam.getDbinst());
+							Result createOrUpdateNode = ZkClient.getInst().createOrUpdateNode(ZkPath.mappings.getPath(mapping.getId()),
+									JSONObject.toJSONString(mapping));
+							log.info("创建索引节点结果："+createOrUpdateNode.getMessage());
+						}
 						log.info(rule.getItems().get(RuleItem.index)+"创建结果：" + indexCreate.getMessage());
 					}
 				}
