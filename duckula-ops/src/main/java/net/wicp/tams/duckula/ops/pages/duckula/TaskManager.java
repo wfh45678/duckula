@@ -47,6 +47,8 @@ import net.wicp.tams.common.es.bean.IndexBean;
 import net.wicp.tams.common.es.bean.MappingBean;
 import net.wicp.tams.common.es.bean.MappingBean.DataTypes;
 import net.wicp.tams.common.es.client.singleton.ESClientOnlyOne;
+import net.wicp.tams.component.annotation.HtmlJs;
+import net.wicp.tams.component.constant.EasyUIAdd;
 import net.wicp.tams.component.services.IReq;
 import net.wicp.tams.component.tools.TapestryAssist;
 import net.wicp.tams.duckula.common.ZkClient;
@@ -68,6 +70,7 @@ import net.wicp.tams.duckula.plugin.beans.Rule;
 import net.wicp.tams.duckula.plugin.constant.RuleItem;
 
 @Slf4j
+@HtmlJs(easyuiadd= {EasyUIAdd.edatagrid})
 public class TaskManager {
 
 	@Inject

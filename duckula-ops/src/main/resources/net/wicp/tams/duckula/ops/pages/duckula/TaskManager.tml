@@ -4,7 +4,6 @@
       xmlns:p="tapestry:parameter"> 
 <head>
    <title isMenu="true" module="3">任务管理</title>
-   <script type="text/javascript" src="https://www.jeasyui.com/easyui/jquery.edatagrid.js"></script>
 </head>
 <body>
    <r:query id="q"  qBlock="query" queryUrl="/duckula/taskManager:query" uBlock="save"   saveUrl="/duckula/taskManager:save" deleteUrl="/duckula/taskManager:del" opFormatter="showopt" 
