@@ -128,8 +128,8 @@
 					                <th field="redisurl" width="12%" editor="{type:'validatebox',options:{required:false}}">缓存地址</th>
 					                 <th field="appid" width="12%" editor="{type:'validatebox',options:{required:false}}">appid</th>
 					                <th field="type" width="12%" editor="{type:'validatebox',options:{required:false}}">索引类型</th>
-					                <th field="middleware" width="12%" editor="{type:'validatebox',options:{required:false}}">中间件</th>
-					                <th field="dbinstanceid" width="12%" editor="{type:'validatebox',options:{required:false}}">中间件实例</th>
+					                <th field="middleware" width="12%" editor="{type:'validatebox',options:{required:false}}">中间件实例</th>
+					                <th field="dbinstanceid" width="12%" editor="{type:'validatebox',options:{required:false}}">数据库</th>
 					                <th field="dbtb" width="12%" editor="{type:'validatebox',options:{required:false}}">库名表名</th>
 					                <th field="partitions" width="12%" editor="{type:'validatebox',options:{required:false}}">分区数</th>
 					                <th field="copynum" width="12%" editor="{type:'validatebox',options:{required:false}}">复制份数</th>					               

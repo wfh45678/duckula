@@ -1,6 +1,7 @@
 package net.wicp.tams.duckula.ops.pages.es;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.tapestry5.annotations.OnEvent;
 import org.apache.tapestry5.ioc.annotations.Inject;
@@ -26,17 +28,27 @@ import lombok.extern.slf4j.Slf4j;
 import net.wicp.tams.common.Result;
 import net.wicp.tams.common.apiext.CollectionUtil;
 import net.wicp.tams.common.apiext.StringUtil;
+import net.wicp.tams.common.apiext.jdbc.JdbcConnection;
+import net.wicp.tams.common.apiext.jdbc.MySqlAssit;
 import net.wicp.tams.common.apiext.json.EasyUiAssist;
 import net.wicp.tams.common.callback.IConvertValue;
 import net.wicp.tams.common.constant.dic.YesOrNo;
+import net.wicp.tams.common.es.EsAssit;
+import net.wicp.tams.common.es.bean.IndexBean;
+import net.wicp.tams.common.es.bean.MappingBean;
+import net.wicp.tams.common.es.client.singleton.ESClientOnlyOne;
+import net.wicp.tams.component.annotation.HtmlJs;
+import net.wicp.tams.component.constant.EasyUIAdd;
 import net.wicp.tams.component.services.IReq;
 import net.wicp.tams.component.tools.TapestryAssist;
 import net.wicp.tams.duckula.common.ZkClient;
 import net.wicp.tams.duckula.common.ZkUtil;
 import net.wicp.tams.duckula.common.beans.Consumer;
+import net.wicp.tams.duckula.common.beans.Mapping;
 import net.wicp.tams.duckula.common.beans.SenderConsumerEnum;
 import net.wicp.tams.duckula.common.beans.Task;
 import net.wicp.tams.duckula.common.constant.CommandType;
+import net.wicp.tams.duckula.common.constant.SenderEnum;
 import net.wicp.tams.duckula.common.constant.TaskPattern;
 import net.wicp.tams.duckula.common.constant.ZkPath;
 import net.wicp.tams.duckula.ops.beans.Server;
@@ -46,6 +58,7 @@ import net.wicp.tams.duckula.plugin.beans.Rule;
 import net.wicp.tams.duckula.plugin.constant.RuleItem;
 
 @Slf4j
+@HtmlJs(easyuiadd = { EasyUIAdd.edatagrid })
 public class ConsumerManager {
 	@Inject
 	protected RequestGlobals requestGlobals;
@@ -88,11 +101,11 @@ public class ConsumerManager {
 				return ret;
 			}
 		});
-		
-		CollectionUtils.filter(retlist, new Predicate() {			
+
+		CollectionUtils.filter(retlist, new Predicate() {
 			@Override
 			public boolean evaluate(Object object) {
-				return object!=null&&StringUtil.isNotNull(((Consumer)object).getId());
+				return object != null && StringUtil.isNotNull(((Consumer) object).getId());
 			}
 		});
 
@@ -123,59 +136,57 @@ public class ConsumerManager {
 			convertsMap.put("hosts", hostNumList);
 			retstr = EasyUiAssist.getJsonForGridAlias(retlist, new String[] { "id,hostNum", "id,hosts" }, convertsMap,
 					retlist.size());// .getJsonForGridAlias(retlist, retlist.size());
-		}else {
+		} else {
 			IConvertValue<String> podStatus = new IConvertValue<String>() {
 				@Override
 				public String getStr(String keyObj) {
-					keyObj=CommandType.consumer.getK8sId(keyObj);
+					keyObj = CommandType.consumer.getK8sId(keyObj);
 					Map<ResourcesType, String> queryStatus = TillerClient.getInst().queryStatus(keyObj);
 					String valueStr = queryStatus.get(ResourcesType.Pod);
 					String colValue = ResourcesType.Pod.getColValue(valueStr, "STATUS");
 					return colValue;
 				}
 			};
-			
+
 			IConvertValue<String> imageVersionConv = new IConvertValue<String>() {
 				@Override
 				public String getStr(String taskOnlineId) {
 					Task buidlTask = ZkUtil.buidlTask(taskOnlineId);
-					if(buidlTask==null) {
+					if (buidlTask == null) {
 						return "找不到关联的task";
-					}else {
+					} else {
 						return buidlTask.getImageVersion();
 					}
 				}
 			};
-			
+
 			IConvertValue<String> namespaceConv = new IConvertValue<String>() {
 				@Override
 				public String getStr(String taskOnlineId) {
-					Task buidlTask = ZkUtil.buidlTask(taskOnlineId);					
-					if(buidlTask==null) {
+					Task buidlTask = ZkUtil.buidlTask(taskOnlineId);
+					if (buidlTask == null) {
 						return "找不到关联的task";
-					}else {
+					} else {
 						return buidlTask.getNamespace();
-					}					
+					}
 				}
 			};
 			Map<String, IConvertValue<String>> convertsMap = new HashMap<>();
 			convertsMap.put("podStatus", podStatus);
 			convertsMap.put("imageVersion", imageVersionConv);
 			convertsMap.put("namespace", namespaceConv);
-			retstr = EasyUiAssist.getJsonForGridAlias(retlist, new String[] { "id,podStatus","taskOnlineId,imageVersion","taskOnlineId,namespace" }, convertsMap,
+			retstr = EasyUiAssist.getJsonForGridAlias(retlist,
+					new String[] { "id,podStatus", "taskOnlineId,imageVersion", "taskOnlineId,namespace" }, convertsMap,
 					retlist.size());// .getJsonForGridAlias(retlist, retlist.size());
 		}
 		return TapestryAssist.getTextStreamResponse(retstr);
 	}
-	
 
-	
-	
-	
 	public TextStreamResponse onStartK8sTask() {
 		long curtime1 = new Date().getTime();
 		String taskid = request.getParameter("taskid");
-		Result ret = duckulaAssit.startTaskForK8s(CommandType.consumer, taskid, true);// TODO pvc的初始化需解决、可以传入参数standalone
+		Result ret = duckulaAssit.startTaskForK8s(CommandType.consumer, taskid, true);// TODO
+																						// pvc的初始化需解决、可以传入参数standalone
 		// 等待一段时间，为启动各个task留点时间
 		long curtime2 = System.currentTimeMillis();
 		while ((curtime2 - curtime1) < 3000) {
@@ -187,7 +198,6 @@ public class ConsumerManager {
 		}
 		return TapestryAssist.getTextStreamResponse(ret);
 	}
-	
 
 	public TextStreamResponse onSave() {
 		final Consumer consumerparam = TapestryAssist.getBeanFromPage(Consumer.class, requestGlobals);
@@ -212,17 +222,80 @@ public class ConsumerManager {
 			}
 		}
 		Stat stat = ZkUtil.exists(ZkPath.consumers, consumerparam.getId());
-		if (stat == null) {// 新增	
-			consumerparam.setRun(YesOrNo.no);//不立即启动，需要做其它配置
-			ZkClient.getInst().createNode(ZkPath.consumers.getPath(consumerparam.getId()), JSONObject.toJSONString(consumerparam));
-			PathChildrenCache createPathChildrenCache = ZkClient.getInst()
-					.createPathChildrenCache(ZkPath.consumers.getPath(consumerparam.getId()), InitDuckula.haWatcherConsumer);
+		if (stat == null) {// 新增
+			consumerparam.setRun(YesOrNo.no);// 不立即启动，需要做其它配置
+			ZkClient.getInst().createNode(ZkPath.consumers.getPath(consumerparam.getId()),
+					JSONObject.toJSONString(consumerparam));
+			PathChildrenCache createPathChildrenCache = ZkClient.getInst().createPathChildrenCache(
+					ZkPath.consumers.getPath(consumerparam.getId()), InitDuckula.haWatcherConsumer);
 			InitDuckula.cacheConsumerListener.put(consumerparam.getId(), createPathChildrenCache);
 		} else {
-			ZkClient.getInst().updateNode(ZkPath.consumers.getPath(consumerparam.getId()), JSONObject.toJSONString(consumerparam));
-		}		
-		//Result createOrUpdateNode = ZkClient.getInst().createOrUpdateNode(
-		//		ZkPath.consumers.getPath(consumerparam.getId()), JSONObject.toJSONString(consumerparam));
+			ZkClient.getInst().updateNode(ZkPath.consumers.getPath(consumerparam.getId()),
+					JSONObject.toJSONString(consumerparam));
+		}
+		// 添加ES索引
+		if (consumerparam.getSenderConsumerEnum() == SenderConsumerEnum.es) {
+			Task task = ZkUtil.buidlTask(consumerparam.getTaskOnlineId());
+			for (Rule rule : consumerparam.getRuleList()) {
+				if (StringUtil.isNotNull(rule.getItems().get(RuleItem.copynum))
+						&& StringUtil.isNotNull(rule.getItems().get(RuleItem.partitions))) {
+					String db = rule.getDbPattern().replaceAll("\\^", "").replaceAll("\\$", "")
+							.replaceAll("\\[0-9\\]\\*", "");
+					String tb = rule.getTbPattern().replaceAll("\\^", "").replaceAll("\\$", "")
+							.replaceAll("\\[0-9\\]\\*", "");
+					List<IndexBean> queryIndex = IndexManager.getESClient(rule.getItems().get(RuleItem.middleware))
+							.queryIndex(rule.getItems().get(RuleItem.index));
+					if (CollectionUtils.isEmpty(queryIndex) && !db.endsWith("_") && !tb.endsWith("_")) {
+						java.sql.Connection conn = JdbcConnection.getConnectionMyql(task.getIp(), task.getPort(),
+								task.getUser(), task.getPwd(), task.getIsSsh());
+						String[][] cols = MySqlAssit.getCols(conn, db, tb, YesOrNo.yes);
+						try {
+							conn.close();
+						} catch (SQLException e1) {
+						}
+						String contentjson = "";
+						if (ArrayUtils.isNotEmpty(cols) && !"_rowkey_".equals(cols[0][0])) {// 有主键
+							contentjson = EsAssit.packIndexContent(cols[0], cols[1]);
+						}
+						if (StringUtil.isNull(contentjson)) {
+							continue;
+						}
+						MappingBean proMappingBean = null;
+						try {
+							proMappingBean = MappingBean.proMappingBean(contentjson);
+						} catch (Exception e) {
+						}
+						if (proMappingBean == null) {
+							continue;
+						}
+						Result indexCreate = ESClientOnlyOne.getInst().getESClient().indexCreate(
+								rule.getItems().get(RuleItem.index), "_doc",
+								Integer.parseInt(rule.getItems().get(RuleItem.partitions)),
+								Integer.parseInt(rule.getItems().get(RuleItem.copynum)), proMappingBean);
+						if (indexCreate.isSuc()) {
+							Mapping mapping = new Mapping();
+							mapping.setId(rule.getItems().get(RuleItem.index) + "-_doc");
+							mapping.setDb(db);
+							mapping.setTb(tb);
+							mapping.setIndex(rule.getItems().get(RuleItem.index));
+							mapping.setType("_doc");
+							mapping.setContent(contentjson);
+							mapping.setShardsNum(Integer.parseInt(rule.getItems().get(RuleItem.partitions)));
+							mapping.setReplicas(Integer.parseInt(rule.getItems().get(RuleItem.copynum)));
+							mapping.setDbinst(task.getDbinst());
+							Result createOrUpdateNode = ZkClient.getInst().createOrUpdateNode(
+									ZkPath.mappings.getPath(mapping.getId()), JSONObject.toJSONString(mapping));
+							log.info("创建索引节点结果：" + createOrUpdateNode.getMessage());
+						}
+						log.info(rule.getItems().get(RuleItem.index) + "创建结果：" + indexCreate.getMessage());
+					}
+				}
+			}
+		}
+
+		// Result createOrUpdateNode = ZkClient.getInst().createOrUpdateNode(
+		// ZkPath.consumers.getPath(consumerparam.getId()),
+		// JSONObject.toJSONString(consumerparam));
 		return req.retSuccInfo("保存consumer成功");
 	}
 

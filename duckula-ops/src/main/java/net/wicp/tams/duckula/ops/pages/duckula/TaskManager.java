@@ -21,7 +21,6 @@ import org.apache.tapestry5.util.TextStreamResponse;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.data.Stat;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 
@@ -45,7 +44,6 @@ import net.wicp.tams.common.constant.dic.YesOrNo;
 import net.wicp.tams.common.es.EsAssit;
 import net.wicp.tams.common.es.bean.IndexBean;
 import net.wicp.tams.common.es.bean.MappingBean;
-import net.wicp.tams.common.es.bean.MappingBean.DataTypes;
 import net.wicp.tams.common.es.client.singleton.ESClientOnlyOne;
 import net.wicp.tams.component.annotation.HtmlJs;
 import net.wicp.tams.component.constant.EasyUIAdd;
@@ -256,7 +254,7 @@ public class TaskManager {
 							.replaceAll("\\[0-9\\]\\*", "");
 					List<IndexBean> queryIndex = IndexManager.getESClient(taskparam.getMiddlewareInst())
 							.queryIndex(rule.getItems().get(RuleItem.index));
-					if (CollectionUtils.isEmpty(queryIndex) && !db.endsWith("_") && !db.endsWith("_")) {
+					if (CollectionUtils.isEmpty(queryIndex) && !db.endsWith("_") && !tb.endsWith("_")) {
 						java.sql.Connection conn = JdbcConnection.getConnectionMyql(taskparam.getIp(),
 								taskparam.getPort(), taskparam.getUser(), taskparam.getPwd(), taskparam.getIsSsh());
 						String[][] cols = MySqlAssit.getCols(conn, db, tb, YesOrNo.yes);
