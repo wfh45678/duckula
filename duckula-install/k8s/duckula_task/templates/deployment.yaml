@@ -104,8 +104,7 @@ spec:
         persistentVolumeClaim:
           claimName: {{ .Values.persistence.existingClaim }}
       {{- else }}
-        hostPath:
-          path: /data/duckula-data
+        emptyDir: {}
       {{- end -}}
       {{- if .Values.userconfig.root }}
       - name: userconfig-root
