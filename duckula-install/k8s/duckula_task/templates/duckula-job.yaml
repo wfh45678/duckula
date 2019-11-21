@@ -13,4 +13,4 @@ spec:
   template:
 {{ $file := .Files.Get "files/duckula.tpl" }}
 {{ tpl $file . | indent 0 }}
-{{- end -}}
+{{- end }}
