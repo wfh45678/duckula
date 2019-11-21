@@ -51,12 +51,9 @@
 			      </tr>
 			       <tr>
 			         <td class="frame_table_list_2_righttext">需要发送</td>
-			         <td>
-			              <r:comboboxenum id="needSend_save"  name="needSend" enumClass="net.wicp.tams.common.constant.dic.YesOrNo" required="false"></r:comboboxenum>
+			         <td colspan="3">
+			              <r:comboboxenum id="needSend_save"  name="needSend" enumClass="net.wicp.tams.common.constant.dic.YesOrNo" required="false"></r:comboboxenum> 用于自定义插件，如果自定义的插件自己处理发送等事件，此处设置“否”
 	                 </td>
-			 	  	 <td class="frame_table_list_2_righttext" name="trdb"></td>	                 
-	                 <td>
-			         </td>
 			      </tr>
 			      <tr>
 			         <td class="frame_table_list_2_righttext">es集群</td>
@@ -199,7 +196,7 @@
      	 return rows[index];
      }        
      function initAdd(){
-     
+         $('#needSend_save').combobox('setValue','yes');
      }
          
   $(function(){      

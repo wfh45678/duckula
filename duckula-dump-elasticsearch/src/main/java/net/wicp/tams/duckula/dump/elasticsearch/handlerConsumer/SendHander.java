@@ -27,13 +27,13 @@ public class SendHander implements WorkHandler<EventDump> {
 	public SendHander(Mapping mapping, YesOrNo needsend) {
 		this.mapping = mapping;
 		this.needsend = needsend;
-		log.info("不需要发送ES，发送ES的任务由插件完成");
 	}
 
 	@Override
 	public void onEvent(EventDump event) throws Exception {
 		Thread.currentThread().setName("SendHanderThread");
 		if (needsend != null && needsend == YesOrNo.no) {// 不需要发送
+			log.info("不需要发送ES，发送ES的任务由插件完成");
 			MainDump.metric.counter_send_es.inc(event.getEsDataBuilder().getDatasList().size());
 			MainDump.metric.counter_send_event.inc();
 			isOver();
