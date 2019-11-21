@@ -128,7 +128,7 @@ userconfig:
       #查询时的超时
       common.es.query.timeout=5000
       #以下为默认值，如果在api中没有设置相关值，则默认值起做用
-      common.es.query.index=none
+      common.es.query.index=null
       common.es.query.type=_doc
       common.es.http.aync.maxConnTotal=100
       common.es.http.aync.maxConnPerRoute=100
@@ -158,7 +158,7 @@ userconfig:
       #查询时的超时
       common.es.query.timeout=5000
       #以下为默认值，如果在api中没有设置相关值，则默认值起做用
-      common.es.query.index=none
+      common.es.query.index=null
       common.es.query.type=_doc
       common.es.http.aync.maxConnTotal=100
       common.es.http.aync.maxConnPerRoute=100

@@ -128,7 +128,7 @@ public class MainDump {
 		if (StringUtil.isNotNull(task.getDefaultDb())) {
 			props.put("common.jdbc.datasource.default.defaultdb", task.getDefaultDb());
 		} else {
-			props.put("common.jdbc.datasource.default.defaultdb", "none");
+			props.put("common.jdbc.datasource.default.defaultdb", "null");
 		}
 		if (task.getIsSsh() != null && task.getIsSsh() == YesOrNo.yes) {
 			props.put("common.jdbc.ssh.enable", "true");

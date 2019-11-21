@@ -75,7 +75,7 @@ userconfig:
       common.es.http.socketTimeout=30000
       common.es.http.connectionRequestTimeout=500
       common.es.query.timeout=5000
-      common.es.query.index=none
+      common.es.query.index=null
       common.es.query.type=_doc
       common.es.http.aync.maxConnTotal=100
       common.es.http.aync.maxConnPerRoute=100

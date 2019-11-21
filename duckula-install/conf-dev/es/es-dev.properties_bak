@@ -19,7 +19,7 @@ common.es.http.connectionRequestTimeout=500
 #\u67E5\u8BE2\u65F6\u7684\u8D85\u65F6
 common.es.query.timeout=5000
 #\u4EE5\u4E0B\u4E3A\u9ED8\u8BA4\u503C\uFF0C\u5982\u679C\u5728api\u4E2D\u6CA1\u6709\u8BBE\u7F6E\u76F8\u5173\u503C\uFF0C\u5219\u9ED8\u8BA4\u503C\u8D77\u505A\u7528
-common.es.query.index=none
+common.es.query.index=null
 common.es.query.type=_doc
 common.es.http.aync.maxConnTotal=100
 common.es.http.aync.maxConnPerRoute=100
