@@ -14,6 +14,7 @@ public class Dump {
 	private String db_tb;
 	private String[] primarys;
 	private Integer numDuan;
+	private String schedule;//如果是定时器模式才设置
 	private String wheresql;// where语句
 	private String remark;
 

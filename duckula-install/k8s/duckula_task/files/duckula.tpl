@@ -24,6 +24,10 @@
           value: {{ .Values.env.taskid }}
         - name: taskpattern
           value: tiller
+        {{- if .Values.env.rootpath  }} 
+        - name: rootpath
+          value: {{ .Values.env.rootpath }}
+        {{- end }}       
         #不能有command否则会覆盖ENTRYPOINT
         args: [{{ .Values.cmd |quote }},"$(taskid)","2723"]
         ports:

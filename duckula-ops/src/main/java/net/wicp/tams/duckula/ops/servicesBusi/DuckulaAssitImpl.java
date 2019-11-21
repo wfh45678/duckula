@@ -297,6 +297,18 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 		userList.add(Conf.get("common.others.zookeeper.constr"));
 		userList.add("env.rootpath");// 设置zk的root目录
 		userList.add(Conf.get("duckula.zk.rootpath"));
+
+		if (commandType == CommandType.dump) {// 默认是“nojob”需要被覆盖
+			Dump buidlDump = ZkUtil.buidlDump(taskId);// 需要dump来判断设置执行时间
+			if (StringUtil.isNull(buidlDump.getSchedule())) {// 是job
+				userList.add("schedule");
+				userList.add(buidlDump.getSchedule());
+			} else {// 是Schedule
+				userList.add("schedule");
+				userList.add("now");
+			}
+		}
+
 		log.info("-----------taskId:{},zk:{},rootpath:{}-----------", taskId,
 				Conf.get("common.others.zookeeper.constr"), Conf.get("duckula.zk.rootpath"));
 		String idfull = commandType.getK8sId(taskId);
@@ -355,7 +367,7 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 		Object[] userConfig = userList.toArray(new Object[userList.size()]);
 
 		Result result = TillerClient.getInst().installDirChart(name, buidlTask.getNamespace(), chartsDirPath,
-				userConfig);		
+				userConfig);
 		if (!result.isSuc()) {
 			log.error("在k8s上启动Task[{}]出错:{}", taskId, result.getMessage());
 		} else {
@@ -386,7 +398,7 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 		return buidlTask;
 	}
 
-	//isAuto
+	// isAuto
 	@Override
 	public Result stopTaskForK8s(CommandType commandType, String taskId, boolean isAuto) {
 		if (true) {
