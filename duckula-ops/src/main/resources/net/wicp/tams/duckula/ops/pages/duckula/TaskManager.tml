@@ -55,7 +55,7 @@
 	               </td>
 			 	  	 <td class="frame_table_list_2_righttext">名称空间</td>
 			 	     <td>
-			 	        <r:validatebox id="namespace_save" name="namespace" style="width:250px;" required="false"/>
+			 	        <r:validatebox id="namespace_save" name="namespace" style="width:250px;" required="false"  readonly="true"/>
 			 	     </td>
 			      </tr>
 			      
@@ -203,6 +203,7 @@
    
 <script>
      var needServer=${needServer};
+     var namespace='${namespace}';
      function showopt(value,row,index){
             var optCan=gt(row.hostNum,0);
             var k8sCan=!(""==row.podStatus);//Pending
@@ -513,7 +514,15 @@
 				autoSave: false,
 				onDestroy: updateRuleInput,
 				onAfterEdit: updateRuleInput
-      });      
+      }); 
+      
+      if(namespace!=''){
+         if("all"==namespace){
+            $('#namespace_save').validatebox('readonly',false);
+         }else{
+            $('#namespace_save').validatebox('readonly',true);
+         }
+      }     
    });
 </script>
 </body>

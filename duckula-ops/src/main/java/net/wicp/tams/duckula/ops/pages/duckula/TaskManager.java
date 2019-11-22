@@ -11,7 +11,9 @@ import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.tapestry5.annotations.OnEvent;
+import org.apache.tapestry5.annotations.Persist;
 import org.apache.tapestry5.annotations.Property;
+import org.apache.tapestry5.annotations.SessionState;
 import org.apache.tapestry5.ioc.annotations.Inject;
 import org.apache.tapestry5.ioc.internal.util.CollectionFactory;
 import org.apache.tapestry5.json.JSONArray;
@@ -68,7 +70,7 @@ import net.wicp.tams.duckula.plugin.beans.Rule;
 import net.wicp.tams.duckula.plugin.constant.RuleItem;
 
 @Slf4j
-@HtmlJs(easyuiadd= {EasyUIAdd.edatagrid})
+@HtmlJs(easyuiadd = { EasyUIAdd.edatagrid })
 public class TaskManager {
 
 	@Inject
@@ -85,6 +87,11 @@ public class TaskManager {
 	@Inject
 	private IDuckulaAssit duckulaAssit;
 
+	@Property
+	@SessionState
+	private String namespace;
+	
+
 	public boolean isNeedServer() {
 		return TaskPattern.isNeedServer();
 	}
@@ -94,7 +101,7 @@ public class TaskManager {
 	}
 
 	public String getDefaultNamespace() {
-		return Conf.get("common.kubernetes.apiserver.namespace.default");
+		return StringUtil.hasNull(namespace, Conf.get("common.kubernetes.apiserver.namespace.default"));
 	}
 
 	public String getColDifferent() {
@@ -281,9 +288,9 @@ public class TaskManager {
 								rule.getItems().get(RuleItem.index), "_doc",
 								Integer.parseInt(rule.getItems().get(RuleItem.partitions)),
 								Integer.parseInt(rule.getItems().get(RuleItem.copynum)), proMappingBean);
-						if(indexCreate.isSuc()) {
-							Mapping  mapping=new Mapping();
-							mapping.setId(rule.getItems().get(RuleItem.index)+"-_doc");
+						if (indexCreate.isSuc()) {
+							Mapping mapping = new Mapping();
+							mapping.setId(rule.getItems().get(RuleItem.index) + "-_doc");
 							mapping.setDb(db);
 							mapping.setTb(tb);
 							mapping.setIndex(rule.getItems().get(RuleItem.index));
@@ -292,11 +299,11 @@ public class TaskManager {
 							mapping.setShardsNum(Integer.parseInt(rule.getItems().get(RuleItem.partitions)));
 							mapping.setReplicas(Integer.parseInt(rule.getItems().get(RuleItem.copynum)));
 							mapping.setDbinst(taskparam.getDbinst());
-							Result createOrUpdateNode = ZkClient.getInst().createOrUpdateNode(ZkPath.mappings.getPath(mapping.getId()),
-									JSONObject.toJSONString(mapping));
-							log.info("创建索引节点结果："+createOrUpdateNode.getMessage());
+							Result createOrUpdateNode = ZkClient.getInst().createOrUpdateNode(
+									ZkPath.mappings.getPath(mapping.getId()), JSONObject.toJSONString(mapping));
+							log.info("创建索引节点结果：" + createOrUpdateNode.getMessage());
 						}
-						log.info(rule.getItems().get(RuleItem.index)+"创建结果：" + indexCreate.getMessage());
+						log.info(rule.getItems().get(RuleItem.index) + "创建结果：" + indexCreate.getMessage());
 					}
 				}
 			}
@@ -558,6 +565,10 @@ public class TaskManager {
 		}
 		String retstr = buff.length() > 1 ? buff.substring(1) : "";
 		return TapestryAssist.getTextStreamResponse(Result.getSuc(retstr));
+	}
+
+	public void onActivate(String namespace) {
+		this.namespace = namespace;
 	}
 
 	private Server selServer(List<Server> allserver, String serverid) {
