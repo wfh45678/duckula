@@ -300,7 +300,7 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 
 		if (commandType == CommandType.dump) {// 默认是“nojob”需要被覆盖
 			Dump buidlDump = ZkUtil.buidlDump(taskId);// 需要dump来判断设置执行时间
-			if (StringUtil.isNull(buidlDump.getSchedule())) {// 是job
+			if (StringUtil.isNotNull(buidlDump.getSchedule())) {// 是job
 				userList.add("schedule");
 				userList.add(buidlDump.getSchedule());
 			} else {// 是Schedule
