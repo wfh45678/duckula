@@ -307,6 +307,10 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 				userList.add("schedule");
 				userList.add("now");
 			}
+			userList.add("resources.limits.memory");
+			userList.add(buidlDump.getMemory()+"Mi");
+			userList.add("resources.limits.cpu");
+			userList.add(buidlDump.getCpu()+"m");
 		}
 
 		log.info("-----------taskId:{},zk:{},rootpath:{}-----------", taskId,

@@ -23,6 +23,9 @@ public class Dump {
 	private Integer baseDataNum;// 抽数据线程数
 	private Integer busiNum;// 业务处理线程数
 	private Integer sendNum;// 发送线程数
+	//k8s版本使用的CPU和内存
+	private Integer cpu;//CPU数据 
+	private Integer memory;//内存 M
 
 	public String packFromstr() {
 		if (StringUtil.isNotNull(this.wheresql)) {

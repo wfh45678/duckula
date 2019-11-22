@@ -96,6 +96,16 @@
 	                 </td>
 			      </tr>
 			      <tr>
+			         <td class="frame_table_list_2_righttext" name="trdb">k8s CPU</td>
+			         <td name="trdb">
+			            <r:numberbox  name="cpu" style="width:60px;" min="2000" max="8000" missingMessage="1000m为CPU的1核" required="true"/> m
+	                 </td>
+			         <td class="frame_table_list_2_righttext">k8s内存</td>
+			         <td>
+			            <r:numberbox  name="memory" style="width:60px;" min="4096" max="16384" missingMessage="1024Mi为1G" required="true"/> Mi
+	                 </td>
+			      </tr>
+			      <tr>
 			        
 			      </tr>			      
 			       <tr>
