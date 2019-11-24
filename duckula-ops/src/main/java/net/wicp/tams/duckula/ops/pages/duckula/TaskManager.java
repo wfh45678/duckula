@@ -5,13 +5,13 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.tapestry5.annotations.OnEvent;
-import org.apache.tapestry5.annotations.Persist;
 import org.apache.tapestry5.annotations.Property;
 import org.apache.tapestry5.annotations.SessionState;
 import org.apache.tapestry5.ioc.annotations.Inject;
@@ -58,6 +58,7 @@ import net.wicp.tams.duckula.common.beans.Mapping;
 import net.wicp.tams.duckula.common.beans.Task;
 import net.wicp.tams.duckula.common.beans.TaskOffline;
 import net.wicp.tams.duckula.common.constant.CommandType;
+import net.wicp.tams.duckula.common.constant.FilterPattern;
 import net.wicp.tams.duckula.common.constant.SenderEnum;
 import net.wicp.tams.duckula.common.constant.TaskPattern;
 import net.wicp.tams.duckula.common.constant.ZkPath;
@@ -90,7 +91,6 @@ public class TaskManager {
 	@Property
 	@SessionState
 	private String namespace;
-	
 
 	public boolean isNeedServer() {
 		return TaskPattern.isNeedServer();
@@ -460,13 +460,7 @@ public class TaskManager {
 		return TapestryAssist.getTextStreamResponse(ret);
 	}
 
-	public TextStreamResponse onSaveFilter() throws KeeperException, InterruptedException {
-		String filterContext = request.getParameter("filterContext");
-		String taskId = request.getParameter("taskId");
-		System.out.println(filterContext);
-		ZkClient.getInst().createOrUpdateNode(ZkPath.filter.getPath(taskId), filterContext);
-		return req.retSuccInfo("保存过滤成功");
-	}
+	
 
 	public TextStreamResponse onGetFilter() throws KeeperException, InterruptedException {
 		String taskId = request.getParameter("taskId");
@@ -536,6 +530,25 @@ public class TaskManager {
 			ary.add(retobj);
 		}
 		return TapestryAssist.getTextStreamResponse(ary.toJSONString());
+	}
+
+	public TextStreamResponse onFilterRuleData() {
+		String filterContext = request.getParameter("filterContext");
+		Map<FilterPattern, Map<String, Map<String, Set<String>>>> packageFilterRules = FilterPattern
+				.packageFilterRules(filterContext);// 设置值
+		com.alibaba.fastjson.JSONArray ary = FilterPattern.getJson(packageFilterRules);
+		return TapestryAssist.getTextStreamResponse(ary.toJSONString());
+	}
+
+//把过滤数据转为string
+	public TextStreamResponse onFilterDataConvert() {
+		String filterSaveData = request.getParameter("filterSaveData");
+		String taskId = request.getParameter("taskId");
+		JSONObject dgAll = JSONObject.parseObject(filterSaveData);
+		com.alibaba.fastjson.JSONArray rows = dgAll.getJSONArray("rows");
+		String retstr = FilterPattern.toString(rows);
+		ZkClient.getInst().createOrUpdateNode(ZkPath.filter.getPath(taskId), retstr);//保存zk
+		return TapestryAssist.getTextStreamResponse(Result.getSuc(retstr));
 	}
 
 	public TextStreamResponse onDataConvert() {
