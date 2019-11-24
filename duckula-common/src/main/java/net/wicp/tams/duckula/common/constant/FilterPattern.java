@@ -20,12 +20,20 @@ import net.wicp.tams.common.apiext.IOUtil;
 
 @Slf4j
 public enum FilterPattern {
-	regular("正则表达式"), sql("带参数SQL"), function("自定义函数，考虑使用脚本语言"), colname("列过滤");
+	regular("正则表达式", true, "row"),
+
+	sql("带参数SQL", false, "row"),
+
+	function("自定义函数，考虑使用脚本语言", false, "row"),
+
+	colname("列名过滤", false, "col");
 
 	public static final String db_tb_formart = "%s|%s";
 	public static final String ruleFormat = "duckula.busi.filter.%s.%s.%s.%s.%s=%s";
 
 	private final String desc;
+	private final boolean hasColName;// 需要设置列名
+	private final String group;// row:行过滤,col:列过滤
 
 	// key:db_tb_formart value:{} key:field,value:Set<String> 规则值,容许多条
 	/*
@@ -35,6 +43,14 @@ public enum FilterPattern {
 	 * public Map<String, Map<String, Set<String>>> getFilterRules() { return
 	 * this.filterRules; }
 	 */
+
+	public String getGroup() {
+		return group;
+	}
+
+	public boolean isHasColName() {
+		return hasColName;
+	}
 
 	public static JSONArray getJson(Map<FilterPattern, Map<String, Map<String, Set<String>>>> inputmap) {
 		JSONArray retall = new JSONArray();
@@ -77,9 +93,14 @@ public enum FilterPattern {
 			FilterRulePo temppo = new FilterRulePo();
 			temppo.setDb(jsonObject.getString("db"));
 			temppo.setTb(jsonObject.getString("tb"));
-			temppo.setField(jsonObject.getString("field"));
+			FilterPattern filterPattern = FilterPattern.valueOf(jsonObject.getString("rule"));
+			temppo.setRule(filterPattern);
+			if (!filterPattern.isHasColName()) {
+				temppo.setField("_");
+			} else {
+				temppo.setField(jsonObject.getString("field"));
+			}
 			temppo.setIndex(jsonObject.getIntValue("index"));
-			temppo.setRule(FilterPattern.valueOf(jsonObject.getString("rule")));
 			temppo.setRuleValue(jsonObject.getString("ruleValue"));
 			tempset.add(temppo);
 		}
@@ -125,13 +146,19 @@ public enum FilterPattern {
 		return desc;
 	}
 
-	private FilterPattern(String desc) {
+	private FilterPattern(String desc, boolean hasColName, String group) {
 		this.desc = desc;
+		this.hasColName = hasColName;
+		this.group = group;
 	}
 
 	public static Map<FilterPattern, Map<String, Map<String, Set<String>>>> packageFilterRules(String filterStr) {
 		Map<FilterPattern, Map<String, Map<String, Set<String>>>> returmap = new HashMap<FilterPattern, Map<String, Map<String, Set<String>>>>();
 		Properties props = IOUtil.StringToProperties(filterStr);
+		if (props == null) {
+			log.error("busiFilter过滤文件转换失败");
+			return null;
+		}
 		Map<String, String> propmap = CollectionUtil.getPropsByKeypre(props, "duckula.busi.filter", true);
 		for (String ele : propmap.keySet()) {
 			String[] tempKeyAry = ele.split("\\.");// 库、表、字段、模式、唯一标识(可以避免重复被覆盖，可以不填这个标识)，

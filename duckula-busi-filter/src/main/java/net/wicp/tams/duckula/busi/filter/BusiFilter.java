@@ -9,9 +9,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +35,7 @@ import net.wicp.tams.common.thread.threadlocal.PerthreadManager;
 import net.wicp.tams.duckula.common.ZkClient;
 import net.wicp.tams.duckula.common.ZkUtil;
 import net.wicp.tams.duckula.common.beans.Task;
+import net.wicp.tams.duckula.common.constant.FilterPattern;
 import net.wicp.tams.duckula.common.constant.ZkPath;
 import net.wicp.tams.duckula.plugin.beans.DuckulaPackage;
 import net.wicp.tams.duckula.plugin.beans.Rule;
@@ -41,11 +44,9 @@ import net.wicp.tams.duckula.plugin.busi.IBusi;
 @Slf4j
 public class BusiFilter implements IBusi {
 
-	// private String[][] filterRules;
-	// key:库名|表名 value:key:字段名 value[0]模式 value[1]模式值
-	private Map<String, Map<String, String[]>> filterRules = new HashMap<String, Map<String, String[]>>();
 	private Map<String, String[]> colNamesMap = new HashMap<String, String[]>();
-	private final String db_tb_formart = "%s|%s";
+
+	private final Map<FilterPattern, Map<String, Map<String, Set<String>>>> filterRulesMap;
 
 	public BusiFilter() {
 		String taskId = PerthreadManager.getInstance().createValue("duckula-taskId", String.class).get("");
@@ -56,13 +57,8 @@ public class BusiFilter implements IBusi {
 		// 添加默认配置，由于classload在下层，Conf初始化已在上层做掉了，没办法再次load下层的jar包中的默认配置
 		Properties defaultProps = IOUtil.fileToProperties("/filter-default.properties", BusiFilter.class);
 		Conf.overProp(defaultProps);
-		// zk上的配置
-		String filterStr = ZkClient.getInst().getZkDataStr(ZkPath.filter.getPath(taskId));
-		Properties props = IOUtil.StringToProperties(filterStr);
-		if (props == null) {
-			log.error("busiFilter过滤文件转换失败");
-			LoggerUtil.exit(JvmStatus.s15);
-		}
+
+		Properties props = new Properties();
 		// task的配置
 		Task task = ZkUtil.buidlTask(taskId);
 		props.put("common.jdbc.datasource.default.host", task.getIp());
@@ -70,39 +66,31 @@ public class BusiFilter implements IBusi {
 		props.put("common.jdbc.datasource.default.username", task.getUser());
 		props.put("common.jdbc.datasource.default.password", task.getPwd());
 		Conf.overProp(props);
-		Map<String, String> propmap = Conf.getPre("duckula.busi.filter", true);
-		Connection connection = DruidAssit.getConnection();
-		for (String key : propmap.keySet()) {
-			String[] tempKeyAry = key.split("\\.");// 库、表、字段、模式
-			String db_tb = String.format(db_tb_formart, tempKeyAry[0], tempKeyAry[1]);
-			Map<String, String[]> tempmap = filterRules.get(db_tb);
-			if (tempmap == null) {
-				tempmap = new HashMap<String, String[]>();
-				filterRules.put(db_tb, tempmap);
-			}
-			Pattern pattern = Pattern.valueOf(tempKeyAry[3]);
-			String value = propmap.get(key);
-			switch (pattern) {
-			case regular:
-				break;
-			case sql:
-				break;
-			case colname:
-				String[] primary = MySqlAssit.getPrimary(connection, tempKeyAry[0], tempKeyAry[1]);
+
+		// zk上的配置
+		String filterStr = ZkClient.getInst().getZkDataStr(ZkPath.filter.getPath(taskId));
+		this.filterRulesMap = FilterPattern.packageFilterRules(filterStr);
+		if (this.filterRulesMap == null) {// 没有过滤条件,或是转换失败
+			LoggerUtil.exit(JvmStatus.s15);
+		}
+		// colname特殊处理
+		if (MapUtils.isNotEmpty(this.filterRulesMap.get(FilterPattern.colname))) {
+			Connection connection = DruidAssit.getConnection();
+			for (String db_tb : this.filterRulesMap.get(FilterPattern.colname).keySet()) {
+				String[] dbtbAry = db_tb.split("\\|");
+				String[] primary = MySqlAssit.getPrimary(connection, dbtbAry[0], dbtbAry[1]);
+				String value = this.filterRulesMap.get(FilterPattern.colname).get(db_tb).get("_").iterator().next();// 取第一条,因为只有一条
 				String[] colNamesFilterAry = value.split(",");
 				String[] arrayOr = CollectionUtil.arrayOr(String[].class, primary, colNamesFilterAry);
 				colNamesMap.put(db_tb, arrayOr);
-				break;
-			default:
-				break;
 			}
-			tempmap.put(tempKeyAry[2], new String[] { pattern.name(), value });
+			try {
+				connection.close();
+			} catch (SQLException e) {
+				log.error("关闭connection失败", e);
+			}
 		}
-		try {
-			connection.close();
-		} catch (SQLException e) {
-			log.error("关闭connection失败", e);
-		}
+
 		log.info("---------------------初始化完成-----------------------");
 	}
 
@@ -111,50 +99,54 @@ public class BusiFilter implements IBusi {
 		// List<Integer> remove = new ArrayList<>();
 		Map<Integer, Boolean> remove = new HashMap<Integer, Boolean>();
 		// Map<Integer, Boolean> remove = new ConcurrentHashMap<Integer, Boolean>();
-		String db_tb = String.format(db_tb_formart, duckulaPackage.getEventTable().getDb(),
+		String db_tb = String.format(FilterPattern.db_tb_formart, duckulaPackage.getEventTable().getDb(),
 				duckulaPackage.getEventTable().getTb());
-		Map<String, String[]> filters = filterRules.get(db_tb);
-		if (filters != null) {
-			String[][] valuestrue = OptType.delete == duckulaPackage.getEventTable().getOptType()
-					? duckulaPackage.getBefores()
-					: duckulaPackage.getAfters();
-			for (String col : filters.keySet()) {
-				// remove.clear();如果有多个过滤条件，是叠加，不要clear
-				int indexOf = "_".equals(col) ? -2 : ArrayUtils.indexOf(duckulaPackage.getEventTable().getCols(), col);//
-				String[] vals = filters.get(col);
-				Pattern pattern = Pattern.valueOf(vals[0]);
-				String value = vals[1];
-				if (pattern == Pattern.colname) {
-					// 列过滤在后面做，且只会存在一个
-					continue;
-				}
-				final CountDownLatch latch = new CountDownLatch(valuestrue.length);
-				for (int i = 0; i < valuestrue.length; i++) {
-					// filter(duckulaPackage, remove, valuestrue, indexOf, pattern, value, i);
-					// log.info("filter 后:{},i:{}",remove.size(),i);
-					final int index = i;
-					ThreadPool.getDefaultPool().submit(new Runnable() {
 
-						@Override
-						public void run() {
-							try {
-								filter(duckulaPackage, remove, valuestrue, indexOf, pattern, value, index);
-							} catch (Exception e) {
-								log.error("过滤失败:" + duckulaPackage.getEventTable().getTb() + ":" + valuestrue[index][0],
-										e);
-							} finally {
-								latch.countDown();
-							}
+		for (FilterPattern filterPattern : filterRulesMap.keySet()) {
+			if ("col".equals(filterPattern.getGroup())) {// 列过滤后面处理
+				// 列过滤在后面做，且只会存在一个
+				continue;
+			}
+			Map<String, Map<String, Set<String>>> dbtbMap = filterRulesMap.get(filterPattern);
+			if (MapUtils.isNotEmpty(dbtbMap) && MapUtils.isNotEmpty(dbtbMap.get(db_tb))) {// 需要过滤
+				String[][] valuestrue = OptType.delete == duckulaPackage.getEventTable().getOptType()
+						? duckulaPackage.getBefores()
+						: duckulaPackage.getAfters();
+				Map<String, Set<String>> fieldmap = dbtbMap.get(db_tb);
+				for (String col : fieldmap.keySet()) {
+					// remove.clear();如果有多个过滤条件，是叠加，不要clear
+					int indexOf = "_".equals(col) ? -2
+							: ArrayUtils.indexOf(duckulaPackage.getEventTable().getCols(), col);//
+					for (String field : fieldmap.keySet()) {
+						final CountDownLatch latch = new CountDownLatch(valuestrue.length);
+						String[] values = fieldmap.get(field).toArray(new String[fieldmap.get(field).size()]);
+						for (int i = 0; i < values.length; i++) {
+							final int index = i;
+							ThreadPool.getDefaultPool().submit(new Runnable() {
+
+								@Override
+								public void run() {
+									try {
+										filter(duckulaPackage, remove, valuestrue, indexOf, filterPattern,
+												values[index], index);
+									} catch (Exception e) {
+										log.error("过滤失败:" + duckulaPackage.getEventTable().getTb() + ":"
+												+ valuestrue[index][0], e);
+									} finally {
+										latch.countDown();
+									}
+								}
+							});
 						}
-					});
-				}
-				try {
-					latch.await(240, TimeUnit.SECONDS); // latch.await();
-					// log.info("remove:" + remove.size());
-				} catch (InterruptedException e) {
-					log.error("等待CountDownLatch超时", e);
-				}
+						try {
+							latch.await(240, TimeUnit.SECONDS); // latch.await();
+							// log.info("remove:" + remove.size());
+						} catch (InterruptedException e) {
+							log.error("等待CountDownLatch超时", e);
+						}
+					}
 
+				}
 			}
 		}
 
@@ -167,7 +159,6 @@ public class BusiFilter implements IBusi {
 			boolean isnull = false;
 			int rowsNumRrue = 0;
 			if (ArrayUtils.isNotEmpty(duckulaPackage.getBefores())) {
-				int tempsize = duckulaPackage.getBefores().length;
 				String[][] valuesTrue = ArrayUtils.removeAll(duckulaPackage.getBefores(), array);
 				// log.info("before:{},remove:{},valuesTrue:{}", tempsize, array.length,
 				// valuesTrue.length);
@@ -180,7 +171,6 @@ public class BusiFilter implements IBusi {
 				}
 			}
 			if (ArrayUtils.isNotEmpty(duckulaPackage.getAfters())) {
-				int tempsize = duckulaPackage.getAfters().length;
 				String[][] valuesTrue = ArrayUtils.removeAll(duckulaPackage.getAfters(), array);
 				// log.info("after:{},remove:{},valuesTrue:{}", tempsize, array.length,
 				// valuesTrue.length);
@@ -239,7 +229,7 @@ public class BusiFilter implements IBusi {
 	}
 
 	private void filter(DuckulaPackage duckulaPackage, Map<Integer, Boolean> remove, String[][] valuestrue, int indexOf,
-			Pattern pattern, String value, int i) {
+			FilterPattern pattern, String value, int i) {
 		String[] values = valuestrue[i];
 		switch (pattern) {
 		case regular:
