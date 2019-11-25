@@ -92,6 +92,8 @@ public class TaskManager {
 	@SessionState
 	private String namespace;
 
+	private boolean namespaceExists;
+
 	public boolean isNeedServer() {
 		return TaskPattern.isNeedServer();
 	}
@@ -114,6 +116,10 @@ public class TaskManager {
 
 	@SuppressWarnings("unchecked")
 	public TextStreamResponse onQuery() {
+		if (!namespaceExists) {
+			return TapestryAssist.getTextStreamResponse(EasyUiAssist.getJsonForGridEmpty());
+		}
+
 		final Task taskparam = TapestryAssist.getBeanFromPage(Task.class, requestGlobals);
 
 		List<String> taskNodes = ZkClient.getInst().getChildren(ZkPath.tasks.getRoot());
@@ -133,6 +139,9 @@ public class TaskManager {
 					return false;
 				}
 				Task temp = (Task) object;
+				if(!TaskPattern.isNeedServer()&&!"all".equals(namespace)&& !namespace.equalsIgnoreCase(temp.getNamespace())) {
+					return false;
+				}
 				boolean ret = true;
 				if (StringUtil.isNotNull(taskparam.getId())) {
 					ret = temp.getId().indexOf(taskparam.getId()) >= 0;
@@ -460,8 +469,6 @@ public class TaskManager {
 		return TapestryAssist.getTextStreamResponse(ret);
 	}
 
-	
-
 	public TextStreamResponse onGetFilter() throws KeeperException, InterruptedException {
 		String taskId = request.getParameter("taskId");
 		Stat stat = ZkClient.getInst().exists(ZkPath.filter.getPath(taskId));
@@ -547,7 +554,7 @@ public class TaskManager {
 		JSONObject dgAll = JSONObject.parseObject(filterSaveData);
 		com.alibaba.fastjson.JSONArray rows = dgAll.getJSONArray("rows");
 		String retstr = FilterPattern.toString(rows);
-		ZkClient.getInst().createOrUpdateNode(ZkPath.filter.getPath(taskId), retstr);//保存zk
+		ZkClient.getInst().createOrUpdateNode(ZkPath.filter.getPath(taskId), retstr);// 保存zk
 		return TapestryAssist.getTextStreamResponse(Result.getSuc(retstr));
 	}
 

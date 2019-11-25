@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
+import org.apache.tapestry5.annotations.SessionState;
 import org.apache.tapestry5.ioc.annotations.Inject;
 import org.apache.tapestry5.services.Request;
 import org.apache.tapestry5.services.RequestGlobals;
@@ -49,6 +50,11 @@ public class OpsManager {
 	@Inject
 	private IDuckulaAssit duckulaAssit;
 
+	@SessionState
+	private String namespace;
+
+	private boolean namespaceExists;
+
 	@Inject
 	private IReq req;
 
@@ -56,10 +62,21 @@ public class OpsManager {
 	public TextStreamResponse onQuery() throws KeeperException, InterruptedException {
 		final Task taskparam = TapestryAssist.getBeanFromPage(Task.class, requestGlobals);
 		List<PosShow> taskPosList = duckulaAssit.findAllPosForTasks();
+
+		if (!namespaceExists) {
+			String jsonStr = EasyUiAssist.getJsonForGridEmpty();
+			return TapestryAssist.getTextStreamResponse(jsonStr);
+		}
+
+		List<String> fitTasks = DuckulaUtils.findTaskIdByNamespace(namespace);
+
 		List<PosShow> retlist = (List<PosShow>) CollectionUtils.select(taskPosList, new Predicate() {
 			@Override
 			public boolean evaluate(Object object) {
 				PosShow temp = (PosShow) object;
+				if (!fitTasks.contains(temp.getId())) {
+					return false;
+				}
 				boolean ret = true;
 				if (StringUtil.isNotNull(taskparam.getId())) {
 					ret = temp.getId().indexOf(taskparam.getId()) >= 0;
@@ -222,6 +239,10 @@ public class OpsManager {
 		PosShow posshow = TapestryAssist.getBeanFromPage(PosShow.class, requestGlobals);
 		Result result = ZkUtil.del(ZkPath.pos, posshow.getId());
 		return TapestryAssist.getTextStreamResponse(result);
+	}
+
+	public void onActivate(String namespace) {
+		this.namespace = namespace;
 	}
 
 }

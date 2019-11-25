@@ -11,6 +11,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.tapestry5.annotations.OnEvent;
+import org.apache.tapestry5.annotations.SessionState;
 import org.apache.tapestry5.ioc.annotations.Inject;
 import org.apache.tapestry5.ioc.internal.util.CollectionFactory;
 import org.apache.tapestry5.json.JSONArray;
@@ -40,6 +41,7 @@ import net.wicp.tams.duckula.common.constant.CommandType;
 import net.wicp.tams.duckula.common.constant.TaskPattern;
 import net.wicp.tams.duckula.common.constant.ZkPath;
 import net.wicp.tams.duckula.ops.beans.Server;
+import net.wicp.tams.duckula.ops.servicesBusi.DuckulaUtils;
 import net.wicp.tams.duckula.ops.servicesBusi.IDuckulaAssit;
 
 @Slf4j
@@ -55,6 +57,12 @@ public class ImportManager {
 	@Inject
 	private IDuckulaAssit duckulaAssit;
 	
+	
+	@SessionState
+	private String namespace;
+
+	private boolean namespaceExists;
+	
 	public boolean isNeedServer() {
 		return TaskPattern.isNeedServer();
 	}
@@ -69,13 +77,20 @@ public class ImportManager {
 
 	@SuppressWarnings("unchecked")
 	public TextStreamResponse onQuery() {
+		if (!namespaceExists) {
+			String jsonStr = EasyUiAssist.getJsonForGridEmpty();
+			return TapestryAssist.getTextStreamResponse(jsonStr);
+		}
 		final Dump dumpparam = TapestryAssist.getBeanFromPage(Dump.class, requestGlobals);
 		List<Dump> dumps = ZkUtil.findAllDump();
-
+		List<String> fitTasks = DuckulaUtils.findTaskIdByNamespace(namespace);
 		List<Dump> retlist = (List<Dump>) CollectionUtils.select(dumps, new Predicate() {
 			@Override
 			public boolean evaluate(Object object) {
 				Dump temp = (Dump) object;
+				if (!fitTasks.contains(temp.getTaskOnlineId())) {
+					return false;
+				}
 				boolean ret = true;
 				if (StringUtil.isNotNull(dumpparam.getTaskOnlineId())) {
 					ret = temp.getTaskOnlineId().indexOf(dumpparam.getTaskOnlineId()) >= 0;

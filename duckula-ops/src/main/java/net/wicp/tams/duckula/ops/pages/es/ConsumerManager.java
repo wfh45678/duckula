@@ -12,6 +12,7 @@ import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.tapestry5.annotations.OnEvent;
+import org.apache.tapestry5.annotations.SessionState;
 import org.apache.tapestry5.ioc.annotations.Inject;
 import org.apache.tapestry5.ioc.internal.util.CollectionFactory;
 import org.apache.tapestry5.json.JSONArray;
@@ -48,11 +49,11 @@ import net.wicp.tams.duckula.common.beans.Mapping;
 import net.wicp.tams.duckula.common.beans.SenderConsumerEnum;
 import net.wicp.tams.duckula.common.beans.Task;
 import net.wicp.tams.duckula.common.constant.CommandType;
-import net.wicp.tams.duckula.common.constant.SenderEnum;
 import net.wicp.tams.duckula.common.constant.TaskPattern;
 import net.wicp.tams.duckula.common.constant.ZkPath;
 import net.wicp.tams.duckula.ops.beans.Server;
 import net.wicp.tams.duckula.ops.services.InitDuckula;
+import net.wicp.tams.duckula.ops.servicesBusi.DuckulaUtils;
 import net.wicp.tams.duckula.ops.servicesBusi.IDuckulaAssit;
 import net.wicp.tams.duckula.plugin.beans.Rule;
 import net.wicp.tams.duckula.plugin.constant.RuleItem;
@@ -71,6 +72,11 @@ public class ConsumerManager {
 	@Inject
 	private IDuckulaAssit duckulaAssit;
 
+	@SessionState
+	private String namespace;
+
+	private boolean namespaceExists;
+
 	public boolean isNeedServer() {
 		return TaskPattern.isNeedServer();
 	}
@@ -86,11 +92,21 @@ public class ConsumerManager {
 	@SuppressWarnings("unchecked")
 	public TextStreamResponse onQuery() {
 		final Consumer consumerparam = TapestryAssist.getBeanFromPage(Consumer.class, requestGlobals);
+		if (!namespaceExists) {
+			String jsonStr = EasyUiAssist.getJsonForGridEmpty();
+			return TapestryAssist.getTextStreamResponse(jsonStr);
+		}
+
+		List<String> fitTasks = DuckulaUtils.findTaskIdByNamespace(namespace);
+
 		List<Consumer> consumers = ZkUtil.findAllObjs(ZkPath.consumers, Consumer.class);
 		List<Consumer> retlist = (List<Consumer>) CollectionUtils.select(consumers, new Predicate() {
 			@Override
 			public boolean evaluate(Object object) {
 				Consumer temp = (Consumer) object;
+				if (!fitTasks.contains(temp.getTaskOnlineId())) {
+					return false;
+				}
 				boolean ret = true;
 				if (StringUtil.isNotNull(consumerparam.getTopic())) {
 					ret = temp.getTopic().indexOf(consumerparam.getTopic()) >= 0;
@@ -388,6 +404,10 @@ public class ConsumerManager {
 			}
 		}
 		return null;
+	}
+
+	public void onActivate(String namespace) {
+		this.namespace = namespace;
 	}
 
 }

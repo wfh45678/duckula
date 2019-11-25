@@ -11,6 +11,7 @@ import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
@@ -24,6 +25,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import lombok.extern.slf4j.Slf4j;
 import net.wicp.tams.common.Conf;
+import net.wicp.tams.common.apiext.CollectionUtil;
 import net.wicp.tams.common.apiext.IOUtil;
 import net.wicp.tams.common.apiext.StringUtil;
 import net.wicp.tams.common.beans.Host;
@@ -32,8 +34,12 @@ import net.wicp.tams.common.exception.ExceptAll;
 import net.wicp.tams.common.exception.ProjectExceptionRuntime;
 import net.wicp.tams.common.os.pool.SSHConnection;
 import net.wicp.tams.common.os.pool.SSHPoolByMap;
+import net.wicp.tams.duckula.common.ZkUtil;
 import net.wicp.tams.duckula.common.beans.Pos;
+import net.wicp.tams.duckula.common.beans.Task;
 import net.wicp.tams.duckula.common.constant.MiddlewareType;
+import net.wicp.tams.duckula.common.constant.TaskPattern;
+import net.wicp.tams.duckula.common.constant.ZkPath;
 import net.wicp.tams.duckula.ops.beans.Server;
 import net.wicp.tams.duckula.plugin.beans.Rule;
 import net.wicp.tams.duckula.plugin.constant.RuleItem;
@@ -57,6 +63,26 @@ public abstract class DuckulaUtils {
 		} catch (Exception e) {
 			throw new ProjectExceptionRuntime(ExceptAll.ssh_pool_conn, "连接出错");
 		}
+	}
+
+	public static List<String> findTaskIdByNamespace(String namespace) {
+		if (StringUtil.isNull(namespace)) {
+			return new ArrayList<String>();
+		}
+		List<Task> allTasks = ZkUtil.findAllObjs(ZkPath.tasks, Task.class);
+		CollectionUtils.filter(allTasks, new Predicate() {
+
+			@Override
+			public boolean evaluate(Object object) {
+				if (TaskPattern.isNeedServer()||"all".equalsIgnoreCase(namespace)) {
+					return true;
+				}
+				Task task = (Task) object;
+				return namespace.equalsIgnoreCase(task.getNamespace());
+			}
+		});
+		List<String> colFromObj = (List<String>) CollectionUtil.getColFromObj(allTasks, "id");
+		return colFromObj;
 	}
 
 	public static void returnConn(Host host, SSHConnection conn) {
