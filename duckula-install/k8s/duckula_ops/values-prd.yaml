@@ -1,26 +1,10 @@
 image: registry.choerodon.xforceplus.com/rjzjh/duckula
-imageOpsTag: ops.2.0.9.1
-imageDataTag: data.2.0.9
+imageOpsTag: ops.2.1.5
+imageDataTag: data.2.1.5
 imagePullPolicy: IfNotPresent
 env:
   zk: 192.168.51.16:2181,192.168.51.17:2181,192.168.51.18:2181
   rootpath: /duckula-k8s
-hosts:
-- {ip: 192.168.51.16,host: [zk1]}
-- {ip: 192.168.51.17,host: [zk2]}
-- {ip: 192.168.51.18,host: [zk3]}
-
-- {ip: 192.168.50.95,host: [node-es5]}
-- {ip: 192.168.50.92,host: [node-es2]}
-- {ip: 192.168.50.91,host: [node-es1]}
-- {ip: 192.168.50.94,host: [node-es4]}
-- {ip: 192.168.50.93,host: [node-es3]}
-
-- {ip: 172.18.203.10,host: [seller-node-es1]}
-- {ip: 172.18.203.14,host: [seller-node-es2]}
-- {ip: 172.18.203.12,host: [seller-node-es3]}
-- {ip: 172.18.203.13,host: [seller-node-es4]}
-- {ip: 172.18.203.11,host: [seller-node-es5]}
 service:
   type: ClusterIP
   port: 8080
@@ -31,7 +15,7 @@ persistence:
   # 指定存储，推荐使用此方式，注意创建的的访问模式为：accessMode: ReadWriteMany
   #existingClaim: duckula-test-duckula-data
   # 快速搭建demo可以使用此方式，要求k8s拥有此storageClass
-  storageClass: "xforcecloud-disk-share"
+  storageClass: xforcecloud-disk-share
   accessMode: ReadWriteMany
   size: 80Gi
   annotations: {}
@@ -98,13 +82,13 @@ userconfig:
       common.kubernetes.apiserver.master.url=null
       common.kubernetes.apiserver.master.username=null
       common.kubernetes.apiserver.master.password=null
-      common.kubernetes.apiserver.namespace.default=p0135-bi-sas-prd
+      common.kubernetes.apiserver.namespace.default=default
       #20190912 默认的命名空间,用于在ops部署不同的命名空间,value-test.yaml
       common.kubernetes.apiserver.namespace.valuepost=prd
       #k8s,此参数需要跟据情况修改为自己的私有镜像库
       #duckula.task.image.name=192.168.137.100:5000/rjzjh/duckula
       duckula.task.image.name=registry.choerodon.xforceplus.com/rjzjh/duckula
-      duckula.task.image.tag=task.2.0.7
+      duckula.task.image.tag=task.2.1.5
       #位点保留最大天数
       duckula.ops.pos.maxsize=7
   es:
@@ -231,7 +215,7 @@ userconfig:
       common.redis.cachecloud.redis_sentinel_suffix = /cache/client/redis/sentinel/%s.json?clientVersion=
       common.redis.cachecloud.redis_standalone_suffix = /cache/client/redis/standalone/%s.json?clientVersion=
       common.redis.cachecloud.cachecloud_report_url = /cachecloud/client/reportData.json
-  
+
 podAnnotations: {}
 
 resources:
@@ -240,7 +224,7 @@ resources:
     cpu: 200m
   limits:
     memory: 1280Mi
-    cpu:  200m
+    cpu: 200m
 livenessProbe:
   initialDelaySeconds: 30
   periodSeconds: 10
@@ -254,3 +238,19 @@ readinessProbe:
   timeoutSeconds: 1
   successThreshold: 1
   failureThreshold: 3
+hosts:
+- {ip: 192.168.51.16, host: [zk1]}
+- {ip: 192.168.51.17, host: [zk2]}
+- {ip: 192.168.51.18, host: [zk3]}
+
+- {ip: 192.168.50.95, host: [node-es5]}
+- {ip: 192.168.50.92, host: [node-es2]}
+- {ip: 192.168.50.91, host: [node-es1]}
+- {ip: 192.168.50.94, host: [node-es4]}
+- {ip: 192.168.50.93, host: [node-es3]}
+
+- {ip: 172.18.203.10, host: [seller-node-es1]}
+- {ip: 172.18.203.14, host: [seller-node-es2]}
+- {ip: 172.18.203.12, host: [seller-node-es3]}
+- {ip: 172.18.203.13, host: [seller-node-es4]}
+- {ip: 172.18.203.11, host: [seller-node-es5]}
