@@ -103,7 +103,8 @@ public class TaskManager {
 	}
 
 	public String getDefaultNamespace() {
-		return StringUtil.hasNull(namespace, Conf.get("common.kubernetes.apiserver.namespace.default"));
+		String namespaceTrue="all".equalsIgnoreCase(namespace)?"":namespace;
+		return StringUtil.hasNull(namespaceTrue, Conf.get("common.kubernetes.apiserver.namespace.default"));
 	}
 
 	public String getColDifferent() {
