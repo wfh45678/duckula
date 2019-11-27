@@ -46,7 +46,6 @@ import net.wicp.tams.common.constant.dic.YesOrNo;
 import net.wicp.tams.common.es.EsAssit;
 import net.wicp.tams.common.es.bean.IndexBean;
 import net.wicp.tams.common.es.bean.MappingBean;
-import net.wicp.tams.common.es.client.singleton.ESClientOnlyOne;
 import net.wicp.tams.component.annotation.HtmlJs;
 import net.wicp.tams.component.constant.EasyUIAdd;
 import net.wicp.tams.component.services.IReq;
@@ -294,7 +293,7 @@ public class TaskManager {
 						if (proMappingBean == null) {
 							continue;
 						}
-						Result indexCreate = ESClientOnlyOne.getInst().getESClient().indexCreate(
+						Result indexCreate = IndexManager.getESClient(taskparam.getMiddlewareInst()).indexCreate(
 								rule.getItems().get(RuleItem.index), "_doc",
 								Integer.parseInt(rule.getItems().get(RuleItem.partitions)),
 								Integer.parseInt(rule.getItems().get(RuleItem.copynum)), proMappingBean);
