@@ -56,6 +56,8 @@
 		<common.flink.source.binlog.version>3.6.6</common.flink.source.binlog.version>
 		<common.flink.sink.influxdb.version>3.6.6</common.flink.sink.influxdb.version>
 		<common.spring.autoconfig.version>3.6.5</common.spring.autoconfig.version>
+		
+		<tams.component>1.2.5</tams.component>
 		<!-- 与parent不同 -->
 		<log4j.version>2.6.2</log4j.version>
 		<!-- dev版本 -->

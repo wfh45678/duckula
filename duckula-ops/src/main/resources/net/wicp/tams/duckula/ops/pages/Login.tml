@@ -1,16 +1,151 @@
-<html t:type="layout" title="duckula-ops com.example"
-      xmlns:t="http://tapestry.apache.org/schema/tapestry_5_3.xsd"
-      xmlns:p="tapestry:parameter">
+<html xmlns:t="http://tapestry.apache.org/schema/tapestry_5_4.xsd"
+      xmlns:r="tapestry-library:rjzjh"
+      xmlns:s="tapestry-library:tams"
+      xmlns:p="tapestry:parameter"> 
+<head>
+   <meta charset="UTF-8"/>
+   <title isMenu="true" module="3">任务管理</title>
+   <style type="text/css" rel="stylesheet/scss">
+        *{ margin: 0; padding: 0;}
+        ul{ list-style: none;}
+       .duckula{ background: #ecf9ff; height: 100vh; width: 100vw;}
+        .top{ display:flex; justify-content:space-between; padding: 30px 60px;}
+        .logo{ position: relative; padding-top: 3px;}
+        .logo i { position: absolute; background: #fcb303; border-radius: 20px; height:20px; width: 20px;
+            right: 18px; font-size: 14px; line-height: 20px; font-style: normal; color: #fff; text-align: center;
+            top: 0; font-family: "Avenir"; font-weight:900;}
 
-<div class="row">
-    <div class="span4 offset3">
-        <t:form t:id="login">
-            <h2>Please sign in</h2>
-            <t:textfield t:id="email" class="input-block-level" validate="required" placeholder="Email address"/>
-            <t:passwordfield t:id="password" class="input-block-level" validate="required" placeholder="Password"/>
-            <t:submit class="btn btn-large btn-primary" value="Sign in"/>
-        </t:form>
-    </div>
-</div>
+        .main{ display: flex; width:78%; margin:0 auto; align-items:center;
+            justify-content:space-between; height: calc(100vh - 230px)}
+        .main .pic{ height: 100%; width: 100%; display: flex; justify-content: center; align-items: center}
 
+        .form-inline{ width: 400px;}
+
+        .form-inline .button{ margin-top: 30px;}
+
+        .form-inline .input-group{ height: 46px; overflow: hidden;
+            margin-bottom: 20px;
+            width: 100%;
+            border-radius: 4px; border: solid 1px #c2cdd2; display: flex;}
+
+        .input-group-prepend{ flex-basis:49px; border-right: solid 1px #c2cdd2;
+            text-align: center; line-height: 42px; background: #eaecf0}
+        .form-control{ width: 350px; text-indent:12px; font-size: 14px; color: #444;
+            height:46px; border: 0; background: #fff; }
+        .input-group-text{ display: flex; align-content: center; height: 46px; justify-content: center;}
+        .input-group-text img{ display: block}
+        .button{ display: flex; justify-content: space-between;}
+        .button button{ display: block; border: 0; height: 46px;
+            width: 100%; letter-spacing: 2px; font-size: 14px;
+            border-radius: 4px}
+        .btn1{ background: #03a9f5; color: #fff;margin-right:40px; }
+        .btn2{ background: #a4afb6; color: #fff}
+        .footer{
+            font-family: "Avenir";
+            position: fixed;
+            height: 36px;line-height: 36px;
+            padding: 0 20px;
+            color: #fff;
+            background: #343536;
+            width: calc(100% - 100px);
+            bottom: 0;
+            left: 30px;
+        }
+        .fix{ display: flex; justify-content:space-between; font-size: 12px;
+        }
+
+        ul{ display: flex;}
+        ul li{ padding-left: 10px;}
+        ul li img{ opacity: .8; transition-duration: .26s;}
+        ul li img:hover{ opacity: 1;}
+        li.more{ position: relative}
+        .more .wei{ position: absolute; bottom:32px; right: 0; display: none}
+        .more:hover .wei{ display: block;}
+        input::-webkit-input-placeholder {
+            /* WebKit browsers */
+            color: #dddddd;
+        }
+
+        input:-moz-placeholder {
+            /* Mozilla Firefox 4 to 18 */
+            color: #dddddd;
+        }
+
+        input::-moz-placeholder {
+            /* Mozilla Firefox 19+ */
+            color: #dddddd;
+        }
+
+        input::-ms-input-placeholder {
+            /* Internet Explorer 10+ */
+            color: #dddddd;
+        }
+    </style>
+</head>
+
+<body>
+    <section class="duckula">
+        <section class="top">
+            <section class="logo">
+                <i>2</i>
+                <img src="${context:resource/images/login/logo_01.png}"  height="38"/>
+            </section>
+            <section class="info">
+                <img src="${context:resource/images/login/logo_02.png}" height="44"/>
+            </section>
+        </section>
+
+        <section class="main">
+            <section class="pic">
+            <img src="${context:resource/images/login/pic_03.png}" height="300"/>
+            </section>
+            <section class="pic">
+                <form class="form-inline">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text"><img style="padding-top:8px;"  src="${context:resource/images/login/use.png}" height="28"/></div>
+                        </div>
+                        <input id="username" type="text" class="form-control" name="name" placeholder="Username"/>
+                    </div>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text"><img style="padding-top:10px;" src="${context:resource/images/login/mima.png}"  height="24"/></div>
+                        </div>
+                        <input id="password"  type="password" class="form-control" name="password" placeholder="password"/>
+                    </div>
+                    <div class="button">
+                        <button id="submitbut" type="buton" class="btn1">登陆</button>
+                        <button type="reset" class="btn2">重置</button>
+                    </div>
+                </form>
+            </section>
+        </section>
+
+        <section class="footer">
+            <div class="fix">
+                <div>Copyright © 2016-2019 Duckula. All rights reserved.</div>
+                <ul>
+                    <li class="more">
+                        <div class="wei"><img src="${context:resource/images/login/weiLarge.png}" width="130"/></div>
+                        <img style="padding-top: 9px;" src="${context:resource/images/login/wei.png}" width="23"/></li>
+                    <li><img style="padding-top: 8px;" src="${context:resource/images/login/github.png}" width="20"/></li>
+                </ul>
+            </div>
+        </section>
+    </section>
+</body>
+<script>
+ $(function(){
+    $('#submitbut').click(function(){
+      var userName=$('#username').val();
+      var pwd=$('#password').val();
+      $.post($.rjzjh.packurl('/login:login'),{'userName':userName,'pwd':pwd},function(data){
+		$.rjzjh.opt2(data,function(){
+		    window.location.href=$.rjzjh.packurl('/index');
+		});
+	  },'json');
+    });
+   
+ });
+</script>
 </html>

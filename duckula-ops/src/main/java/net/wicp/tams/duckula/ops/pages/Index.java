@@ -6,15 +6,19 @@ import java.util.Properties;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.tapestry5.Asset;
+import org.apache.tapestry5.annotations.InjectPage;
 import org.apache.tapestry5.annotations.OnEvent;
 import org.apache.tapestry5.annotations.Path;
+import org.apache.tapestry5.annotations.SessionState;
 import org.apache.tapestry5.ioc.annotations.Inject;
 import org.apache.tapestry5.ioc.internal.util.CollectionFactory;
 
 import net.wicp.tams.common.apiext.StringUtil;
+import net.wicp.tams.common.constant.dic.YesOrNo;
 import net.wicp.tams.component.assistbean.Menu;
 import net.wicp.tams.component.constant.ResType;
 import net.wicp.tams.duckula.common.constant.TaskPattern;
+import net.wicp.tams.duckula.ops.beans.SessionBean;
 
 /**
  * Start page of application duckula-ops.
@@ -24,6 +28,14 @@ public class Index {
 	@Inject
 	@Path("context:/menu.properties")
 	private Asset asset;
+
+	@SessionState
+	private SessionBean sessionBean;
+
+	private boolean sessionBeanExists;
+
+	@InjectPage
+	private Login login;
 
 	@OnEvent(value = "switchMenu")
 	public List<Menu> switchMenu(String moudleId) throws IOException {
@@ -35,12 +47,12 @@ public class Index {
 			if (!menus[i].startsWith(moudleId)) {
 				continue;
 			}
-			String id = prop.getProperty(String.format("%s.id", menus[i]));			
+			String id = prop.getProperty(String.format("%s.id", menus[i]));
 			TaskPattern curTaskPattern = TaskPattern.getCurTaskPattern();
-			if(ArrayUtils.contains(curTaskPattern.getExcludeMenu(), id) ) {
+			if (ArrayUtils.contains(curTaskPattern.getExcludeMenu(), id)) {
 				continue;
 			}
-			
+
 			String resName = prop.getProperty(String.format("%s.resName", menus[i]));
 			String resType = prop.getProperty(String.format("%s.resType", menus[i]));
 			String resValue = prop.getProperty(String.format("%s.resValue", menus[i]));
@@ -52,5 +64,13 @@ public class Index {
 			}
 		}
 		return retlist;
+	}
+
+	public Object onActivate() {
+		if (!sessionBeanExists || sessionBean == null || sessionBean.getIsLogin() == YesOrNo.no) {
+			return login;
+		} else {
+			return null;
+		}
 	}
 }
