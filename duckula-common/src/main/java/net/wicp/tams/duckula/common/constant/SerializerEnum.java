@@ -3,6 +3,8 @@ package net.wicp.tams.duckula.common.constant;
 import net.wicp.tams.common.constant.dic.intf.IEnumCombobox;
 
 public enum SerializerEnum implements IEnumCombobox {
+	pb3ide("pb3ide", "/serializer/duckula-serializer-pb3ide/"),
+	
 	protobuff3("protobuff3", "/serializer/duckula-serializer-protobuf3/"),
 
 	protobuff2("protobuff2", "/serializer/duckula-serializer-protobuf2/"),

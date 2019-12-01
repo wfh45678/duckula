@@ -325,18 +325,23 @@
         if("no"===val){
            $('td[name="othersender"]').css({"visibility":"visible"});
            $('#middlewareType_save').combobox('setValue','');
+        }else if("kafkaIde"===val){
+           $('td[name="othersender"]').css({"visibility":"hidden"});
+           $('#middlewareType_save').combobox('setValue','kafka'); 
         }else{
            $('td[name="othersender"]').css({"visibility":"hidden"});
            $('#middlewareType_save').combobox('setValue',val);
         }
         if(or('kafka'==val,'redis'==val)){
           $('td[name="serializerEnum"]').css({"visibility":"visible"});
+        }else if('kafkaIde'==val){//暂时只配置为kafkaIde
+          $('td[name="serializerEnum"]').css({"visibility":"hidden"});
+          $('#serializerEnum_save').combobox('setValue','pb3ide');
         }else{
           $('td[name="serializerEnum"]').css({"visibility":"hidden"});
           $('#serializerEnum_save').combobox('setValue','no');
         }
-        
-        if('kafka'==val){
+        if('kafka'==val||"kafkaIde"===val){
            showRuleColumn(["topic","splitkey"]);
         }else if('es'==val){
             showRuleColumn(["index","key","partitions","copynum"]);

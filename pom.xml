@@ -9,6 +9,7 @@
 
 		<module>duckula-plugin-redis</module>
 		<module>duckula-serializer-protobuf3</module>
+		<module>duckula-serializer-pb3ide</module>
 		<module>duckula-serializer-protobuf2</module>
 		<module>duckula-serializer-thrift</module>
 		<module>duckula-task</module>
@@ -24,6 +25,8 @@
 		<module>duckula-dump-elasticsearch</module>
 		<module>duckula-kafka-consumer</module>
 
+		<module>duckula-plugin-kafka-idempotent</module>
+		
 	</modules>
 	<parent>
 		<groupId>net.wicp.tams</groupId>
@@ -56,7 +59,7 @@
 		<common.flink.source.binlog.version>3.6.6</common.flink.source.binlog.version>
 		<common.flink.sink.influxdb.version>3.6.6</common.flink.sink.influxdb.version>
 		<common.spring.autoconfig.version>3.6.5</common.spring.autoconfig.version>
-		
+
 		<tams.component>1.2.5</tams.component>
 		<!-- 与parent不同 -->
 		<log4j.version>2.6.2</log4j.version>
@@ -131,6 +134,12 @@
 			</dependency>
 			<dependency>
 				<groupId>net.wicp.tams</groupId>
+				<artifactId>duckula-serializer-pb3ide</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>net.wicp.tams</groupId>
 				<artifactId>duckula-serializer-thrift</artifactId>
 				<version>${project.version}</version>
 			</dependency>
@@ -142,6 +151,11 @@
 			<dependency>
 				<groupId>net.wicp.tams</groupId>
 				<artifactId>duckula-plugin-kafka</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>net.wicp.tams</groupId>
+				<artifactId>duckula-plugin-kafka-idempotent</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>

@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
@@ -18,6 +19,10 @@
 		</dependency>
 		<dependency>
 			<groupId>net.wicp.tams</groupId>
+			<artifactId>duckula-serializer-pb3ide</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.wicp.tams</groupId>
 			<artifactId>duckula-serializer-thrift</artifactId>
 		</dependency>
 		<dependency>
@@ -27,6 +32,10 @@
 		<dependency>
 			<groupId>net.wicp.tams</groupId>
 			<artifactId>duckula-plugin-kafka</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.wicp.tams</groupId>
+			<artifactId>duckula-plugin-kafka-idempotent</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>net.wicp.tams</groupId>
@@ -48,6 +57,8 @@
 			<groupId>net.wicp.tams</groupId>
 			<artifactId>duckula-kafka-consumer</artifactId>
 		</dependency>
+
+
 	</dependencies>
 	<build>
 		<finalName>duckula-install</finalName>
@@ -66,15 +77,17 @@
 							<plugs>
 								<param>duckula-plugin-redis</param>
 								<param>duckula-plugin-kafka</param>
+								<param>duckula-plugin-kafka-idempotent</param>
 								<param>duckula-plugin-elasticsearch</param>
 							</plugs>
 							<serializers>
 								<param>duckula-serializer-protobuf3</param>
+								<param>duckula-serializer-pb3ide</param>
 								<param>duckula-serializer-protobuf2</param>
 								<param>duckula-serializer-thrift</param>
 							</serializers>
 							<env>
-							   test
+								test
 							</env>
 							<busis>
 								<param>duckula-busi-filter</param>

@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -28,11 +29,16 @@ import net.wicp.tams.common.exception.ExceptAll;
 import net.wicp.tams.common.exception.ProjectExceptionRuntime;
 import net.wicp.tams.common.jdbc.DruidAssit;
 import net.wicp.tams.common.others.kafka.IConsumer;
-import net.wicp.tams.common.thread.threadlocal.PerthreadManager;
 import net.wicp.tams.duckula.client.DuckulaAssit;
+import net.wicp.tams.duckula.client.DuckulaIdempotentAssit;
 import net.wicp.tams.duckula.client.Protobuf3.DuckulaEvent;
+import net.wicp.tams.duckula.client.Protobuf3.DuckulaEvent.Builder;
+import net.wicp.tams.duckula.client.Protobuf3.DuckulaEventIdempotent;
+import net.wicp.tams.duckula.client.Protobuf3.IdempotentEle;
 import net.wicp.tams.duckula.client.Protobuf3.OptType;
+import net.wicp.tams.duckula.common.ZkUtil;
 import net.wicp.tams.duckula.common.beans.Consumer;
+import net.wicp.tams.duckula.common.beans.Task;
 import net.wicp.tams.duckula.common.constant.PluginType;
 import net.wicp.tams.duckula.kafka.consumer.MainConsumer;
 import net.wicp.tams.duckula.plugin.pluginAssit;
@@ -49,6 +55,8 @@ public abstract class ConsumerAbs<T> implements IConsumer<byte[]> {
 	protected Map<String, String[]> primarysMap = new HashMap<>();
 
 	protected static final org.slf4j.Logger errorlog = org.slf4j.LoggerFactory.getLogger("errorBinlog");// 需要跳过的错误数据。
+
+	protected final boolean isIde;
 
 	@SuppressWarnings("unchecked")
 	public ConsumerAbs(Consumer consumer) {
@@ -73,6 +81,8 @@ public abstract class ConsumerAbs<T> implements IConsumer<byte[]> {
 		} else {
 			busiEs = null;
 		}
+		Task task = ZkUtil.buidlTask(consumer.getTaskOnlineId());
+		isIde = task.getSenderEnum().isIdempotent();
 	}
 
 	public abstract T packObj(DuckulaEvent duckulaEvent, Map<String, String> datamap, Rule rule);
@@ -86,84 +96,44 @@ public abstract class ConsumerAbs<T> implements IConsumer<byte[]> {
 		List<T> datas = new ArrayList<>();
 		for (ConsumerRecord<String, byte[]> consumerRecord : consumerRecords) {
 			Rule rule = null;
-			DuckulaEvent duckulaEvent = null;
-			try {
-				duckulaEvent = DuckulaAssit.parse(consumerRecord.value());
-			} catch (InvalidProtocolBufferException e1) {
-				log.error("解析失败", e1);
-				continue;// 不处理此数据
-			}
-
-			try {
-				rule = findReule(consumer, duckulaEvent.getDb(), duckulaEvent.getTb());
-				if (rule == null) {
+			if (!isIde) {
+				DuckulaEvent duckulaEvent = null;
+				try {
+					duckulaEvent = DuckulaAssit.parse(consumerRecord.value());
+				} catch (InvalidProtocolBufferException e1) {
+					log.error("解析失败", e1);
 					continue;// 不处理此数据
 				}
-				String keymapkey = String.format("%s.%s", duckulaEvent.getDb(), duckulaEvent.getTb());
-				if (primarysMap.get(keymapkey) == null) {
-					String keyColName = rule.getItems().get(RuleItem.key);
-					String[] primarys;
-					if (StringUtil.isNull(keyColName)) {
-						primarys = MySqlAssit.getPrimary(connection, duckulaEvent.getDb(), duckulaEvent.getTb());
-					} else {
-						primarys = keyColName.split(",");
-					}
-					primarysMap.put(keymapkey, primarys);
+				duckulaEventToDatas(datas, duckulaEvent, rule);
+			} else {
+				DuckulaEventIdempotent duckulaEventIdempotent = null;
+				try {
+					duckulaEventIdempotent = DuckulaIdempotentAssit.parse(consumerRecord.value());
+				} catch (InvalidProtocolBufferException e1) {
+					log.error("解析失败", e1);
+					continue;// 不处理此数据
 				}
-
-				Serializable[] keyValues = new Serializable[primarysMap.get(keymapkey).length];
-				for (int i = 0; i < keyValues.length; i++) {
-					keyValues[i] = DuckulaAssit.getValue(duckulaEvent, primarysMap.get(keymapkey)[i]);
-				}
-				String idStr = CollectionUtil.arrayJoin(keyValues, "-");
-				Map<String, String> datamap = new HashMap<>();
-				if (duckulaEvent.getOptType() == OptType.delete) {
-					for (int i = 0; i < keyValues.length; i++) {
-						datamap.put(primarysMap.get(keymapkey)[i], String.valueOf(keyValues[i]));
-					}
-				} else if (duckulaEvent.getIsError()) {
-					PreparedStatement preparedStatement = statMap.get(rule);
-					if (preparedStatement == null) {
-						StringBuilder build = new StringBuilder();
-						build.append("select * from " + keymapkey + " where ");
-						for (int i = 0; i < primarysMap.get(keymapkey).length; i++) {
-							build.append(String.format(" %s=?", primarysMap.get(keymapkey)[i]));
+				Builder duckulaEventBuilder = DuckulaEvent.newBuilder();
+				duckulaEventBuilder.setDb(duckulaEventIdempotent.getDb());
+				duckulaEventBuilder.setTb(duckulaEventIdempotent.getTb());
+				duckulaEventBuilder.setOptType(duckulaEventIdempotent.getOptType());
+				duckulaEventBuilder.addAllCols(duckulaEventIdempotent.getKeyNamesList());
+				duckulaEventBuilder.addAllColsType(duckulaEventIdempotent.getKeyTypesList());
+				duckulaEventBuilder.setIsError(true);
+				for (IdempotentEle dempotentEle : duckulaEventIdempotent.getValuesList()) {
+					Builder tempEventBuild = duckulaEventBuilder.clone();
+					for (int i = 0; i < dempotentEle.getKeyValuesCount(); i++) {
+						String keyValues = dempotentEle.getKeyValues(i);
+						if (duckulaEventIdempotent.getOptType() == OptType.delete) {
+							tempEventBuild.putBefore(duckulaEventBuilder.getCols(i), keyValues);
+						} else {
+							tempEventBuild.putAfter(duckulaEventBuilder.getCols(i), keyValues);
 						}
-						preparedStatement = connection.prepareStatement(build.toString());
-						statMap.put(rule, preparedStatement);
 					}
-					JdbcAssit.setPreParam(preparedStatement, keyValues);
-					ResultSet rs = preparedStatement.executeQuery();
-					if (rs.next()) {
-						for (String colName : duckulaEvent.getColsList()) {
-							String valuestr = rs.getString(colName);
-							datamap.put(colName, valuestr);
-						}
-					} else {
-						log.error("没有找到ID:{}", idStr);
-						continue;
-					}
-					try {
-						rs.close();
-					} catch (Exception e) {
-						log.error("关闭es失败", e);
-					}
-				} else {
-					for (String colName : duckulaEvent.getColsList()) {
-						String valuestr = DuckulaAssit.getValueStr(duckulaEvent, colName);
-						datamap.put(colName, valuestr);
-					}
+					duckulaEventToDatas(datas, tempEventBuild.build(), rule);
 				}
-				CollectionUtil.filterNull(datamap, 1);
-				T packObj = packObj(duckulaEvent, datamap, rule);
-				if (packObj != null) {// 没有错误，有些错误需要跳过
-					datas.add(packObj);
-				}
-			} catch (Exception e) {
-				log.error("组装失败", e);
-				LoggerUtil.exit(JvmStatus.s15);
-				throw new ProjectExceptionRuntime(ExceptAll.duckula_es_formate);
 			}
+
 		}
 		if (datas.size() == 0) {// 没有可用的数据，有可能是合理跳过了某些数据
 			return Result.getSuc();
@@ -217,6 +187,92 @@ public abstract class ConsumerAbs<T> implements IConsumer<byte[]> {
 					throw new ProjectExceptionRuntime(ExceptAll.duckula_es_batch);
 				}
 			}
+		}
+	}
+
+	public void duckulaEventToDatas(List<T> datas, DuckulaEvent duckulaEvent, Rule rule) {
+		try {
+			if (rule == null) {
+				rule = findReule(consumer, duckulaEvent.getDb(), duckulaEvent.getTb());
+				if (rule == null) {
+					return;
+				}
+			}
+			String keymapkey = String.format("%s.%s", duckulaEvent.getDb(), duckulaEvent.getTb());
+			if (primarysMap.get(keymapkey) == null) {
+				String keyColName = rule.getItems().get(RuleItem.key);
+				String[] primarys;
+				if (StringUtil.isNull(keyColName)) {
+					primarys = MySqlAssit.getPrimary(connection, duckulaEvent.getDb(), duckulaEvent.getTb());
+				} else {
+					primarys = keyColName.split(",");
+				}
+				primarysMap.put(keymapkey, primarys);
+			}
+
+			Serializable[] keyValues = new Serializable[primarysMap.get(keymapkey).length];
+			for (int i = 0; i < keyValues.length; i++) {
+				keyValues[i] = DuckulaAssit.getValue(duckulaEvent, primarysMap.get(keymapkey)[i]);
+			}
+			String idStr = CollectionUtil.arrayJoin(keyValues, "-");
+			Map<String, String> datamap = new HashMap<>();
+			if (duckulaEvent.getOptType() == OptType.delete) {
+				for (int i = 0; i < keyValues.length; i++) {
+					datamap.put(primarysMap.get(keymapkey)[i], String.valueOf(keyValues[i]));
+				}
+			} else if (duckulaEvent.getIsError()) {
+				PreparedStatement preparedStatement = statMap.get(rule);
+				if (preparedStatement == null) {
+					StringBuilder build = new StringBuilder();
+					build.append("select * from " + keymapkey + " where ");
+					for (int i = 0; i < primarysMap.get(keymapkey).length; i++) {
+						build.append(String.format(" %s=?", primarysMap.get(keymapkey)[i]));
+					}
+					preparedStatement = connection.prepareStatement(build.toString());
+					statMap.put(rule, preparedStatement);
+				}
+				JdbcAssit.setPreParam(preparedStatement, keyValues);
+				ResultSet rs = preparedStatement.executeQuery();
+				
+				if(isIde) {
+					List<Map<String, String>> rsToMap = JdbcAssit.rsToMap(rs);
+					if(CollectionUtils.isNotEmpty(rsToMap)) {
+						datamap.putAll(rsToMap.get(0));
+					}else {
+						log.error("没有找到ID:{}", idStr);
+						return;
+					}
+				}else {
+					if (rs.next()) {
+						for (String colName : duckulaEvent.getColsList()) {
+							String valuestr = rs.getString(colName);
+							datamap.put(colName, valuestr);
+						}
+					} else {
+						log.error("没有找到ID:{}", idStr);
+						return;
+					}
+				}
+				try {
+					rs.close();
+				} catch (Exception e) {
+					log.error("关闭es失败", e);
+				}
+			} else {
+				for (String colName : duckulaEvent.getColsList()) {
+					String valuestr = DuckulaAssit.getValueStr(duckulaEvent, colName);
+					datamap.put(colName, valuestr);
+				}
+			}
+			CollectionUtil.filterNull(datamap, 1);
+			T packObj = packObj(duckulaEvent, datamap, rule);
+			if (packObj != null) {// 没有错误，有些错误需要跳过
+				datas.add(packObj);
+			}
+		} catch (Exception e) {
+			log.error("组装失败", e);
+			LoggerUtil.exit(JvmStatus.s15);
+			throw new ProjectExceptionRuntime(ExceptAll.duckula_es_formate);
 		}
 	}
 
