@@ -49,6 +49,7 @@ import net.wicp.tams.duckula.common.beans.Mapping;
 import net.wicp.tams.duckula.common.beans.SenderConsumerEnum;
 import net.wicp.tams.duckula.common.beans.Task;
 import net.wicp.tams.duckula.common.constant.CommandType;
+import net.wicp.tams.duckula.common.constant.MiddlewareType;
 import net.wicp.tams.duckula.common.constant.TaskPattern;
 import net.wicp.tams.duckula.common.constant.ZkPath;
 import net.wicp.tams.duckula.ops.beans.Server;
@@ -88,6 +89,8 @@ public class ConsumerManager {
 			return "{field:'podStatus',width:120,title:'k8s状态'},{field:'imageVersion',width:80,title:'image版本'},{field:'namespace',width:100,title:'名称空间'}";
 		}
 	}
+
+
 
 	@SuppressWarnings("unchecked")
 	public TextStreamResponse onQuery() {

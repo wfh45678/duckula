@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.alibaba.fastjson.JSONObject;
@@ -22,12 +22,11 @@ import net.wicp.tams.common.es.UpdateSet;
 import net.wicp.tams.common.es.bean.MappingBean;
 import net.wicp.tams.common.es.bean.MappingBean.Propertie;
 import net.wicp.tams.common.es.client.ESClient;
+import net.wicp.tams.common.es.client.threadlocal.EsClientThreadlocal;
 import net.wicp.tams.duckula.client.DuckulaAssit;
 import net.wicp.tams.duckula.client.Protobuf3.DuckulaEvent;
 import net.wicp.tams.duckula.client.Protobuf3.OptType;
-import net.wicp.tams.duckula.common.ConfUtil;
 import net.wicp.tams.duckula.common.beans.Consumer;
-import net.wicp.tams.duckula.common.constant.MiddlewareType;
 import net.wicp.tams.duckula.plugin.beans.Rule;
 import net.wicp.tams.duckula.plugin.constant.RuleItem;
 
@@ -55,8 +54,7 @@ public class ConsumerEsImpl extends ConsumerAbs<EsData.Builder> {
 		}
 		// 查看index是否有关联关系，一般有2张表肯定有关联关系
 		if (!relaMapToEs.containsKey(key)) {
-			String cluster = ruleMapToEs.get(key).getItems().get(RuleItem.middleware);
-			ESClient esClient = getEsClient(cluster);
+			ESClient esClient = EsClientThreadlocal.createPerThreadEsClient();
 			Map<String, Propertie> queryMapping_tc_all = esClient.queryMapping_tc_all(index, type);
 			if (queryMapping_tc_all.containsKey(Conf.get("common.es.assit.rela.key"))) {
 				JSONObject relations = queryMapping_tc_all.get(Conf.get("common.es.assit.rela.key")).getRelations();
@@ -86,8 +84,8 @@ public class ConsumerEsImpl extends ConsumerAbs<EsData.Builder> {
 		} else {// 有关联关系且不是根元素
 			String keyColName = rule.getItems().get(RuleItem.relakey);
 			String keyName = "";
-			if(StringUtil.isNotNull(keyColName)) {
-				String[] splitAry = keyColName.split("\\|");			
+			if (StringUtil.isNotNull(keyColName)) {
+				String[] splitAry = keyColName.split("\\|");
 				if (splitAry.length == 1) {
 					keyName = splitAry[0];
 				} else {
@@ -108,8 +106,8 @@ public class ConsumerEsImpl extends ConsumerAbs<EsData.Builder> {
 			String[] relaNameAry = relaName.split(":");
 			String parentId = DuckulaAssit.getValueStr(duckulaEvent, relaNameAry[1]);
 			// 找id
-			String idstr = DuckulaAssit.getValueStr(duckulaEvent, duckulaEvent.getCols(0));//TODO 子表暂时使用第一个字段， 后续需要改为配置
-			//String idstr = DuckulaAssit.getValueStr(duckulaEvent, keyName);
+			String idstr = DuckulaAssit.getValueStr(duckulaEvent, duckulaEvent.getCols(0));// TODO 子表暂时使用第一个字段， 后续需要改为配置
+			// String idstr = DuckulaAssit.getValueStr(duckulaEvent, keyName);
 			esObjBuilder.setId(String.format("%s:%s", duckulaEvent.getTb(), idstr));// 有可能与主表id相同把主表的ID冲掉
 			if (StringUtils.isBlank(parentId)) {// 关联关系没有parent
 				errorlog.error(esObjBuilder.toString());// 打错误日志跳过
@@ -121,46 +119,22 @@ public class ConsumerEsImpl extends ConsumerAbs<EsData.Builder> {
 		return esDataBuilder;
 	}
 
-	private Map<String, ESClient> esClientMap = new HashMap<>();
-
 	@Override
 	public Result doSend(List<Builder> datas) {
-		Map<String, List<EsData>> splitmap = new HashMap<>();
-		for (EsData.Builder esData : datas) {
-			String key = String.format(keyFormate, esData.getIndex(), esData.getType());
-			String cluster = ruleMapToEs.get(key).getItems().get(RuleItem.middleware);
-			if (splitmap.get(cluster) == null) {
-				List<EsData> templist = new ArrayList<>();
-				templist.add(esData.build());
-				splitmap.put(cluster, templist);
-			} else {
-				splitmap.get(cluster).add(esData.build());
-			}
+		if (CollectionUtils.isEmpty(datas)) {
+			return Result.getSuc();
 		}
-		for (String clusterEle : splitmap.keySet()) {
-			List<EsData> list = splitmap.get(clusterEle);
-			ESClient esClient = getEsClient(clusterEle);
-			Result sendResult = esClient.docWriteBatch_tc(list);
-			if (!sendResult.isSuc()) {
-				return sendResult;
-			}
+		List<EsData> datasSend = new ArrayList<EsData>();
+		for (Builder builder : datas) {
+			datasSend.add(builder.build());
 		}
-		return Result.getSuc();
-	}
-
-	private ESClient getEsClient(String cluster) {
-		if (!esClientMap.containsKey(cluster)) {
-			Properties props = ConfUtil.configMiddleware(MiddlewareType.es, cluster);
-			ESClient tempClient = new ESClient(props);
-			esClientMap.put(cluster, tempClient);
-		}
-		ESClient esClient = esClientMap.get(cluster);
-		return esClient;
+		Result sendResult = EsClientThreadlocal.createPerThreadEsClient().docWriteBatch_tc(datasSend);
+		return sendResult;
 	}
 
 	@Override
-	public boolean checkDataNull(Builder data) {		
-		return data.getDatasCount()==0;
+	public boolean checkDataNull(Builder data) {
+		return data.getDatasCount() == 0;
 	}
 
 }

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -15,6 +16,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import lombok.extern.slf4j.Slf4j;
+import net.wicp.tams.common.Conf;
 import net.wicp.tams.common.Plugin;
 import net.wicp.tams.common.Result;
 import net.wicp.tams.common.apiext.CollectionUtil;
@@ -36,9 +38,11 @@ import net.wicp.tams.duckula.client.Protobuf3.DuckulaEvent.Builder;
 import net.wicp.tams.duckula.client.Protobuf3.DuckulaEventIdempotent;
 import net.wicp.tams.duckula.client.Protobuf3.IdempotentEle;
 import net.wicp.tams.duckula.client.Protobuf3.OptType;
+import net.wicp.tams.duckula.common.ConfUtil;
 import net.wicp.tams.duckula.common.ZkUtil;
 import net.wicp.tams.duckula.common.beans.Consumer;
 import net.wicp.tams.duckula.common.beans.Task;
+import net.wicp.tams.duckula.common.constant.MiddlewareType;
 import net.wicp.tams.duckula.common.constant.PluginType;
 import net.wicp.tams.duckula.kafka.consumer.MainConsumer;
 import net.wicp.tams.duckula.plugin.pluginAssit;
@@ -83,6 +87,10 @@ public abstract class ConsumerAbs<T> implements IConsumer<byte[]> {
 		}
 		Task task = ZkUtil.buidlTask(consumer.getTaskOnlineId());
 		isIde = task.getSenderEnum().isIdempotent();
+		if(consumer.getMiddlewareType()!=null&&StringUtil.isNotNull(consumer.getMiddlewareInst())) {//中间件集群相关配置
+			Properties props = ConfUtil.configMiddleware(consumer.getMiddlewareType(), consumer.getMiddlewareInst());
+			Conf.overProp(props);
+		}
 	}
 
 	public abstract T packObj(DuckulaEvent duckulaEvent, Map<String, String> datamap, Rule rule);

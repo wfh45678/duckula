@@ -89,6 +89,16 @@
 			             <r:comboboxenum id="senderConsumerEnum_save"  name="senderConsumerEnum" enumClass="net.wicp.tams.duckula.common.beans.SenderConsumerEnum" required="true" changeHandle="changeSender"></r:comboboxenum>
 			         </td>
 			      </tr>
+				  <tr>
+			         <td class="frame_table_list_2_righttext">中间件类型</td>
+			         <td>
+			            <r:comboboxenum id="middlewareType_save"  name="middlewareType" enumClass="net.wicp.tams.duckula.common.constant.MiddlewareType" required="false" readonly="true"></r:comboboxenum>
+	               </td>
+			 	  	 <td class="frame_table_list_2_righttext">中间件实例</td>
+			 	     <td>
+			 	        <r:combobox id="middlewareInst_save" name="middlewareInst" textField="text" valueField="value" url="/es/indexManager:queryMiddlewareType" parent="middlewareType_save" required="false"></r:combobox>
+			 	     </td>
+			      </tr>
 			       <tr name="showmodel">
 			        <td colspan="4">
 				        <table id="dg" title="规则编辑" style="width:98%;height:160px"
@@ -174,8 +184,13 @@
 	 
 	 function changeSender(val){      
         if('es'==val){
-            showRuleColumn(["index","key","middleware","partitions","copynum"]);
+            $('#middlewareType_save').combobox('setValue','es');
+            //$('#middlewareInst_save').validatebox('required','true');
+            
+            showRuleColumn(["index","key","partitions","copynum"]);
         }else if('jdbc'==val){
+            $('#middlewareType_save').combobox('setValue','');
+           // $('#middlewareInst_save').validatebox('required','false');
             showRuleColumn(["key","dbinstanceid","dbtb"]);
         }
      }

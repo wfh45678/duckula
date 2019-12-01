@@ -1,6 +1,7 @@
 package net.wicp.tams.duckula.common.beans;
 
 import net.wicp.tams.common.constant.dic.intf.IEnumCombobox;
+import net.wicp.tams.duckula.common.constant.MiddlewareType;
 import net.wicp.tams.duckula.common.constant.SenderEnum;
 
 /**
@@ -14,10 +15,12 @@ public enum SenderConsumerEnum implements IEnumCombobox {
 
 	es("es搜索", "net.wicp.tams.duckula.kafka.consumer.impl.ConsumerEsImpl"),
 
-	jdbc("mysql", "net.wicp.tams.duckula.kafka.consumer.impl.ConsumerMysqlImpl");
+	jdbc("mysql", "net.wicp.tams.duckula.kafka.consumer.impl.ConsumerMysqlImpl");//TODO 可以选择配置到哪个数据库
 
 	private final String desc;
 	private final String pluginClass;// 值
+
+
 
 	public String getPluginClass() {
 		return pluginClass;

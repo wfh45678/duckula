@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.wicp.tams.common.apiext.StringUtil;
 import net.wicp.tams.common.constant.StrPattern;
 import net.wicp.tams.common.constant.dic.YesOrNo;
+import net.wicp.tams.duckula.common.constant.MiddlewareType;
 import net.wicp.tams.duckula.plugin.beans.Rule;
 import net.wicp.tams.duckula.plugin.constant.RuleItem;
 
@@ -27,6 +28,9 @@ public class Consumer {
 	private YesOrNo run = YesOrNo.no;// 是否运行此任务,默认为false不运行,仅配置好,不做运行处理.
 	private SenderConsumerEnum senderConsumerEnum;
 	private final List<Rule> ruleList = new ArrayList<>();
+	
+	private MiddlewareType middlewareType;//中间件类型
+	private String middlewareInst;//中间件配置
 
 	//
 	private Integer busiNum;
