@@ -40,14 +40,12 @@ import net.wicp.tams.duckula.common.ZkUtil;
 import net.wicp.tams.duckula.common.beans.ColHis;
 import net.wicp.tams.duckula.common.beans.Count;
 import net.wicp.tams.duckula.common.constant.CommandType;
-import net.wicp.tams.duckula.common.constant.TaskPattern;
 import net.wicp.tams.duckula.common.constant.ZkPath;
 import net.wicp.tams.duckula.task.bean.DuckulaContext;
 import net.wicp.tams.duckula.task.conf.ITaskConf;
 import net.wicp.tams.duckula.task.conf.ZookeeperImpl;
 import net.wicp.tams.duckula.task.disruptor.DisruptorProducer;
 import net.wicp.tams.duckula.task.jmx.BinlogControl;
-import net.wicp.tams.duckula.task.parser.IProducer;
 import net.wicp.tams.duckula.task.parser.ParseLogOnline;
 
 public class Main {
@@ -57,6 +55,8 @@ public class Main {
 	private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(Main.class);
 	public final static DuckulaContext context = new DuckulaContext();
 	public static DuckulaGroup metric;
+
+	private static DisruptorProducer producer = null;// 生产者
 
 	public static void main(String[] args) {
 		Thread.currentThread().setName("Duckula-main");
@@ -149,7 +149,7 @@ public class Main {
 			LoggerUtil.exit(JvmStatus.s15);
 		}
 		log.info("----------------------启动生产者-------------------------------------");
-		IProducer producer = null;
+
 		try {
 			producer = new DisruptorProducer(false);
 		} catch (Throwable e) {
@@ -241,6 +241,11 @@ public class Main {
 			build.oneMinuteRate(String.format("%.2f", metric.meter_dowith_event.getOneMinuteRate()));
 			build.fiveMinuteRate(String.format("%.2f", metric.meter_dowith_event.getFiveMinuteRate()));
 			build.fifteenMinuteRate(String.format("%.2f", metric.meter_dowith_event.getFifteenMinuteRate()));
+			build.dowithNum(metric.meter_dowith_event.getCount());
+
+			build.undoSize(producer.getCounter().getUndoSize());
+			build.senderUnit(producer.getCounter().getSenderUnit());
+
 			build.updateNum(metric.meter_sender_event_update.getCount());
 			build.deleteNum(metric.meter_sender_event_del.getCount());
 			build.filterNum(metric.meter_sender_event_filter.getCount());

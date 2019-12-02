@@ -8,7 +8,8 @@
 <body>
    <r:query id="q"  qBlock="query" queryUrl="/duckula/viewnum:query"  opFormatter="showopt" 
         columns="[[{field:'id',width:250,title:'任务ID'},{field:'meanRate',width:40,title:'瞬时速度'},{field:'oneMinuteRate',width:40,title:'1分钟'},{field:'fiveMinuteRate',width:40,title:'5分钟'},{field:'fifteenMinuteRate',width:40,title:'15分钟'}
-        ,{field:'insertNum',width:100,title:'新增数'},{field:'updateNum',width:100,title:'修改数'},{field:'deleteNum',width:100,title:'删除数'},{field:'filterNum',width:100,title:'过滤数'},{field:'parserEvent',width:100,title:'解析事件数'},{field:'sendEvent',width:100,title:'发送事件数'},{field:'ringbuffEvent',width:100,title:'未发事件数'},{field:'op',width:200,title:'操作'}]]" 
+        ,{field:'undoSize',width:80,title:'未处理单元'},{field:'senderUnit',width:80,title:'已处理单元'},{field:'dowithNum',width:80,title:'处理总数量'}
+        ,{field:'insertNum',width:80,title:'新增数'},{field:'updateNum',width:80,title:'修改数'},{field:'deleteNum',width:80,title:'删除数'},{field:'filterNum',width:80,title:'过滤数'},{field:'parserEvent',width:80,title:'解析事件数'},{field:'sendEvent',width:100,title:'发送事件数'},{field:'ringbuffEvent',width:100,title:'未发事件数'},{field:'op',width:200,title:'操作'}]]" 
         dialogStyle="width:800px;height:360px;" pagination="false"/>
    <t:block id="query">
        <table class="frame_table_list_4">

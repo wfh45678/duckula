@@ -16,6 +16,7 @@ import com.lmax.disruptor.util.DaemonThreadFactory;
 import net.wicp.tams.duckula.plugin.receiver.ReceiveAbs;
 import net.wicp.tams.duckula.task.Main;
 import net.wicp.tams.duckula.task.bean.EventPackage;
+import net.wicp.tams.duckula.task.bean.RingBuffMonitor;
 import net.wicp.tams.duckula.task.parser.IProducer;
 
 public class DisruptorProducer implements IProducer {
@@ -29,6 +30,7 @@ public class DisruptorProducer implements IProducer {
 	private WorkerPool<EventPackage> workerPool;
 	private final boolean isError;
 	private final BatchEventProcessor<EventPackage> sendProcessor;
+	private final SequenceBarrier sendBarrier;
 
 	public DisruptorProducer(boolean isError) {
 		this.isError = isError;
@@ -48,7 +50,7 @@ public class DisruptorProducer implements IProducer {
 
 		workerPool.start(executor);
 
-		final SequenceBarrier sendBarrier = ringBuffer.newBarrier(workerPool.getWorkerSequences());
+		sendBarrier = ringBuffer.newBarrier(workerPool.getWorkerSequences());
 		JSONObject sendParams = new JSONObject();
 		sendParams.put(ReceiveAbs.colParam, Main.context.getTask().getParams());
 		sendParams.put(ReceiveAbs.colTaskId, Main.context.getTask().getId());
@@ -87,6 +89,15 @@ public class DisruptorProducer implements IProducer {
 
 	public void sendMsg(EventPackage sendBean) {
 		ringBuffer.publish(sequence);
+	}
+
+	public RingBuffMonitor getCounter() {
+		long min = this.ringBuffer.getMinimumGatingSequence();
+		long cursor = ringBuffer.getCursor();
+		RingBuffMonitor retobj = new RingBuffMonitor();
+		retobj.setUndoSize(cursor - min);
+		retobj.setSenderUnit(min);
+		return retobj;
 	}
 
 }

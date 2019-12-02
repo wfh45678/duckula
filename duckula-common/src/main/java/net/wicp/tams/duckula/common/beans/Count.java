@@ -27,17 +27,22 @@ public class Count {
 	private long ringbuffEvent;
 
 	// 速度
+	private long dowithNum;
 	private String meanRate;
 	private String oneMinuteRate;
 	private String fiveMinuteRate;
 	private String fifteenMinuteRate;
 
+	// ringbuff变量
+	private long undoSize;
+	private long senderUnit;
+
 	public Count() {
 	}
 
 	public Count(long insertNum, long updateNum, long deleteNum, long filterNum, long allPack, long parserPack,
-			long parserEvent, long sendEvent, long ringbuffPack, long ringbuffEvent, String meanRate,
-			String oneMinuteRate, String fiveMinuteRate, String fifteenMinuteRate) {
+			long parserEvent, long sendEvent, long ringbuffPack, long ringbuffEvent, long dowithNum, String meanRate,
+			String oneMinuteRate, String fiveMinuteRate, String fifteenMinuteRate, long undoSize, long senderUnit) {
 		super();
 		this.insertNum = insertNum;
 		this.updateNum = updateNum;
@@ -53,6 +58,9 @@ public class Count {
 		this.oneMinuteRate = oneMinuteRate;
 		this.fiveMinuteRate = fiveMinuteRate;
 		this.fifteenMinuteRate = fifteenMinuteRate;
+		this.undoSize = undoSize;
+		this.senderUnit = senderUnit;
+		this.dowithNum = dowithNum;
 	}
 
 }
