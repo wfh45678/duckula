@@ -283,7 +283,7 @@ public abstract class ConsumerAbs<T> implements IConsumer<byte[]> {
 					}
 				}
 				try {
-					rs.close();
+					//rs.close();
 				} catch (Exception e) {
 					log.error("关闭es失败", e);
 				}
