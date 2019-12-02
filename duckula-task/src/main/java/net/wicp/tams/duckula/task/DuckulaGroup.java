@@ -34,6 +34,9 @@ public class DuckulaGroup extends TsMetricAbstractGroup {
 
 	// 修改记录数
 	public final Meter meter_sender_event_update = newMeter(this.getClass(), "meter_sender_event_update");
+	
+	// 处理记录记录数
+    public final Meter meter_dowith_event = newMeter(this.getClass(), "meter_dowith_event");
 
 	public final Counter counter_ringbuff_pack = newCounter(this.getClass(), "counter_ringbuff_pack");
 

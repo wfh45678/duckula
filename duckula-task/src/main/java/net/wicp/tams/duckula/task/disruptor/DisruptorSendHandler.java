@@ -45,7 +45,7 @@ public class DisruptorSendHandler implements EventHandler<EventPackage> {
 	static {
 		rootDir = new File(System.getenv("DUCKULA_DATA"));
 	}
-	//private final boolean isSync;// 需要同步实现,现只有ES插件需要。
+	// private final boolean isSync;// 需要同步实现,现只有ES插件需要。
 
 	public DisruptorSendHandler(JSONObject params) {
 		Thread.currentThread().setName("duckula-sendHandler");
@@ -136,7 +136,8 @@ public class DisruptorSendHandler implements EventHandler<EventPackage> {
 					if (serialize == null) {
 						retvalue = receive.receiveMsg(event, event.getRule());
 					} else {
-						retvalue = receive.receiveMsg(serialize.serialize(event, event.getRule().getItems().get(RuleItem.splitkey)),
+						retvalue = receive.receiveMsg(
+								serialize.serialize(event, event.getRule().getItems().get(RuleItem.splitkey)),
 								event.getRule());
 					}
 					if (retvalue != null && retvalue.booleanValue()) {
@@ -170,7 +171,8 @@ public class DisruptorSendHandler implements EventHandler<EventPackage> {
 						if (serialize == null) {
 							return receive.receiveMsg(event, event.getRule());
 						} else {
-							return receive.receiveMsg(serialize.serialize(event, event.getRule().getItems().get(RuleItem.splitkey)),
+							return receive.receiveMsg(
+									serialize.serialize(event, event.getRule().getItems().get(RuleItem.splitkey)),
 									event.getRule());
 						}
 					}
@@ -221,9 +223,11 @@ public class DisruptorSendHandler implements EventHandler<EventPackage> {
 		Main.metric.meter_sender_event.mark(event.getRowsNum());
 
 		if (suc) {
+			Main.metric.meter_dowith_event.mark(event.getRowsNum());
 			switch (event.getEventTable().getOptType()) {
 			case insert:
 				Main.metric.meter_sender_event_add.mark(event.getRowsNum());
+
 				break;
 
 			case delete:

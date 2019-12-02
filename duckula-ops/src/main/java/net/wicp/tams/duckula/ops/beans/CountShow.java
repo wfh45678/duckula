@@ -18,4 +18,10 @@ public class CountShow {
 
 	private long ringbuffPack;
 	private long ringbuffEvent;
+	
+	// 速度
+	private String meanRate;
+	private String oneMinuteRate;
+	private String fiveMinuteRate;
+	private String fifteenMinuteRate;
 }

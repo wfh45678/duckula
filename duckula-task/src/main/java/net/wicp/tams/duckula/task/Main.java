@@ -237,6 +237,10 @@ public class Main {
 		// 更新计数
 		try {
 			Count.CountBuilder build = Count.builder().insertNum(metric.meter_sender_event_add.getCount());
+			build.meanRate(String.format("%.2f", metric.meter_dowith_event.getMeanRate()));
+			build.oneMinuteRate(String.format("%.2f", metric.meter_dowith_event.getOneMinuteRate()));
+			build.fiveMinuteRate(String.format("%.2f", metric.meter_dowith_event.getFiveMinuteRate()));
+			build.fifteenMinuteRate(String.format("%.2f", metric.meter_dowith_event.getFifteenMinuteRate()));
 			build.updateNum(metric.meter_sender_event_update.getCount());
 			build.deleteNum(metric.meter_sender_event_del.getCount());
 			build.filterNum(metric.meter_sender_event_filter.getCount());
@@ -260,7 +264,7 @@ public class Main {
 		final Configuration config = ctx.getConfiguration();
 		LoggerConfig loggerConfig = config.getRootLogger();
 		loggerConfig.setLevel(Level.INFO);
-		//是否要删除某个Logger，默认是日志和控制台都打
+		// 是否要删除某个Logger，默认是日志和控制台都打
 		if (StringUtil.isNotNull(System.getenv("DelLoggerConfig"))) {
 			String loggerConfigEnv = System.getenv("DelLoggerConfig");
 			loggerConfig.removeAppender(loggerConfigEnv);
