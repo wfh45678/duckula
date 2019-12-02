@@ -27,6 +27,7 @@ import net.wicp.tams.common.apiext.TimeAssist;
 import net.wicp.tams.common.apiext.jdbc.JdbcAssit;
 import net.wicp.tams.common.apiext.jdbc.MySqlAssit;
 import net.wicp.tams.common.constant.JvmStatus;
+import net.wicp.tams.common.constant.dic.YesOrNo;
 import net.wicp.tams.common.exception.ExceptAll;
 import net.wicp.tams.common.exception.ProjectExceptionRuntime;
 import net.wicp.tams.common.jdbc.DruidAssit;
@@ -57,6 +58,7 @@ public abstract class ConsumerAbs<T> implements IConsumer<byte[]> {
 	protected Connection connection = DruidAssit.getConnection();// TODO 每线程一个连接
 	private Map<Rule, PreparedStatement> statMap = new HashMap<>();
 	protected Map<String, String[]> primarysMap = new HashMap<>();
+	protected Map<String, String[]> colsMap = new HashMap<>();
 
 	protected static final org.slf4j.Logger errorlog = org.slf4j.LoggerFactory.getLogger("errorBinlog");// 需要跳过的错误数据。
 
@@ -217,6 +219,11 @@ public abstract class ConsumerAbs<T> implements IConsumer<byte[]> {
 				}
 				primarysMap.put(keymapkey, primarys);
 			}
+			if (colsMap.get(keymapkey) == null) {
+				String[][] cols = MySqlAssit.getCols(connection, duckulaEvent.getDb(), duckulaEvent.getTb(),
+						YesOrNo.no);
+				colsMap.put(keymapkey, cols[0]);
+			}
 
 			Serializable[] keyValues = new Serializable[primarysMap.get(keymapkey).length];
 			for (int i = 0; i < keyValues.length; i++) {
@@ -242,15 +249,28 @@ public abstract class ConsumerAbs<T> implements IConsumer<byte[]> {
 				JdbcAssit.setPreParam(preparedStatement, keyValues);
 				ResultSet rs = preparedStatement.executeQuery();
 				if (isIde) {
-					List<Map<String, String>> rsToMap = JdbcAssit.rsToMap(rs);
-					rs.last(); // 20191202 Operation not allowed after ResultSet closed
-								// https://www.cnblogs.com/haore147/p/3617767.html
-					if (CollectionUtils.isNotEmpty(rsToMap)) {
-						datamap.putAll(rsToMap.get(0));
+					if (rs.next()) {
+						for (String colName : colsMap.get(keymapkey)) {
+							try {
+								String valuestr = rs.getString(colName);
+								datamap.put(colName, valuestr);
+							} catch (Exception e) {
+								log.error("no colName:" + colName, e);
+							}
+						}
 					} else {
 						log.error("没有找到ID:{}", idStr);
 						return;
 					}
+					// List<Map<String, String>> rsToMap = JdbcAssit.rsToMap(rs);
+					// rs.last(); // 20191202 Operation not allowed after ResultSet closed
+					// https://www.cnblogs.com/haore147/p/3617767.html
+					// if (CollectionUtils.isNotEmpty(rsToMap)) {
+					// datamap.putAll(rsToMap.get(0));
+					// } else {
+					// log.error("没有找到ID:{}", idStr);
+					// return;
+					// }
 				} else {
 					if (rs.next()) {
 						for (String colName : duckulaEvent.getColsList()) {
