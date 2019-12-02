@@ -87,7 +87,7 @@ public abstract class ConsumerAbs<T> implements IConsumer<byte[]> {
 		}
 		Task task = ZkUtil.buidlTask(consumer.getTaskOnlineId());
 		isIde = task.getSenderEnum().isIdempotent();
-		if(consumer.getMiddlewareType()!=null&&StringUtil.isNotNull(consumer.getMiddlewareInst())) {//中间件集群相关配置
+		if (consumer.getMiddlewareType() != null && StringUtil.isNotNull(consumer.getMiddlewareInst())) {// 中间件集群相关配置
 			Properties props = ConfUtil.configMiddleware(consumer.getMiddlewareType(), consumer.getMiddlewareInst());
 			Conf.overProp(props);
 		}
@@ -241,16 +241,17 @@ public abstract class ConsumerAbs<T> implements IConsumer<byte[]> {
 				}
 				JdbcAssit.setPreParam(preparedStatement, keyValues);
 				ResultSet rs = preparedStatement.executeQuery();
-				
-				if(isIde) {
+				if (isIde) {
 					List<Map<String, String>> rsToMap = JdbcAssit.rsToMap(rs);
-					if(CollectionUtils.isNotEmpty(rsToMap)) {
+					rs.last(); // 20191202 Operation not allowed after ResultSet closed
+								// https://www.cnblogs.com/haore147/p/3617767.html
+					if (CollectionUtils.isNotEmpty(rsToMap)) {
 						datamap.putAll(rsToMap.get(0));
-					}else {
+					} else {
 						log.error("没有找到ID:{}", idStr);
 						return;
 					}
-				}else {
+				} else {
 					if (rs.next()) {
 						for (String colName : duckulaEvent.getColsList()) {
 							String valuestr = rs.getString(colName);
