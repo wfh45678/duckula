@@ -236,16 +236,12 @@ public abstract class ConsumerAbs<T> implements IConsumer<byte[]> {
 					datamap.put(primarysMap.get(keymapkey)[i], String.valueOf(keyValues[i]));
 				}
 			} else if (duckulaEvent.getIsError()) {
-				PreparedStatement preparedStatement = statMap.get(rule);
-				if (preparedStatement == null) {
-					StringBuilder build = new StringBuilder();
-					build.append("select * from " + keymapkey + " where ");
-					for (int i = 0; i < primarysMap.get(keymapkey).length; i++) {
-						build.append(String.format(" %s=?", primarysMap.get(keymapkey)[i]));
-					}
-					preparedStatement = connection.prepareStatement(build.toString());
-					statMap.put(rule, preparedStatement);
+				StringBuilder build = new StringBuilder();
+				build.append("select * from " + keymapkey + " where ");
+				for (int i = 0; i < primarysMap.get(keymapkey).length; i++) {
+					build.append(String.format(" %s=?", primarysMap.get(keymapkey)[i]));
 				}
+				PreparedStatement preparedStatement = DruidAssit.getConnection().prepareStatement(build.toString());
 				JdbcAssit.setPreParam(preparedStatement, keyValues);
 				ResultSet rs = preparedStatement.executeQuery();
 				if (isIde) {
@@ -283,7 +279,8 @@ public abstract class ConsumerAbs<T> implements IConsumer<byte[]> {
 					}
 				}
 				try {
-					//rs.close();
+					rs.close();
+					preparedStatement.close();					
 				} catch (Exception e) {
 					log.error("关闭es失败", e);
 				}
