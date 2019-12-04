@@ -119,6 +119,7 @@ public class DisruptorSendHandler implements EventHandler<EventPackage> {
 		// status:{},record:{}",event.isOver(),ArrayUtils.isEmpty(event.getAfters())?"":event.getAfters()[0][0]);
 		if (event.isOver()) {// 处理的时候出现问题或无需处理，一般为业务处理失败
 			if (curPos != null) {
+				curPos.setIshalf(false);//也是一个完整的gtid
 				Main.context.setPos(curPos);
 				updatePos(event, false);// 20190813 没有记录也得更新位点
 			}
@@ -227,17 +228,13 @@ public class DisruptorSendHandler implements EventHandler<EventPackage> {
 			switch (event.getEventTable().getOptType()) {
 			case insert:
 				Main.metric.meter_sender_event_add.mark(event.getRowsNum());
-
 				break;
-
 			case delete:
 				Main.metric.meter_sender_event_del.mark(event.getRowsNum());
 				break;
-
 			case update:
 				Main.metric.meter_sender_event_update.mark(event.getRowsNum());
 				break;
-
 			default:
 				break;
 			}

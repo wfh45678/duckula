@@ -215,6 +215,7 @@ public class ParseLogOnline extends BaseLogFetcher {
 			Main.context.getParsePos().setGtids(super.gtidBean.getGtids());
 			Main.context.getParsePos().setPos(event.getLogPos());
 			Main.context.getParsePos().setTime(super.gtidBean.getCommitTime());
+			Main.context.getParsePos().setIshalf(false);//解析位点不用区分是否一半
 		} else {
 			log.info("------------------做主备切换,原主机源[{}],切换源[{}}]--------------------------------", uuid,
 					event.getSource());

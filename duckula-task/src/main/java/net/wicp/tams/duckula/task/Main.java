@@ -39,6 +39,7 @@ import net.wicp.tams.duckula.common.ZkClient;
 import net.wicp.tams.duckula.common.ZkUtil;
 import net.wicp.tams.duckula.common.beans.ColHis;
 import net.wicp.tams.duckula.common.beans.Count;
+import net.wicp.tams.duckula.common.beans.Pos;
 import net.wicp.tams.duckula.common.constant.CommandType;
 import net.wicp.tams.duckula.common.constant.ZkPath;
 import net.wicp.tams.duckula.task.bean.DuckulaContext;
@@ -216,14 +217,18 @@ public class Main {
 																		// &&
 																		// context.getParsePos().getFileName().equals(context.getPos().getFileName())一段时间没有提交的位点
 					if (context.getParsePos().getTime() != 0 && prePos != context.getParsePos().getPos()) {
+						//解析位点不需要判断isIshalf
 						taskConf.updatePos(context.getParsePos());
 						prePos = context.getParsePos().getPos();
 					}
 					// log.info("update ParsePos");
 				} else {
 					if (context.getPos().getTime() != 0 && prePos != context.getPos().getPos()) {
-						taskConf.updatePos(context.getPos());
-						prePos = context.getPos().getPos();
+						// 20191204 如果只操作到一半，不要保存位点，否则会导致gtid启动方式不可用的情况
+						if (!context.getPos().isIshalf()) {
+							taskConf.updatePos(context.getPos());
+							prePos = context.getPos().getPos();
+						}
 					}
 					// log.info("update CurPos");
 				}
