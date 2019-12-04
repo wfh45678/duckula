@@ -58,7 +58,8 @@ public class ParseLogOnline extends BaseLogFetcher {
 			statement.close();
 
 			uuid = getVar(conn, "server_uuid", false);
-			super.gtidBean= GtidBean.builder().gtids(Main.context.getParsePos().getGtids()).commitTime(Main.context.getParsePos().getTime()).build();
+			super.gtidBean = GtidBean.builder().gtids(Main.context.getParsePos().getGtids())
+					.commitTime(Main.context.getParsePos().getTime()).build();
 			fileName = Main.context.getParsePos().getFileName();
 			// 设置一些参数
 			Checksum checksum = Checksum.get(getVar(conn, "binlog_checksum", false));
@@ -105,19 +106,22 @@ public class ParseLogOnline extends BaseLogFetcher {
 					break;
 				case LogEvent.WRITE_ROWS_EVENT_V1:
 				case LogEvent.WRITE_ROWS_EVENT:
-					if (super.gtidBean.getGtids() != null && parseRowsEvent((WriteRowsLogEvent) event, OptType.insert)) {
+					if (super.gtidBean.getGtids() != null
+							&& parseRowsEvent((WriteRowsLogEvent) event, OptType.insert)) {
 						isSel = true;
 					}
 					break;
 				case LogEvent.UPDATE_ROWS_EVENT_V1:
 				case LogEvent.UPDATE_ROWS_EVENT:
-					if (super.gtidBean.getGtids() != null && parseRowsEvent((UpdateRowsLogEvent) event, OptType.update)) {
+					if (super.gtidBean.getGtids() != null
+							&& parseRowsEvent((UpdateRowsLogEvent) event, OptType.update)) {
 						isSel = true;
 					}
 					break;
 				case LogEvent.DELETE_ROWS_EVENT_V1:
 				case LogEvent.DELETE_ROWS_EVENT:
-					if (super.gtidBean.getGtids() != null && parseRowsEvent((DeleteRowsLogEvent) event, OptType.delete)) {
+					if (super.gtidBean.getGtids() != null
+							&& parseRowsEvent((DeleteRowsLogEvent) event, OptType.delete)) {
 						isSel = true;
 					}
 					break;
@@ -162,7 +166,13 @@ public class ParseLogOnline extends BaseLogFetcher {
 		boolean needSecond = false;
 		try {
 			if (gtidCan && !Main.context.getParsePos().isIshalf()) {
-				fecther.openGtid(conn, super.gtidBean.getGtids(), Main.context.getTask().getClientId());
+				String gtidTrue = super.gtidBean.getGtids();
+				if (Main.context.getTask().getSenderEnum().isIdempotent()) {// 是全幂等模式，需要回推多少位点？否则会有数据丢失风险:如果在停机时kafka未发送完
+
+					gtidTrue = backGtid(gtidTrue, 16 * 3);// TODO 要回溯多少个位点不知，先设置48个
+				}
+				log.info("star from the gtid:{}",gtidTrue);
+				fecther.openGtid(conn, gtidTrue, Main.context.getTask().getClientId());
 				// fecther.openGtid(conn,
 				// "f07e8023-5c57-11e6-ad03-340286ad00d3:1-115",
 				// Main.context.getTask().getClientId());// 本机1000W数据
@@ -208,18 +218,19 @@ public class ParseLogOnline extends BaseLogFetcher {
 	protected void parseGtidLogEventSub(GtidLogEvent event) {
 		if (StringUtil.isNotNull(uuid) && uuid.equals(event.getSource())) {// 当做主备时会变化source
 			if (StringUtil.isNotNull(slaveGtids)) {
-				super.gtidBean=GtidBean.builder().gtids(String.format("%s,%s", super.gtidBean.getGtids(), slaveGtids)).commitTime(event.getWhen()).build();
-				//super.gtids = String.format("%s,%s", super.gtids, slaveGtids);
+				super.gtidBean = GtidBean.builder().gtids(String.format("%s,%s", super.gtidBean.getGtids(), slaveGtids))
+						.commitTime(event.getWhen()).build();
+				// super.gtids = String.format("%s,%s", super.gtids, slaveGtids);
 			}
 			// 设置解析的位点
 			Main.context.getParsePos().setGtids(super.gtidBean.getGtids());
 			Main.context.getParsePos().setPos(event.getLogPos());
 			Main.context.getParsePos().setTime(super.gtidBean.getCommitTime());
-			Main.context.getParsePos().setIshalf(false);//解析位点不用区分是否一半
+			Main.context.getParsePos().setIshalf(false);// 解析位点不用区分是否一半
 		} else {
 			log.info("------------------做主备切换,原主机源[{}],切换源[{}}]--------------------------------", uuid,
 					event.getSource());
-			super.gtidBean=null;
+			super.gtidBean = null;
 		}
 	}
 
@@ -280,7 +291,7 @@ public class ParseLogOnline extends BaseLogFetcher {
 
 	private void initSlaveGtids(String gtids) {
 		if (StringUtil.isNotNull(gtids)) {
-			super.gtidBean=GtidBean.builder().gtids(gtids.replace("\n", "")).build();
+			super.gtidBean = GtidBean.builder().gtids(gtids.replace("\n", "")).build();
 			String[] gtidsAry = super.gtidBean.getGtids().split(",");
 
 			for (String gtid : gtidsAry) {
@@ -292,4 +303,25 @@ public class ParseLogOnline extends BaseLogFetcher {
 			this.slaveGtids = CollectionUtil.arrayJoin(gtidsAry, ",");
 		}
 	}
+
+	private String backGtid(String gtids, int gtidNum) {
+		if (StringUtil.isNotNull(gtids)) {
+			GtidBean tempBean = GtidBean.builder().gtids(gtids.replace("\n", "")).build();
+			String[] gtidsAry = tempBean.getGtids().split(",");
+			for (int i = 0; i < gtidsAry.length; i++) {
+				String gtid = gtidsAry[i];
+				if (gtid.startsWith(uuid)) {
+					String[] gtidAry = gtid.split(":");
+					String[] ids = gtidAry[1].split("-");
+					int parseInt = Integer.parseInt(ids[ids.length - 1]);
+					gtidsAry[i] = String.format("%s:%s-%s", gtidAry[0], 1,
+							parseInt > gtidNum ? parseInt - gtidNum : parseInt);
+					break;
+				}
+			}
+			return CollectionUtil.arrayJoin(gtidsAry, ",");
+		}
+		return gtids;
+	}
+
 }
