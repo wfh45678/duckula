@@ -28,17 +28,20 @@ public class Consumer {
 	private YesOrNo run = YesOrNo.no;// 是否运行此任务,默认为false不运行,仅配置好,不做运行处理.
 	private SenderConsumerEnum senderConsumerEnum;
 	private final List<Rule> ruleList = new ArrayList<>();
-	
-	private MiddlewareType middlewareType;//中间件类型
-	private String middlewareInst;//中间件配置
+
+	private MiddlewareType middlewareType;// 中间件类型
+	private String middlewareInst;// 中间件配置
+
+	// k8s版本使用的CPU和内存
+	private Integer cpu;// CPU数据
+	private Integer memory;// 内存 M
 
 	//
 	private Integer busiNum;
 	private String busiPlugin;
-	
-	private Integer batchNum=50;//每次拉取数量
-	private Integer batchTimeout=1000;//拉取的超时时间
-	
+
+	private Integer batchNum = 50;// 每次拉取数量
+	private Integer batchTimeout = 1000;// 拉取的超时时间
 
 	public void setRules(String rules) {
 		this.rules = rules;
@@ -59,8 +62,9 @@ public class Consumer {
 			for (String key : json.keySet()) {
 				RuleItem tempItem = RuleItem.get(key);
 				if (tempItem == null) {
-					log.error("规则设置出错，请检查【{}】是否在net.wicp.tams.duckula.plugin.constant.RuleItem中定义!",key);
-					throw new IllegalArgumentException("规则设置出错，请检查【"+key+"】是否在net.wicp.tams.duckula.plugin.constant.RuleItem中定义!");
+					log.error("规则设置出错，请检查【{}】是否在net.wicp.tams.duckula.plugin.constant.RuleItem中定义!", key);
+					throw new IllegalArgumentException(
+							"规则设置出错，请检查【" + key + "】是否在net.wicp.tams.duckula.plugin.constant.RuleItem中定义!");
 				} else {
 					rule.getItems().put(tempItem, json.getString(key));
 				}

@@ -150,10 +150,10 @@ podAnnotations: {}
 #dump请调整此资源
 resources:
   requests:
-    memory: 1024Mi
+    memory: 320Mi
     cpu: 1000m
   limits:
-    memory: 1024Mi
+    memory: 512Mi
     cpu:  1000m
 
 livenessProbe:

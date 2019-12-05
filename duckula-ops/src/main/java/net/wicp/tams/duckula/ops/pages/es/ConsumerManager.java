@@ -90,8 +90,6 @@ public class ConsumerManager {
 		}
 	}
 
-
-
 	@SuppressWarnings("unchecked")
 	public TextStreamResponse onQuery() {
 		final Consumer consumerparam = TapestryAssist.getBeanFromPage(Consumer.class, requestGlobals);
@@ -262,7 +260,8 @@ public class ConsumerManager {
 							.replaceAll("\\[0-9\\]\\*", "");
 					String tb = rule.getTbPattern().replaceAll("\\^", "").replaceAll("\\$", "")
 							.replaceAll("\\[0-9\\]\\*", "");
-					List<IndexBean> queryIndex = IndexManager.getESClient(rule.getItems().get(RuleItem.middleware))
+
+					List<IndexBean> queryIndex = IndexManager.getESClient(consumerparam.getMiddlewareInst())
 							.queryIndex(rule.getItems().get(RuleItem.index));
 					if (CollectionUtils.isEmpty(queryIndex) && !db.endsWith("_") && !tb.endsWith("_")) {
 						java.sql.Connection conn = JdbcConnection.getConnectionMyql(task.getIp(), task.getPort(),
