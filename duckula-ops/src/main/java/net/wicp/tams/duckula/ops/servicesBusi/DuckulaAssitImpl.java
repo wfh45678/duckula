@@ -292,14 +292,18 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 		userList.add(Conf.get("common.others.zookeeper.constr"));
 		userList.add("env.rootpath");// 设置zk的root目录
 		userList.add(Conf.get("duckula.zk.rootpath"));
-		
-		if(commandType == CommandType.consumer) {//consumer需要配置资源
+
+		if (commandType == CommandType.consumer) {// consumer需要配置资源
 			Consumer buidlConsumer = ZkUtil.buidlConsumer(taskId);
+			userList.add("resources.requests.memory");
+			userList.add(buidlConsumer.getMemory() + "Mi");
 			userList.add("resources.limits.memory");
-			userList.add(buidlConsumer.getMemory()+"Mi");
+			userList.add(buidlConsumer.getMemory() + "Mi");
+			userList.add("resources.requests.cpu");
+			userList.add(buidlConsumer.getCpu() + "m");
 			userList.add("resources.limits.cpu");
-			userList.add(buidlConsumer.getCpu()+"m");
-		}else if (commandType == CommandType.dump) {// 默认是“nojob”需要被覆盖
+			userList.add(buidlConsumer.getCpu() + "m");
+		} else if (commandType == CommandType.dump) {// 默认是“nojob”需要被覆盖
 			Dump buidlDump = ZkUtil.buidlDump(taskId);// 需要dump来判断设置执行时间
 			if (StringUtil.isNotNull(buidlDump.getSchedule())) {// 是job
 				userList.add("schedule");
@@ -308,12 +312,15 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 				userList.add("schedule");
 				userList.add("now");
 			}
+			userList.add("resources.requests.memory");
+			userList.add(buidlDump.getMemory() + "Mi");
 			userList.add("resources.limits.memory");
-			userList.add(buidlDump.getMemory()+"Mi");
+			userList.add(buidlDump.getMemory() + "Mi");
+			userList.add("resources.requests.cpu");
+			userList.add(buidlDump.getCpu() + "m");
 			userList.add("resources.limits.cpu");
-			userList.add(buidlDump.getCpu()+"m");
+			userList.add(buidlDump.getCpu() + "m");
 		}
-		
 
 		log.info("-----------taskId:{},zk:{},rootpath:{}-----------", taskId,
 				Conf.get("common.others.zookeeper.constr"), Conf.get("duckula.zk.rootpath"));

@@ -157,11 +157,16 @@ public class ConsumerManager {
 			IConvertValue<String> podStatus = new IConvertValue<String>() {
 				@Override
 				public String getStr(String keyObj) {
-					keyObj = CommandType.consumer.getK8sId(keyObj);
-					Map<ResourcesType, String> queryStatus = TillerClient.getInst().queryStatus(keyObj);
-					String valueStr = queryStatus.get(ResourcesType.Pod);
-					String colValue = ResourcesType.Pod.getColValue(valueStr, "STATUS");
-					return colValue;
+					try {
+						keyObj = CommandType.consumer.getK8sId(keyObj);
+						Map<ResourcesType, String> queryStatus = TillerClient.getInst().queryStatus(keyObj);
+						String valueStr = queryStatus.get(ResourcesType.Pod);
+						String colValue = ResourcesType.Pod.getColValue(valueStr, "STATUS");
+						return colValue;
+					} catch (Exception e) {
+						log.error("query Pod status error",e);
+						return "";
+					}
 				}
 			};
 
