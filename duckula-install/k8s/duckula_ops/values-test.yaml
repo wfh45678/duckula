@@ -1,19 +1,10 @@
 image: registry.choerodon.xforceplus.com/rjzjh/duckula
-imageOpsTag: ops.2.0.9.1
-imageDataTag: data.2.0.9
+imageOpsTag: ops.2.2.4
+imageDataTag: data.2.2.4
 imagePullPolicy: IfNotPresent
 env:
   zk: 192.168.11.80:2181
   rootpath: /duckula-k8s
-hosts:
-- {ip: 192.168.11.61,host: [zk-kafka-01]}
-- {ip: 192.168.11.58,host: [zk-kafka-02]}
-- {ip: 192.168.11.60,host: [zk-kafka-03]}
-- {ip: 192.168.11.59,host: [zk-kafka-04]}
-
-- {ip: 192.168.11.116,host: [node-es1]}
-- {ip: 192.168.11.117,host: [node-es2]}
-- {ip: 192.168.11.118,host: [node-es3]}    
 service:
   type: ClusterIP
   port: 8080
@@ -24,7 +15,7 @@ persistence:
   # 指定存储，推荐使用此方式，注意创建的的访问模式为：accessMode: ReadWriteMany
   #existingClaim: duckula-test-duckula-data
   # 快速搭建demo可以使用此方式，要求k8s拥有此storageClass
-  storageClass: "xforcecloud-disk-share"
+  storageClass: xforcecloud-disk-share
   accessMode: ReadWriteMany
   size: 40Gi
   annotations: {}
@@ -34,7 +25,7 @@ userconfig:
     zk.properties: |-
       common.others.zookeeper.constr=null
       #二次重试眨眼时间
-      common.others.zookeeper.sleepTimeMs=1000
+      common.others.zookeeper.sleepTimeMs=10000
       #最大重试次数
       common.others.zookeeper.maxRetries=5
       common.others.zookeeper.sessionTimeoutMs=9000
@@ -91,13 +82,13 @@ userconfig:
       common.kubernetes.apiserver.master.url=null
       common.kubernetes.apiserver.master.username=null
       common.kubernetes.apiserver.master.password=null
-      common.kubernetes.apiserver.namespace.default=35-flink-stream-dev
+      common.kubernetes.apiserver.namespace.default=default
       #20190912 默认的命名空间,用于在ops部署不同的命名空间,value-test.yaml
       common.kubernetes.apiserver.namespace.valuepost=test
       #k8s,此参数需要跟据情况修改为自己的私有镜像库
       #duckula.task.image.name=192.168.137.100:5000/rjzjh/duckula
       duckula.task.image.name=registry.choerodon.xforceplus.com/rjzjh/duckula
-      duckula.task.image.tag=task.2.0.7
+      duckula.task.image.tag=task.2.2.4
       #位点保留最大天数
       duckula.ops.pos.maxsize=7
   es:
@@ -121,7 +112,7 @@ userconfig:
       #查询时的超时
       common.es.query.timeout=5000
       #以下为默认值，如果在api中没有设置相关值，则默认值起做用
-      common.es.query.index=null
+      common.es.query.index=none
       common.es.query.type=_doc
       common.es.http.aync.maxConnTotal=100
       common.es.http.aync.maxConnPerRoute=100
@@ -197,7 +188,7 @@ userconfig:
       common.redis.cachecloud.redis_sentinel_suffix = /cache/client/redis/sentinel/%s.json?clientVersion=
       common.redis.cachecloud.redis_standalone_suffix = /cache/client/redis/standalone/%s.json?clientVersion=
       common.redis.cachecloud.cachecloud_report_url = /cachecloud/client/reportData.json
-  
+
 podAnnotations: {}
 
 resources:
@@ -206,7 +197,7 @@ resources:
     cpu: 200m
   limits:
     memory: 1280Mi
-    cpu:  200m
+    cpu: 200m
 livenessProbe:
   initialDelaySeconds: 30
   periodSeconds: 10
@@ -220,3 +211,12 @@ readinessProbe:
   timeoutSeconds: 1
   successThreshold: 1
   failureThreshold: 3
+hosts:
+- {ip: 192.168.11.61, host: [zk-kafka-01]}
+- {ip: 192.168.11.58, host: [zk-kafka-02]}
+- {ip: 192.168.11.60, host: [zk-kafka-03]}
+- {ip: 192.168.11.59, host: [zk-kafka-04]}
+
+- {ip: 192.168.11.116, host: [node-es1]}
+- {ip: 192.168.11.117, host: [node-es2]}
+- {ip: 192.168.11.118, host: [node-es3]}
