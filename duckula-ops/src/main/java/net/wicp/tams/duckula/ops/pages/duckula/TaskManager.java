@@ -102,7 +102,7 @@ public class TaskManager {
 	}
 
 	public String getDefaultNamespace() {
-		String namespaceTrue="all".equalsIgnoreCase(namespace)?"":namespace;
+		String namespaceTrue = "all".equalsIgnoreCase(namespace) ? "" : namespace;
 		return StringUtil.hasNull(namespaceTrue, Conf.get("common.kubernetes.apiserver.namespace.default"));
 	}
 
@@ -139,7 +139,8 @@ public class TaskManager {
 					return false;
 				}
 				Task temp = (Task) object;
-				if(!TaskPattern.isNeedServer()&&!"all".equals(namespace)&& !namespace.equalsIgnoreCase(temp.getNamespace())) {
+				if (!TaskPattern.isNeedServer() && !"all".equals(namespace)
+						&& !namespace.equalsIgnoreCase(temp.getNamespace())) {
 					return false;
 				}
 				boolean ret = true;

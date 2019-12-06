@@ -32,7 +32,7 @@ public class Task {
 	private String ip;// ip地址或机器名
 	private int clientId;// 连到mysql的从服务器ID
 	private int port;
-	private String dbinst;// 数据库实例名
+	private String dbinst;// 数据库实例名//只用于位点历史更新的挂存目录用，不做其它使用
 	private YesOrNo rds = YesOrNo.yes;// yes表示是rds
 	private YesOrNo isSsh = YesOrNo.no; //no表示不启用ssh
 	private YesOrNo posListener = YesOrNo.yes; //yes表示需要启用ssh
