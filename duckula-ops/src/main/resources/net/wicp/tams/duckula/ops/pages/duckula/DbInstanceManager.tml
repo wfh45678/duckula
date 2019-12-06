@@ -8,7 +8,7 @@
 <body>
    <r:query id="q"  qBlock="query" queryUrl="/duckula/dbInstanceManager:query"  uBlock="save"   saveUrl="/duckula/dbInstanceManager:save" deleteUrl="/duckula/dbInstanceManager:del"
         columns="[[{field:'id',width:150,title:'db实例ID'},{field:'url',width:300,title:'地址'},{field:'hostIds1',width:180,title:'主机实例1'},{field:'hostIds2',width:180,title:'主机实例2'},{field:'hostIds3',width:180,title:'主机实例3'},{field:'remark',width:200,title:'备注'},{field:'op',width:250,title:'操作'}]]" 
-        dialogStyle="width:800px;height:320px;" initAddHandle="initAdd" pagination="false"/>
+        dialogStyle="width:800px;height:360px;" initAddHandle="initAdd" pagination="false"/>
    <t:block id="query">
        <table class="frame_table_list_4">
 		 <tr>
@@ -60,6 +60,12 @@
 			 	     <td>
 			 	        <r:validatebox name="pwd" style="width:250px;" required="true"/>
 			 	     </td>
+			      </tr>
+			      <tr>
+			         <td class="frame_table_list_2_righttext">授权命名空间</td>
+			         <td colspan="3">
+			           <r:validatebox name="namespaces" style="width:650px;" required="true"/>
+	                 </td>
 			      </tr>
 			      <tr>
 			         <td class="frame_table_list_2_righttext">启用SSH跳板机</td>

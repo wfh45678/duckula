@@ -42,6 +42,7 @@ import net.wicp.tams.common.apiext.json.easyuibean.EasyUINodeConf;
 import net.wicp.tams.common.callback.IConvertValue;
 import net.wicp.tams.common.callback.impl.convertvalue.ConvertValueEnum;
 import net.wicp.tams.common.constant.DateFormatCase;
+import net.wicp.tams.common.constant.StrPattern;
 import net.wicp.tams.common.constant.dic.YesOrNo;
 import net.wicp.tams.common.es.EsAssit;
 import net.wicp.tams.common.es.bean.IndexBean;
@@ -255,11 +256,11 @@ public class TaskManager {
 			ZkClient.getInst().updateNode(ZkPath.tasks.getPath(taskparam.getId()), JSONObject.toJSONString(taskparam));
 		}
 
-		if (taskparam.getPosListener() == YesOrNo.no) {// 不监听pos
-			InitDuckula.noPosListener.add(ZkPath.pos.getPath(taskparam.getId()));
-		} else {
-			InitDuckula.noPosListener.remove(ZkPath.pos.getPath(taskparam.getId()));
-		}
+		/*
+		 * if (taskparam.getPosListener() == YesOrNo.no) {// 不监听pos
+		 * InitDuckula.noPosListener.add(ZkPath.pos.getPath(taskparam.getId())); } else
+		 * { InitDuckula.noPosListener.remove(ZkPath.pos.getPath(taskparam.getId())); }
+		 */
 		// init Index
 		if (taskparam.getSenderEnum() == SenderEnum.es) {
 			for (Rule rule : taskparam.getRuleList()) {
@@ -326,9 +327,28 @@ public class TaskManager {
 	 * 
 	 */
 	public TextStreamResponse onQueryInst() {
-		List<String> dbs = ZkClient.getInst().getChildren(ZkPath.dbinsts.getRoot());// 所有dbs
-		dbs.add(0, "no");
-		String retstr = JSONUtil.getJsonForListSimple(dbs);
+		if (!namespaceExists) {
+			return TapestryAssist.getTextStreamResponse(EasyUiAssist.getJsonForGridEmpty());
+		}
+		//List<String> dbs = ZkClient.getInst().getChildren(ZkPath.dbinsts.getRoot());// 所有dbs		
+		List<DbInstance> allDbs = ZkUtil.findAllObjs(ZkPath.dbinsts,DbInstance.class);
+	    if (!TaskPattern.isNeedServer()&& !"all".equals(namespace)) {//
+			CollectionUtils.filter(allDbs, new Predicate() {				
+				@Override
+				public boolean evaluate(Object object) {
+					DbInstance temp=(DbInstance)object;	
+					if(StringUtil.isNull(temp.getNamespaces())) {
+						return false;
+					}
+					if("*".equals(temp.getNamespaces())) {
+						return true;
+					}
+					return StrPattern.checkStrFormat(temp.getNamespaces(), namespace);
+				}
+			});
+		}		
+		List<?> ids = CollectionUtil.getColFromObj(allDbs, "id");		
+		String retstr = JSONUtil.getJsonForListSimple(ids);
 		return TapestryAssist.getTextStreamResponse(retstr);
 	}
 

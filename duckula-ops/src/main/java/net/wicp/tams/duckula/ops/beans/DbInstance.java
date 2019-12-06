@@ -16,6 +16,7 @@ public class DbInstance {
 	private int port;
 	private String user;
 	private String pwd;
+	private String namespaces;
 	private YesOrNo isSsh = YesOrNo.no;
 	private YesOrNo isRds = YesOrNo.yes;// yes表示是rds
 	private List<NodeInfo> nodesFirst;

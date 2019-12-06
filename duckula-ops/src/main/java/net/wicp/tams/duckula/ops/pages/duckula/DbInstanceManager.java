@@ -71,8 +71,9 @@ public class DbInstanceManager {
 
 		String retstr = EasyUiAssist.getJsonForGrid(retlist,
 				new String[] { "id", "url", "port", "user", "pwd", "isWhileList", "isSsh", "isRds", "remark",
-						",hostIds1", ",hostIds2", ",hostIds3" },
-				new IConvertValue[] { null, null, null, null, null, null, null, null, null, conver1, conver2, conver3 },
+						"namespaces", ",hostIds1", ",hostIds2", ",hostIds3" },
+				new IConvertValue[] { null, null, null, null, null, null, null, null, null, null, conver1, conver2,
+						conver3 },
 				retlist.size());
 		return TapestryAssist.getTextStreamResponse(retstr);
 	}

@@ -25,7 +25,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
-import org.apache.zookeeper.data.Stat;
 
 import com.alibaba.fastjson.JSONObject;
 
@@ -34,8 +33,8 @@ import net.wicp.tams.common.apiext.CollectionUtil;
 import net.wicp.tams.common.apiext.LoggerUtil;
 import net.wicp.tams.common.apiext.StringUtil;
 import net.wicp.tams.common.beans.Host;
-import net.wicp.tams.common.constant.DateFormatCase;
 import net.wicp.tams.common.constant.JvmStatus;
+import net.wicp.tams.common.constant.dic.YesOrNo;
 import net.wicp.tams.common.metrics.utility.TsLogger;
 import net.wicp.tams.duckula.common.ConfUtil;
 import net.wicp.tams.duckula.common.ZkClient;
@@ -220,7 +219,7 @@ public class Main {
 																		// &&
 																		// context.getParsePos().getFileName().equals(context.getPos().getFileName())一段时间没有提交的位点
 					if (context.getParsePos().getTime() != 0 && prePos != context.getParsePos().getPos()) {
-						//解析位点不需要判断isIshalf
+						// 解析位点不需要判断isIshalf
 						Pos savepos = context.getParsePos();
 						taskConf.updatePos(savepos);
 						prePos = savepos.getPos();
@@ -271,20 +270,25 @@ public class Main {
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
-		
-		//更新db的历史位点
+
+		// 更新db的历史位点
 
 	}
-	//更新位点时会更新此字段。达到5分钟更新一次的目的
+
+	// 更新位点时会更新此字段。达到5分钟更新一次的目的
 	private static long sendlasttime;
+
 	private static void updatePosHis(Pos pos) {
-		if(pos.getTime()-sendlasttime<300||StringUtil.isNull(Main.context.getTask().getDbinst())) {//小于5分钟或没有配置数据库
+		if (context.getTask().getPosListener() == null || context.getTask().getPosListener() == YesOrNo.no) {
 			return;
 		}
-		sendlasttime=pos.getTime();
+		if (pos.getTime() - sendlasttime < 300 || StringUtil.isNull(Main.context.getTask().getDbinst())) {// 小于5分钟或没有配置数据库
+			return;
+		}
+		sendlasttime = pos.getTime();
 		String dbinstPath = ZkPath.dbinsts.getPath(Main.context.getTask().getDbinst());
-		String subnodename = new SimpleDateFormat(Pos.hisFormatStr).format(pos.getTime()*1000);
-		ZkClient.getInst().createOrUpdateNode(dbinstPath+"/"+subnodename, JSONObject.toJSONString(pos));		
+		String subnodename = new SimpleDateFormat(Pos.hisFormatStr).format(pos.getTime() * 1000);
+		ZkClient.getInst().createOrUpdateNode(dbinstPath + "/" + subnodename, JSONObject.toJSONString(pos));
 	}
 
 	// 初始化log4j2，由于在k8s与独立部署的中间件不同，需要做处理
