@@ -169,7 +169,7 @@ public class ParseLogOnline extends BaseLogFetcher {
 				String gtidTrue = super.gtidBean.getGtids();
 				if (Main.context.getTask().getSenderEnum().isIdempotent()) {// 是全幂等模式，需要回推多少位点？否则会有数据丢失风险:如果在停机时kafka未发送完
 
-					gtidTrue = backGtid(gtidTrue, 16 * 3);// TODO 要回溯多少个位点不知，先设置48个
+					//gtidTrue = backGtid(gtidTrue, 16 * 3);// TODO 要回溯多少个位点不知，先设置48个//手动设置回退5分钟，不用回退
 				}
 				log.info("star from the gtid:{}",gtidTrue);
 				fecther.openGtid(conn, gtidTrue, Main.context.getTask().getClientId());
