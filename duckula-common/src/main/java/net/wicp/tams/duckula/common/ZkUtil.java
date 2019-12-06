@@ -10,6 +10,7 @@ import java.util.TreeSet;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 import org.apache.zookeeper.data.Stat;
 
@@ -32,6 +33,21 @@ import net.wicp.tams.duckula.plugin.beans.Rule;
 
 @Slf4j
 public abstract class ZkUtil {
+
+	// 只得到位点时间
+	public static String[] findPosHis(String taskId) {
+		List<String> children = ZkClient.getInst().getChildren(ZkPath.dbinsts.getPath(taskId));
+		String[] ary = children.toArray(new String[children.size()]);
+		ArrayUtils.reverse(ary);
+		return ary;
+	}
+
+	public static Pos getPosHis(String dbinstId, String posHisName) {
+		String datapath = ZkPath.dbinsts.getPath(dbinstId) + "/" + posHisName;
+		JSONObject data = ZkClient.getInst().getZkData(datapath);
+		Pos retpos = JSONObject.toJavaObject(data, Pos.class);
+		return retpos;
+	}
 
 	public static Stat exists(ZkPath path) {
 		return ZkClient.getInst().exists(path.getRoot());
@@ -117,10 +133,10 @@ public abstract class ZkUtil {
 	public static InterProcessMutex lockTaskPath(String taskId) {
 		return ZkClient.getInst().lockPath(ZkPath.tasks.getPath(taskId));
 	}
+
 	public static InterProcessMutex lockConsumerPath(String consumerId) {
 		return ZkClient.getInst().lockPath(ZkPath.consumers.getPath(consumerId));
 	}
-	
 
 	public static InterProcessMutex lockDumpPath(String dumpId) {
 		return ZkClient.getInst().lockPath(ZkPath.dumps.getPath(dumpId));
@@ -130,15 +146,14 @@ public abstract class ZkUtil {
 		return ZkClient.getInst().lockPath(ZkPath.tasksofflines.getPath(taskId));
 	}
 
-	public static List<String> lockIps(ZkPath zkPath,String taskId) {
+	public static List<String> lockIps(ZkPath zkPath, String taskId) {
 		List<String> nodes = ZkClient.getInst().getChildren(zkPath.getPath(taskId));
 		List<String> retlist = new ArrayList<>();
-		for (String node : nodes) {			
-			if(zkPath==ZkPath.dumps&&node.equals("lastId")) {
+		for (String node : nodes) {
+			if (zkPath == ZkPath.dumps && node.equals("lastId")) {
 				continue;
 			}
-			String zkValue = ZkClient.getInst()
-					.getZkDataStr(String.format("%s/%s", zkPath.getPath(taskId), node));
+			String zkValue = ZkClient.getInst().getZkDataStr(String.format("%s/%s", zkPath.getPath(taskId), node));
 			retlist.add(zkValue);
 		}
 		return retlist;
@@ -168,9 +183,8 @@ public abstract class ZkUtil {
 	 * StrPattern.checkStrFormat(rule.getTbPattern(), tb); if (!rettb) { continue; }
 	 * } return rule; } return null; }
 	 */
-	
-	
-	public static Map<String, SortedSet<ColHis>> buildCols(String dbInstName,Task task) {
+
+	public static Map<String, SortedSet<ColHis>> buildCols(String dbInstName, Task task) {
 		Map<String, SortedSet<ColHis>> ret = new HashMap<>();
 		try {
 			String dbInstRootPath = ZkPath.cols.getPath(dbInstName);
@@ -182,12 +196,12 @@ public abstract class ZkUtil {
 			if (CollectionUtils.isEmpty(colsTables)) {
 				return ret;
 			}
-			
-			CollectionUtils.filter(colsTables, new Predicate() {				
+
+			CollectionUtils.filter(colsTables, new Predicate() {
 				@Override
 				public boolean evaluate(Object object) {
-					String[] splitary=String.valueOf(object).split("\\|");
-					Rule retRule=null;
+					String[] splitary = String.valueOf(object).split("\\|");
+					Rule retRule = null;
 					for (Rule rule : task.getRuleList()) {
 						if (!"^*$".equals(rule.getDbPattern())) {
 							boolean retdb = StrPattern.checkStrFormat(rule.getDbPattern().toLowerCase(), splitary[0]);
@@ -201,14 +215,13 @@ public abstract class ZkUtil {
 								continue;
 							}
 						}
-						retRule=rule;
+						retRule = rule;
 						break;
 					}
-					return retRule!=null;
+					return retRule != null;
 				}
 			});
-			
-			
+
 			for (String colsTable : colsTables) {
 				String path = String.format("%s/%s", dbInstRootPath, colsTable);
 				List<ColHis> list = JSONObject.parseArray(ZkClient.getInst().getZkDataStr(path), ColHis.class);

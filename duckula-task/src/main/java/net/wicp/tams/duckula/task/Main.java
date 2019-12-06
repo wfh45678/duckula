@@ -283,7 +283,7 @@ public class Main {
 		}
 		sendlasttime=pos.getTime();
 		String dbinstPath = ZkPath.dbinsts.getPath(Main.context.getTask().getDbinst());
-		String subnodename = new SimpleDateFormat("yyyyMMddHHmm").format(pos.getTime()*1000);
+		String subnodename = new SimpleDateFormat(Pos.hisFormatStr).format(pos.getTime()*1000);
 		ZkClient.getInst().createOrUpdateNode(dbinstPath+"/"+subnodename, JSONObject.toJSONString(pos));		
 	}
 

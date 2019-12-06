@@ -84,7 +84,7 @@
    
    
    <r:dialog id="queryPos" title="请选择位点" width="260" height="100"  closable="true"   toolbar="[{'id':'savePosBut','text':'保存','plain':false}]">
-        <r:combogrid id="posGrid" columns="[[{field:'timeStr',width:130,title:'时间'},{field:'fileName',width:110,title:'文件名'},{field:'pos',width:80,title:'位置'},{field:'gtids',width:320,title:'gtid'}]]" idfield="time" panelWidth="650" panelHeight="300" textfield="timeStr" width="200" pagination="false"></r:combogrid>
+        <r:combobox id="posGrid" name="dbinst" width="150"></r:combobox>
         <input id="taskIdSave" type="hidden" name="taskId"/>
    </r:dialog>
    
@@ -120,8 +120,7 @@
         var params=getRow(index);
         $('#taskIdSave').val(params.id);
         $.post($.rjzjh.packurl('/duckula/opsManager:querypos'),params,function(data){
-	        var g = $('#posGrid').combogrid('grid');	// get datagrid object
-            var r = g.datagrid('loadData',data);	// get the selected row        
+	         var g = $('#posGrid').combobox('loadData',data);	      
 	         $.rjzjh.opendialog2("queryPos");  
 	    },'json');	      
      }
@@ -135,11 +134,9 @@
      
    $(function (){
        $('#savePosBut').click(function(){
-          var g = $('#posGrid').combogrid('grid');	// get datagrid object
-          var r = g.datagrid('getSelected');	// get the selected row
-          var taskId=$('#taskIdSave').val();
-          r['id']=taskId;
-          $.post($.rjzjh.packurl('/duckula/opsManager:savepos'),r,function(data){
+          var taskIdVar=$('#taskIdSave').val();
+          var posHisNameVar= $('#posGrid').combobox('getValue');	
+          $.post($.rjzjh.packurl('/duckula/opsManager:savepos'),{taskId:taskIdVar,posHisName:posHisNameVar},function(data){
              $.rjzjh.optshow2(data,function(){
 			    jQuery('#q_grid').datagrid('reload');
 			    $('#queryPos').dialog('close');

@@ -1,11 +1,13 @@
 package net.wicp.tams.duckula.ops.pages.duckula;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.tapestry5.annotations.SessionState;
 import org.apache.tapestry5.ioc.annotations.Inject;
 import org.apache.tapestry5.services.Request;
@@ -22,11 +24,13 @@ import net.wicp.tams.common.Result;
 import net.wicp.tams.common.apiext.CollectionUtil;
 import net.wicp.tams.common.apiext.StringUtil;
 import net.wicp.tams.common.apiext.json.EasyUiAssist;
+import net.wicp.tams.common.apiext.json.JSONUtil;
 import net.wicp.tams.common.callback.IConvertValue;
 import net.wicp.tams.common.constant.DateFormatCase;
 import net.wicp.tams.common.constant.dic.YesOrNo;
 import net.wicp.tams.component.services.IReq;
 import net.wicp.tams.component.tools.TapestryAssist;
+import net.wicp.tams.duckula.common.ZkClient;
 import net.wicp.tams.duckula.common.ZkUtil;
 import net.wicp.tams.duckula.common.beans.Consumer;
 import net.wicp.tams.duckula.common.beans.Pos;
@@ -216,22 +220,21 @@ public class OpsManager {
 		if (StringUtil.isNull(posshow.getId())) {
 			return TapestryAssist.getTextStreamResponseEmpty();
 		}
-		// String path = String.format("%s/%s", duckulaAssit.getPathPos(),
-		// posshow.getId());
-		// String posData = zk.getData(path);
-		// Pos pos = JSONObject.parseObject(posData, Pos.class);
-
-		List<Pos> selPos = DuckulaUtils.readPosLogReverse(posshow.getMasterServerId(),
-				Conf.getInt("duckula.ops.pos.listener.querynum"));
-		String retstr = EasyUiAssist.getJsonForGrid(selPos,
-				new String[] { "gtids", "masterServerId", "fileName", "pos", "time", "timeStr" }, selPos.size());
+		Task task = ZkUtil.buidlTask(posshow.getId());
+		String[] allHis = ZkUtil.findPosHis(task.getDbinst());
+		String retstr = JSONUtil.getJsonForListSimple(Arrays.asList(allHis));
 		return TapestryAssist.getTextStreamResponse(retstr);
 	}
 
 	public TextStreamResponse onSavePos() throws KeeperException, InterruptedException {
-		Pos pos = TapestryAssist.getBeanFromPage(Pos.class, requestGlobals);
-		String taskId = request.getParameter("id");
-		ZkUtil.updatePos(taskId, pos);
+		String posHisName = request.getParameter("posHisName");
+		String taskId = request.getParameter("taskId");
+		Task task = ZkUtil.buidlTask(taskId);
+		if (task == null || StringUtil.isNull(task.getDbinst())) {
+			return TapestryAssist.getTextStreamResponse(Result.getError("没有获得数据库实例配置"));
+		}
+		Pos posHis = ZkUtil.getPosHis(task.getDbinst(), posHisName);
+		ZkUtil.updatePos(taskId, posHis);
 		return TapestryAssist.getTextStreamResponse(Result.getSuc());
 	}
 

@@ -19,6 +19,8 @@ public class Pos implements Comparable<Pos>, Cloneable {
 	private long pos;
 	private long time;
 	private boolean ishalf;//是否一个完整的gtid
+	
+	public static String hisFormatStr= "yyyy-MM-dd:HH:mm";//全于保存位点历史
 
 	public String getTimeStr() {
 		if (time <= 0) {

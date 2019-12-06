@@ -4,17 +4,24 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Predicate;
 import org.apache.commons.io.FileUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.ChildData;
@@ -28,11 +35,13 @@ import com.alibaba.fastjson.JSONObject;
 import ch.qos.logback.classic.Logger;
 import lombok.extern.slf4j.Slf4j;
 import net.wicp.tams.common.Conf;
+import net.wicp.tams.common.apiext.DateUtil;
 import net.wicp.tams.common.apiext.IOUtil;
 import net.wicp.tams.common.apiext.LoggerUtil;
 import net.wicp.tams.common.apiext.OSinfo;
 import net.wicp.tams.common.apiext.StringUtil;
 import net.wicp.tams.common.apiext.TarUtil;
+import net.wicp.tams.common.constant.DateFormatCase;
 import net.wicp.tams.common.constant.EPlatform;
 import net.wicp.tams.common.constant.JvmStatus;
 import net.wicp.tams.common.constant.dic.YesOrNo;
@@ -202,8 +211,46 @@ public class InitDuckula implements ServletContextListener {
 			}
 		}
 
-		// 日志监听
-		if (Conf.getBoolean("duckula.ops.pos.listener.enable")) {
+		// 清除历史位点 duckula.ops.pos.save.day
+		ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+		// 第二个参数为首次执行的延时时间，第三个参数为定时执行的间隔时间
+		service.scheduleAtFixedRate(new Runnable() {
+			@Override
+			public void run() {
+				List<String> dbinsts = ZkUtil.findSubNodes(ZkPath.dbinsts);
+				if (CollectionUtils.isEmpty(dbinsts)) {
+					return;
+				}
+				int saveDays = Integer.parseInt(StringUtil.hasNull(Conf.get("duckula.ops.pos.save.day"), "3"));
+				Date saveDay = DateUtil.setDayAfterBeginTime(new Date(), -saveDays);
+
+				for (String dbinst : dbinsts) {
+					List<String> posHiss = ZkClient.getInst().getChildren(ZkPath.dbinsts.getPath(dbinst));
+					CollectionUtils.filter(posHiss, new Predicate() {
+						@Override
+						public boolean evaluate(Object object) {
+							try {
+								Date posDate = new SimpleDateFormat(Pos.hisFormatStr).parse(String.valueOf(object));
+								return saveDay.after(posDate);//返回true表示要过滤
+							} catch (ParseException e) {
+								log.error("删除pohis失败", e);
+								return false;// 不删除
+							}
+						}
+					});
+					if (CollectionUtils.isNotEmpty(posHiss)) {
+						for (String posHis : posHiss) {
+							String path = ZkPath.dbinsts.getPath(dbinst) + "/" + posHis;
+							ZkClient.getInst().deleteNode(path);
+						}
+					}
+
+				}
+			}
+		}, 0, 10, TimeUnit.HOURS);
+
+		// 日志监听：20191206修改日志监听模式，在task直接更新到 dbinst目录下。取消监听。代码保留防后面有其它用途
+		if (false) {
 			// 监听pos
 			PathChildrenCacheListener childrenCacheListener = new PathChildrenCacheListener() {
 				@Override
