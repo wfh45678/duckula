@@ -1,7 +1,9 @@
 package net.wicp.tams.duckula.common;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +40,13 @@ public abstract class ZkUtil {
 	public static String[] findPosHis(String taskId) {
 		List<String> children = ZkClient.getInst().getChildren(ZkPath.dbinsts.getPath(taskId));
 		String[] ary = children.toArray(new String[children.size()]);
-		ArrayUtils.reverse(ary);
+		//倒序
+		Arrays.sort(ary, new Comparator<String>() {
+			@Override
+			public int compare(String o1, String o2) {
+				return -o1.compareTo(o2);
+			}
+		});		
 		return ary;
 	}
 
