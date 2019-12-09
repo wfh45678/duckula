@@ -1,6 +1,6 @@
 image: registry.choerodon.xforceplus.com/rjzjh/duckula
-imageOpsTag: ops.2.2.4
-imageDataTag: data.2.2.4
+imageOpsTag: ops.2.2.5.1
+imageDataTag: data.2.2.5
 imagePullPolicy: IfNotPresent
 env:
   zk: 192.168.11.80:2181
@@ -44,10 +44,8 @@ userconfig:
       #阿里云
       common.others.aliyun.server.accesskey=null
       common.others.aliyun.server.secretkey=null
-      #位点监听配置
-      duckula.ops.pos.listener.enable=true
-      #每5分钟打一次位点
-      duckula.ops.pos.listener.interval=300
+      #保留几天的位点信息
+      duckula.ops.pos.save.day=3
       #可以查询前600条，可以回退2天前  (60/5)*24*2=576 2天数据
       duckula.ops.pos.listener.querynum=600
       #ssh代理
@@ -88,7 +86,7 @@ userconfig:
       #k8s,此参数需要跟据情况修改为自己的私有镜像库
       #duckula.task.image.name=192.168.137.100:5000/rjzjh/duckula
       duckula.task.image.name=registry.choerodon.xforceplus.com/rjzjh/duckula
-      duckula.task.image.tag=task.2.2.4
+      duckula.task.image.tag=task.2.2.5
       #位点保留最大天数
       duckula.ops.pos.maxsize=7
   es:
