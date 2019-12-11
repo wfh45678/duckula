@@ -153,11 +153,14 @@ public class BusiFilter implements IBusi {
 		}
 
 		if (remove.size() > 0) {
-			int[] array = new int[remove.size()]; // remove.keySet() .toArray(new Integer[remove.size()]);
-			int tempindex = 0;
-			for (Integer i : remove.keySet()) {
-				array[tempindex++] = i.intValue();
+			// remove.size() 不可靠，有时会少一个元素 remove.keySet().toArray(new
+			// Integer[remove.size()]);
+			Object[] array2 = remove.keySet().toArray();
+			int[] array = new int[array2.length];
+			for (int i = 0; i < array2.length; i++) {
+				array[i] = (Integer) array2[i];
 			}
+
 			boolean isnull = false;
 			int rowsNumRrue = 0;
 			if (ArrayUtils.isNotEmpty(duckulaPackage.getBefores())) {
