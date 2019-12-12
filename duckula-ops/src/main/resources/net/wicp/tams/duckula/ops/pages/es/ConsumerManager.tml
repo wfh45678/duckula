@@ -41,10 +41,11 @@
 			        <td class="frame_table_list_2_righttext" name="trdb">id</td>
 			         <td>
 			             <r:validatebox name="id" style="width:280px;" required="true"/>
+			             <input type="hidden" name="isInsert" id="isInsert"/>
 	                 </td>	
 	                   <td class="frame_table_list_2_righttext">在线任务</td>
 			         <td>
-			          <r:combogrid id="taskSel" name="taskOnlineId"  columns="[[{field:'id',width:110,title:'id'},{field:'ip',width:280,title:'ip'},{field:'senderEnum',width:60,title:'发送者'}]]" idfield="id" panelWidth="460" panelHeight="300" textfield="id" width="200" pagination="false" required="true" url="/duckula/binlogDownload:queryTasks"></r:combogrid>
+			          <r:combogrid id="taskSel" name="taskOnlineId"  columns="[[{field:'id',width:110,title:'id'},{field:'ip',width:280,title:'ip'},{field:'senderEnum',width:60,title:'发送者'}]]" idfield="id" panelWidth="460" panelHeight="300" textfield="id" width="200" pagination="false" required="true" url="/duckula/binlogDownload:queryTasks?namespace=${namespace}"></r:combogrid>
 			         </td>			        
 			      </tr>
 			      <tr>
@@ -216,6 +217,7 @@
 	 }
 	
 	function initUpdate(){
+	  $('#isInsert').val('no');
       syncRule();
     }
 	 
@@ -305,6 +307,7 @@
      	 return rows[index];
      }        
      function initAdd(){
+        $('#isInsert').val('yes');
        $('#dg').edatagrid("loadData", []);
      }
       

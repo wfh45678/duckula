@@ -41,6 +41,7 @@ import net.wicp.tams.duckula.common.ZkClient;
 import net.wicp.tams.duckula.common.ZkUtil;
 import net.wicp.tams.duckula.common.beans.Task;
 import net.wicp.tams.duckula.common.beans.TaskOffline;
+import net.wicp.tams.duckula.common.constant.TaskPattern;
 import net.wicp.tams.duckula.common.constant.ZkPath;
 import net.wicp.tams.duckula.ops.beans.DbInstance;
 
@@ -221,6 +222,7 @@ public class BinlogDownload {
 
 	public TextStreamResponse onQueryTasks() throws KeeperException, InterruptedException {
 		final String queryDbId = request.getParameter("queryDbId");
+		final String namespace = request.getParameter("namespace");
 		List<String> taskNodes = ZkClient.getInst().getChildren(ZkPath.tasks.getRoot());
 		List<Task> tasks = CollectionFactory.newList();
 		for (String nodeName : taskNodes) {
@@ -229,19 +231,21 @@ public class BinlogDownload {
 				tasks.add(temp);
 			}
 		}
-		if (StringUtil.isNotNull(queryDbId)) {
-			CollectionUtils.filter(tasks, new Predicate() {
-				@Override
-				public boolean evaluate(Object object) {
-					Task temp = (Task) object;
-					if (queryDbId.equals(temp.getDbinst())) {
-						return true;
-					} else {
-						return false;
-					}
+
+		CollectionUtils.filter(tasks, new Predicate() {
+			@Override
+			public boolean evaluate(Object object) {
+				Task temp = (Task) object;
+				if (StringUtil.isNotNull(queryDbId) && !queryDbId.equals(temp.getDbinst())) {
+					return false;
 				}
-			});
-		}
+				if (!TaskPattern.isNeedServer() && StringUtil.isNotNull(namespace)&&!"all".equalsIgnoreCase(namespace)
+						&& !namespace.equals(temp.getNamespace())) {
+					return false;
+				}
+				return true;
+			}
+		});
 
 		String retstr = EasyUiAssist.getJsonForGrid(tasks, new String[] { "id", "ip", "rules", "senderEnum" },
 				new IConvertValue[] { null, null, null, null, null }, tasks.size());

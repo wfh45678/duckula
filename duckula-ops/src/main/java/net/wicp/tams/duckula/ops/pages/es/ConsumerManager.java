@@ -12,6 +12,7 @@ import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.tapestry5.annotations.OnEvent;
+import org.apache.tapestry5.annotations.Property;
 import org.apache.tapestry5.annotations.SessionState;
 import org.apache.tapestry5.ioc.annotations.Inject;
 import org.apache.tapestry5.ioc.internal.util.CollectionFactory;
@@ -74,6 +75,7 @@ public class ConsumerManager {
 	private IDuckulaAssit duckulaAssit;
 
 	@SessionState
+	@Property
 	private String namespace;
 
 	private boolean namespaceExists;
@@ -164,7 +166,7 @@ public class ConsumerManager {
 						String colValue = ResourcesType.Pod.getColValue(valueStr, "STATUS");
 						return colValue;
 					} catch (Exception e) {
-						log.error("query Pod status error",e);
+						log.error("query Pod status error", e);
 						return "";
 					}
 				}
@@ -252,8 +254,13 @@ public class ConsumerManager {
 					ZkPath.consumers.getPath(consumerparam.getId()), InitDuckula.haWatcherConsumer);
 			InitDuckula.cacheConsumerListener.put(consumerparam.getId(), createPathChildrenCache);
 		} else {
-			ZkClient.getInst().updateNode(ZkPath.consumers.getPath(consumerparam.getId()),
-					JSONObject.toJSONString(consumerparam));
+			String isInsert = request.getParameter("isInsert");// 保证不会覆盖别人的任务
+			if (StringUtil.isNotNull(isInsert) && "no".equals(isInsert)) {
+				ZkClient.getInst().updateNode(ZkPath.consumers.getPath(consumerparam.getId()),
+						JSONObject.toJSONString(consumerparam));
+			} else {
+				return TapestryAssist.getTextStreamResponse(Result.getError("已存在此任务"));
+			}
 		}
 		// 添加ES索引
 		if (consumerparam.getSenderConsumerEnum() == SenderConsumerEnum.es) {

@@ -41,7 +41,7 @@
 			      <tr>
 			         <td class="frame_table_list_2_righttext">在线任务</td>
 			         <td>
-			             <r:combogrid id="taskSel" name="taskOnlineId"  columns="[[{field:'id',width:110,title:'id'},{field:'ip',width:280,title:'ip'},{field:'senderEnum',width:60,title:'发送者'}]]" idfield="id" panelWidth="460" panelHeight="300" textfield="id" width="200" pagination="false" url="/duckula/binlogDownload:queryTasks"></r:combogrid>
+			             <r:combogrid id="taskSel" name="taskOnlineId"  columns="[[{field:'id',width:110,title:'id'},{field:'ip',width:280,title:'ip'},{field:'senderEnum',width:60,title:'发送者'}]]" idfield="id" panelWidth="460" panelHeight="300" textfield="id" width="200" pagination="false" url="/duckula/binlogDownload:queryTasks?namespace=${namespace}"></r:combogrid>
 			             <input type="hidden" name="id"/>
 	                 </td>
 			 	  	  <td class="frame_table_list_2_righttext" name="trdb">业务插件</td>	                 

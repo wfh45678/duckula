@@ -228,8 +228,10 @@ public class TaskManager {
 
 	public TextStreamResponse onSave() {
 		final Task taskparam = TapestryAssist.getBeanFromPage(Task.class, requestGlobals);
+		boolean isInsert=false;
 		if (taskparam.getClientId() == 0) {
 			taskparam.setClientId(StringUtil.buildPort(taskparam.getId()));
+			isInsert=true;
 		}
 		if (StringUtil.isNull(taskparam.getBeginTime())) {
 			taskparam.setBeginTime(DateFormatCase.YYYY_MM_DD_hhmmss.getInstanc().format(new Date()));
@@ -253,7 +255,11 @@ public class TaskManager {
 					.createPathChildrenCache(ZkPath.tasks.getPath(taskparam.getId()), InitDuckula.haWatcherTask);
 			InitDuckula.cacheTaskListener.put(taskparam.getId(), createPathChildrenCache);
 		} else {
-			ZkClient.getInst().updateNode(ZkPath.tasks.getPath(taskparam.getId()), JSONObject.toJSONString(taskparam));
+			if(isInsert) {//防止被别人覆盖
+				return TapestryAssist.getTextStreamResponse(Result.getError("已存在此任务"));
+			}else {
+				ZkClient.getInst().updateNode(ZkPath.tasks.getPath(taskparam.getId()), JSONObject.toJSONString(taskparam));
+			}
 		}
 
 		/*

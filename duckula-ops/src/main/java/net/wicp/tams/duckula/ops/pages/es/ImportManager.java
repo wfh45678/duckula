@@ -11,6 +11,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.tapestry5.annotations.OnEvent;
+import org.apache.tapestry5.annotations.Property;
 import org.apache.tapestry5.annotations.SessionState;
 import org.apache.tapestry5.ioc.annotations.Inject;
 import org.apache.tapestry5.ioc.internal.util.CollectionFactory;
@@ -59,6 +60,7 @@ public class ImportManager {
 	
 	
 	@SessionState
+	@Property
 	private String namespace;
 
 	private boolean namespaceExists;
@@ -297,5 +299,9 @@ public class ImportManager {
 		final Dump dumpparam = TapestryAssist.getBeanFromPage(Dump.class, requestGlobals);
 		Result del = ZkUtil.del(ZkPath.dumps, dumpparam.getId());
 		return TapestryAssist.getTextStreamResponse(del);
+	}
+	
+	public void onActivate(String namespace) {
+		this.namespace = namespace;
 	}
 }
