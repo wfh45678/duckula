@@ -31,6 +31,7 @@ import com.alibaba.fastjson.JSONObject;
 import net.wicp.tams.common.Conf;
 import net.wicp.tams.common.apiext.CollectionUtil;
 import net.wicp.tams.common.apiext.LoggerUtil;
+import net.wicp.tams.common.apiext.OSinfo;
 import net.wicp.tams.common.apiext.StringUtil;
 import net.wicp.tams.common.beans.Host;
 import net.wicp.tams.common.constant.JvmStatus;
@@ -161,6 +162,7 @@ public class Main {
 		}
 
 		addTimer(taskConf);
+		addTimerForLock(taskId);
 		addShutdownHook(taskConf);
 
 		ConfUtil.printlnASCII();
@@ -184,6 +186,30 @@ public class Main {
 				updatePosAndCount(taskConf);
 			}
 		}, 10, 1, TimeUnit.SECONDS);
+	}
+
+	private static void addTimerForLock(String  taskId) {
+		ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+		// 第二个参数为首次执行的延时时间，第三个参数为定时执行的间隔时间
+		service.scheduleAtFixedRate(new Runnable() {
+			@Override
+			public void run() {
+				InterProcessMutex lock = null;
+				try {
+					lock = ZkUtil.lockTaskPath(taskId);
+					if (!lock.acquire(15, TimeUnit.SECONDS)) {// 只等半分钟就好了
+						List<String> ips = ZkClient.getInst().lockValueList(lock);
+						if (!ips.contains(OSinfo.findIpAddressTrue())) {
+							log.error("此任务的分布式锁已丢失，已获得锁ip地址.", CollectionUtil.listJoin(ips, ","));
+							LoggerUtil.exit(JvmStatus.s9);
+						}
+					}
+				} catch (Exception e1) {
+					log.error("获取锁异常", e1);
+					LoggerUtil.exit(JvmStatus.s9);
+				}
+			}
+		}, 10, 20, TimeUnit.SECONDS);
 	}
 
 	private static void addShutdownHook(final ITaskConf taskConf) {

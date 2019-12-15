@@ -89,7 +89,9 @@ public class ZkClient {
 			Collection<String> values = interProcessMutex.getParticipantNodes();
 			for (String value : values) {
 				String val = getZkDataStr(value);
-				retlist.add(val);
+				if (!retlist.contains(val)) {
+					retlist.add(val);
+				}
 			}
 			return retlist;
 		} catch (Exception e) {
@@ -146,7 +148,7 @@ public class ZkClient {
 				create.withProtection().withMode(CreateMode.EPHEMERAL);
 			}
 			if (value == null) {
-				pathret = create.forPath(path,"".getBytes());//不传会把本机IP做为context
+				pathret = create.forPath(path, "".getBytes());// 不传会把本机IP做为context
 			} else {
 				pathret = create.forPath(path, value.getBytes("UTF-8"));
 			}

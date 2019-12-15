@@ -198,9 +198,8 @@
 	 function changeSender(val){      
         if('es'==val){
             $('#middlewareType_save').combobox('setValue','es');
-            //$('#middlewareInst_save').validatebox('required','true');
-            
-            showRuleColumn(["index","key","partitions","copynum"]);
+            //$('#middlewareInst_save').validatebox('required','true');           
+            showRuleColumn(["index","key","relakey","partitions","copynum"]);
         }else if('jdbc'==val){
             $('#middlewareType_save').combobox('setValue','');
            // $('#middlewareInst_save').validatebox('required','false');

@@ -22,6 +22,7 @@ import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 import net.wicp.tams.common.Conf;
 import net.wicp.tams.common.apiext.CollectionUtil;
 import net.wicp.tams.common.apiext.LoggerUtil;
+import net.wicp.tams.common.apiext.OSinfo;
 import net.wicp.tams.common.apiext.StringUtil;
 import net.wicp.tams.common.constant.JvmStatus;
 import net.wicp.tams.common.constant.dic.YesOrNo;
@@ -86,7 +87,8 @@ public class MainConsumer {
 		Consumer consumer = ZkUtil.buidlConsumer(consumerId);
 		addShutdownHook();
 		addTimer();
-		Task task = ZkUtil.buidlTask(consumer.getTaskOnlineId());		
+		addTimerForLock(consumerId);
+		Task task = ZkUtil.buidlTask(consumer.getTaskOnlineId());
 		Properties kafkaProp = ConfUtil.configMiddleware(MiddlewareType.kafka, task.getMiddlewareInst());
 		Conf.overProp(kafkaProp);
 		Properties props = new Properties();
@@ -107,30 +109,31 @@ public class MainConsumer {
 		// 默认不创建连接
 		props.put("common.jdbc.datasource.default.initialSize", 0);
 		props.put("common.jdbc.datasource.default.maxActive", 32);// 最多32分区，32个线程
-		
-	    //设置consumer配置
+
+		// 设置consumer配置
 		props.put("common.others.kafka.consumer.batch.num", consumer.getBatchNum());
 		props.put("common.others.kafka.consumer.batch.timeout", consumer.getBatchTimeout());
 
 		Conf.overProp(props);
 		log.info("----------------------启动consumer-------------------------------------");
-		
+
 		SenderConsumerEnum senderConsumerEnum = consumer.getSenderConsumerEnum();
-		if(senderConsumerEnum==null) {
+		if (senderConsumerEnum == null) {
 			log.info("需要配置发送者");
-			LoggerUtil.exit(JvmStatus.s15);
-		}		
-		IConsumer<byte[]> doConsumer =null;
-		try {
-			doConsumer=(IConsumer<byte[]>) Class.forName(senderConsumerEnum.getPluginClass()).getConstructor(Consumer.class).newInstance(consumer);
-		} catch (Exception e) {
-			log.info("创建发送者时异常",e);
 			LoggerUtil.exit(JvmStatus.s15);
 		}
-		if(doConsumer==null) {
+		IConsumer<byte[]> doConsumer = null;
+		try {
+			doConsumer = (IConsumer<byte[]>) Class.forName(senderConsumerEnum.getPluginClass())
+					.getConstructor(Consumer.class).newInstance(consumer);
+		} catch (Exception e) {
+			log.info("创建发送者时异常", e);
+			LoggerUtil.exit(JvmStatus.s15);
+		}
+		if (doConsumer == null) {
 			log.info("需要配置发送者");
 			LoggerUtil.exit(JvmStatus.s15);
-		}		
+		}
 		String groupId = StringUtil.isNull(consumer.getGroupId()) ? Conf.get("common.others.kafka.consumer.group.id")
 				: consumer.getGroupId();
 		KafkaConsumerGroup<byte[]> group = new KafkaConsumerGroupB(groupId, consumer.getTopic(), doConsumer, 1);
@@ -171,6 +174,30 @@ public class MainConsumer {
 		}, 10, 3, TimeUnit.SECONDS);
 	}
 
+	private static void addTimerForLock(String consumerId) {
+		ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+		// 第二个参数为首次执行的延时时间，第三个参数为定时执行的间隔时间
+		service.scheduleAtFixedRate(new Runnable() {
+			@Override
+			public void run() {
+				InterProcessMutex lock = null;
+				try {
+					lock = ZkUtil.lockConsumerPath(consumerId);
+					if (!lock.acquire(15, TimeUnit.SECONDS)) {// 只等半分钟就好了
+						List<String> ips = ZkClient.getInst().lockValueList(lock);
+						if (!ips.contains(OSinfo.findIpAddressTrue())) {
+							log.error("此任务的分布式锁已丢失，已获得锁ip地址.", CollectionUtil.listJoin(ips, ","));
+							LoggerUtil.exit(JvmStatus.s9);
+						}
+					}
+				} catch (Exception e1) {
+					log.error("获取锁异常", e1);
+					LoggerUtil.exit(JvmStatus.s9);
+				}
+			}
+		}, 10, 20, TimeUnit.SECONDS);
+	}
+
 	private void updateLastId() {
 		// System.out.println("aaaa");
 	}
@@ -186,7 +213,7 @@ public class MainConsumer {
 		ConsumerControl control = new ConsumerControl();
 		control.setLock(lock);
 		MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-		mbs.registerMBean(control, new ObjectName("Commons:name="+Conf.get("duckula.consumer.mbean.beanname")));
+		mbs.registerMBean(control, new ObjectName("Commons:name=" + Conf.get("duckula.consumer.mbean.beanname")));
 		log.info("----------------------MBean注册成功-------------------------------------");
 	}
 

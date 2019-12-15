@@ -242,7 +242,7 @@ public class DuckulaAssitImpl implements IDuckulaAssit {
 		List<String> locks = ZkUtil.lockIps(zkPath, taskId);// 分布式锁里的值
 		for (String lock : locks) {
 			for (Server server : findAllServers) {
-				if (lock.equals(server.getLockIp())) {
+				if (lock.equals(server.getLockIp())&&!serverids.contains(server.getIp())) {
 					serverids.add(server.getIp());
 				}
 			}
