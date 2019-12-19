@@ -70,6 +70,9 @@ public class ParseLogOnline extends BaseLogFetcher {
 			log.info("gtid：[{}]是否可用：[{}]", Main.context.getParsePos().getGtids(), gtidCan);
 		} catch (Exception e) {
 			log.error("读binlog日志出现问题", e);
+			LoggerUtil.exit(JvmStatus.s15);// 20191219 数据库重启时会走此路“The last packet sent successfully to the server was 0
+											// milliseconds ago. The driver has not received any packets from the
+											// server.”需要杀死进程重启
 			throw new RuntimeException(e);
 		}
 	}
@@ -169,9 +172,10 @@ public class ParseLogOnline extends BaseLogFetcher {
 				String gtidTrue = super.gtidBean.getGtids();
 				if (Main.context.getTask().getSenderEnum().isIdempotent()) {// 是全幂等模式，需要回推多少位点？否则会有数据丢失风险:如果在停机时kafka未发送完
 
-					//gtidTrue = backGtid(gtidTrue, 16 * 3);// TODO 要回溯多少个位点不知，先设置48个//手动设置回退5分钟，不用回退
+					// gtidTrue = backGtid(gtidTrue, 16 * 3);// TODO
+					// 要回溯多少个位点不知，先设置48个//手动设置回退5分钟，不用回退
 				}
-				log.info("star from the gtid:{}",gtidTrue);
+				log.info("star from the gtid:{}", gtidTrue);
 				fecther.openGtid(conn, gtidTrue, Main.context.getTask().getClientId());
 				// fecther.openGtid(conn,
 				// "f07e8023-5c57-11e6-ad03-340286ad00d3:1-115",
