@@ -1,29 +1,43 @@
 image: registry.cn-shanghai.aliyuncs.com/rjzjh/duckula
-imageOpsTag: ops.2.2.8
-imageDataTag: data.2.2.8
+imageTaskTag: task.2.2.8
 imagePullPolicy: IfNotPresent
+#运行的命令 docker-run.sh:监听mysql  docker-consumer.sh：kafka监听  docker-dump.sh: 全量导入
+cmd:  docker-run.sh
+#zk与taskid都是必填的
 env:
-  zk: docker.for.win.localhost:2181
-  rootpath: /duckula2
+  #taskid: demo-docker
+  
+## set to `now` to get a one time job, or a cronjob schedule like `0 0 * * *`
+## set to `nojob`  不是job 
+#schedule: "0/5 * * * *"
+schedule: nojob
+
+## 在schedule不是now和nojob时有效
+successfulJobsHistoryLimit: 2
+failedJobsHistoryLimit: 2
+
+#hosts:
+#- {ip: 192.168.11.12,host: [zk-kafka-01]}
+ 
 service:
   type: ClusterIP
-  port: 8080
-  # nodePort: 32000
-#持久化 
+  jmxexport:
+    port: 8080
+    # nodePort: 32000
+  debugport:
+    port: 2780
+    # nodePort: 32001
+#持久化
 persistence:
   enabled: false
-  # 指定存储，推荐使用此方式，注意创建的的访问模式为：accessMode: ReadWriteMany
-  #existingClaim: duckula-test-duckula-data
-  # 快速搭建demo可以使用此方式，要求k8s拥有此storageClass
-  storageClass: xforcecloud-disk-share
-  accessMode: ReadWriteMany
-  size: 40Gi
-  annotations: {}
-
+  #设置ops的持久化卷，必须设置，如果enabled为fals将是全新安装不能与ops建立连接
+  existingClaim: duckula
+  annotations: {}  
+  
 userconfig:
   root:
     zk.properties: |-
-      common.others.zookeeper.constr=null
+      common.others.zookeeper.constr=docker.for.win.localhost:2181
       #二次重试眨眼时间
       common.others.zookeeper.sleepTimeMs=10000
       #最大重试次数
@@ -32,63 +46,6 @@ userconfig:
       common.others.zookeeper.connectionTimeoutMs=60000
       #duckula使用的根目录
       duckula.zk.rootpath=/duckula2
-    duckula-ops.properties: |-
-      #http连接
-      common.http.connpool.maxtotal=200
-      #http连接
-      common.http.connpool.maxtotal=200
-      common.http.connpool.maxperroute=20
-      common.http.connpool.defaultconn.sockettimeout=50000
-      common.http.connpool.defaultconn.connecttimeout=50000
-      common.http.connpool.defaultconn.requesttimeout=50000
-      #阿里云
-      common.others.aliyun.server.accesskey=null
-      common.others.aliyun.server.secretkey=null
-      #保留几天的位点信息
-      duckula.ops.pos.save.day=3
-      #可以查询前600条，可以回退2天前  (60/5)*24*2=576 2天数据
-      duckula.ops.pos.listener.querynum=600
-      #ssh代理
-      common.apiext.ssh.host=ssh-jump
-      common.apiext.ssh.port=22
-      common.apiext.ssh.username=null
-      common.apiext.ssh.password=null
-      #外网传阿里云1分种传了40M，放大到3分种传120M，中够大部分的用户插件的传输任务
-      common.os.ssh.uncork.removeAbandonedTimeout=180
-      #2分钟进行漏洞检查，默认3分钟  
-      common.os.ssh.uncork.timeBetweenEvictionRunsMillis=120000
-      #发送命令返回时的等待时间3分钟
-      common.os.ssh.cmd.timeout=180000
-      #需要跟据实据情况替换
-      duckula.ops.homedir=/opt/duckula
-      duckula.ops.datadir=/data/duckula-data
-      #默认的用户名和密码
-      common.os.ssh.username=duckula
-      common.os.ssh.pwd=rjzjh@163.com
-      #开启任务的模式,tiller/k8s/process
-      duckula.ops.starttask.pattern=tiller
-      #task运行是否使用独立模式，非独立模式需要设置一个共享的磁盘：claimname，则duckula.ops.starttask.claimname必须设置
-      #是否独立启动，true:是独立启动，配置和日志都在本机，重启后将丢失 false:需要设置claimname
-      #注意独立模式需要记住duckula的根目录不一定是“duckula2”
-      duckula.ops.starttask.standalone=false
-      #使用的磁盘PVC
-      duckula.ops.starttask.claimname=null
-      #tiller
-      common.kubernetes.tiller.serverip=tiller-deploy.kube-system
-      common.kubernetes.tiller.port=44134
-      #kubernetes
-      common.kubernetes.apiserver.master.url=null
-      common.kubernetes.apiserver.master.username=null
-      common.kubernetes.apiserver.master.password=null
-      common.kubernetes.apiserver.namespace.default=-1
-      #20190912 默认的命名空间,用于在ops部署不同的命名空间,value-test.yaml
-      common.kubernetes.apiserver.namespace.valuepost=dev
-      #k8s,此参数需要跟据情况修改为自己的私有镜像库
-      #duckula.task.image.name=192.168.137.100:5000/rjzjh/duckula
-      duckula.task.image.name=registry.cn-shanghai.aliyuncs.com/rjzjh/duckula
-      duckula.task.image.tag=task.2.2.8
-      #位点保留最大天数
-      duckula.ops.pos.maxsize=7
   es:
     es-dev.properties: |-
       #此配置为示例，请修改为实际中使用的配置,对于k8s，在各相关的configmap中进行配置，
@@ -110,14 +67,10 @@ userconfig:
       #查询时的超时
       common.es.query.timeout=5000
       #以下为默认值，如果在api中没有设置相关值，则默认值起做用
-      common.es.query.index=none
+      common.es.query.index=null
       common.es.query.type=_doc
       common.es.http.aync.maxConnTotal=100
       common.es.http.aync.maxConnPerRoute=100
-      #hosts,hostname用逗号隔开     
-      docker.host.ip.192.168.11.116=node-es1
-      docker.host.ip.192.168.11.117=node-es2
-      docker.host.ip.192.168.11.118=node-es3
   kafka:
     kafka-dev.properties: |-
       #kafka示例配置，请修改为实际中使用的配置,对于k8s，在各相关的configmap中进行配置，
@@ -143,11 +96,6 @@ userconfig:
       common.others.kafka.consumer.auto.commit.interval.ms=1000
       common.others.kafka.consumer.session.timeout.ms=30000
       common.others.kafka.consumer.auto.offset.reset=earliest
-      #hosts,hostname用逗号隔开
-      docker.host.ip.192.168.11.61=zk-kafka-01
-      docker.host.ip.192.168.11.58=zk-kafka-02
-      docker.host.ip.192.168.11.60=zk-kafka-03
-      docker.host.ip.192.168.11.59=zk-kafka-04
   redis:
     redis-dev.properties: |-
       #Redis配置示例，请修改为实际中使用的配置,对于k8s，在各相关的configmap中进行配置，
@@ -186,16 +134,19 @@ userconfig:
       common.redis.cachecloud.redis_sentinel_suffix = /cache/client/redis/sentinel/%s.json?clientVersion=
       common.redis.cachecloud.redis_standalone_suffix = /cache/client/redis/standalone/%s.json?clientVersion=
       common.redis.cachecloud.cachecloud_report_url = /cachecloud/client/reportData.json
-
+    
+    
 podAnnotations: {}
 
+#dump请调整此资源
 resources:
   requests:
-    memory: 1024Mi
-    cpu: 200m
+    memory: 320Mi
+    cpu: 1000m
   limits:
-    memory: 1280Mi
-    cpu: 200m
+    memory: 512Mi
+    cpu:  1000m
+
 livenessProbe:
   initialDelaySeconds: 30
   periodSeconds: 10
@@ -209,5 +160,3 @@ readinessProbe:
   timeoutSeconds: 1
   successThreshold: 1
   failureThreshold: 3
-#hosts:
-#- {ip: 192.168.11.61, host: [zk-kafka-01]}

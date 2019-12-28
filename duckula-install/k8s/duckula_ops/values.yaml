@@ -1,4 +1,4 @@
-image: rjzjh/duckula
+image: registry.cn-shanghai.aliyuncs.com/rjzjh/duckula
 imageOpsTag: ops.2.2.8
 imageDataTag: data.2.2.8
 imagePullPolicy: IfNotPresent
