@@ -1,194 +1,28 @@
-image: registry.choerodon.xforceplus.com/rjzjh/duckula
-imageOpsTag: ops.2.0.8.1
-imageDataTag: data.2.0.8
+image: rjzjh/duckula
+imageOpsTag: ops.2.2.8
+imageDataTag: data.2.2.8
 imagePullPolicy: IfNotPresent
 env:
-  zk: 192.168.11.80:2181
-  rootpath: /duckula-k8s
+  zk: docker.for.win.localhost:2181
+  rootpath: /duckula2
 service:
   type: ClusterIP
   port: 8080
   # nodePort: 32000
 #持久化 
 persistence:
-  enabled: true
+  enabled: false
   # 指定存储，推荐使用此方式，注意创建的的访问模式为：accessMode: ReadWriteMany
   #existingClaim: duckula-test-duckula-data
   # 快速搭建demo可以使用此方式，要求k8s拥有此storageClass
-  storageClass: "xforcecloud-disk-share"
+  storageClass: xforcecloud-disk-share
   accessMode: ReadWriteMany
   size: 40Gi
   annotations: {}
-
+  
 userconfig:
   root:
-    zk.properties: |-
-      common.others.zookeeper.constr=null
-      #二次重试眨眼时间
-      common.others.zookeeper.sleepTimeMs=1000
-      #最大重试次数
-      common.others.zookeeper.maxRetries=5
-      common.others.zookeeper.sessionTimeoutMs=9000
-      common.others.zookeeper.connectionTimeoutMs=60000
-      #duckula使用的根目录
-      duckula.zk.rootpath=/duckula-k8s
-    duckula-ops.properties: |-
-      #http连接
-      common.http.connpool.maxtotal=200
-      #http连接
-      common.http.connpool.maxtotal=200
-      common.http.connpool.maxperroute=20
-      common.http.connpool.defaultconn.sockettimeout=50000
-      common.http.connpool.defaultconn.connecttimeout=50000
-      common.http.connpool.defaultconn.requesttimeout=50000
-      #阿里云
-      common.others.aliyun.server.accesskey=null
-      common.others.aliyun.server.secretkey=null
-      #位点监听配置
-      duckula.ops.pos.listener.enable=true
-      #每5分钟打一次位点
-      duckula.ops.pos.listener.interval=300
-      #可以查询前600条，可以回退2天前  (60/5)*24*2=576 2天数据
-      duckula.ops.pos.listener.querynum=600
-      #ssh代理
-      common.apiext.ssh.host=ssh-jump
-      common.apiext.ssh.port=22
-      common.apiext.ssh.username=null
-      common.apiext.ssh.password=null
-      #外网传阿里云1分种传了40M，放大到3分种传120M，中够大部分的用户插件的传输任务
-      common.os.ssh.uncork.removeAbandonedTimeout=180
-      #2分钟进行漏洞检查，默认3分钟  
-      common.os.ssh.uncork.timeBetweenEvictionRunsMillis=120000
-      #发送命令返回时的等待时间3分钟
-      common.os.ssh.cmd.timeout=180000
-      #需要跟据实据情况替换
-      duckula.ops.homedir=/opt/duckula
-      duckula.ops.datadir=/data/duckula-data
-      #默认的用户名和密码
-      common.os.ssh.username=duckula
-      common.os.ssh.pwd=rjzjh@163.com
-      #开启任务的模式,tiller/k8s/process
-      duckula.ops.starttask.pattern=tiller
-      #task运行是否使用独立模式，非独立模式需要设置一个共享的磁盘：claimname，则duckula.ops.starttask.claimname必须设置
-      #是否独立启动，true:是独立启动，配置和日志都在本机，重启后将丢失 false:需要设置claimname
-      #注意独立模式需要记住duckula的根目录不一定是“duckula2”
-      duckula.ops.starttask.standalone=false
-      #使用的磁盘PVC
-      duckula.ops.starttask.claimname=null
-      #tiller
-      common.kubernetes.tiller.serverip=tiller-deploy.kube-system
-      common.kubernetes.tiller.port=44134
-      #kubernetes
-      common.kubernetes.apiserver.master.url=null
-      common.kubernetes.apiserver.master.username=null
-      common.kubernetes.apiserver.master.password=null
-      common.kubernetes.apiserver.namespace.default=35-flink-stream-dev
-      #20190912 默认的命名空间,用于在ops部署不同的命名空间,value-test.yaml
-      common.kubernetes.apiserver.namespace.valuepost=test
-      #k8s,此参数需要跟据情况修改为自己的私有镜像库
-      #duckula.task.image.name=192.168.137.100:5000/rjzjh/duckula
-      duckula.task.image.name=registry.choerodon.xforceplus.com/rjzjh/duckula
-      duckula.task.image.tag=task.2.0.8
-      #位点保留最大天数
-      duckula.ops.pos.maxsize=7
-  es:
-    es-dev.properties: |-
-      #此配置为示例，请修改为实际中使用的配置,对于k8s，在各相关的configmap中进行配置，
-      common.es.host.name=node-es1,node-es2,node-es3
-      common.es.cluster.name=es-test
-      common.es.host.port.rest=9200
-      common.es.host.port.transport=9300
-      common.es.host.scheme=http
-      #ping命令响应的超时时间
-      common.es.client.transport.ping_timeout=5s
-      #检查节点可用性的时间间隔
-      common.es.client.transport.nodes_sampler_interval=5s
-      common.es.http.head=header=value&
-      #The default value is 30 seconds 与socket timeout相同，如果socket timeout设置了，则它失效
-      common.es.http.maxRetryTimeoutMillis=30000
-      common.es.http.connectTimeout=1000
-      common.es.http.socketTimeout=30000
-      common.es.http.connectionRequestTimeout=500
-      #查询时的超时
-      common.es.query.timeout=5000
-      #以下为默认值，如果在api中没有设置相关值，则默认值起做用
-      common.es.query.index=null
-      common.es.query.type=_doc
-      common.es.http.aync.maxConnTotal=100
-      common.es.http.aync.maxConnPerRoute=100
-      #hosts,hostname用逗号隔开     
-      docker.host.ip.192.168.11.116=node-es1
-      docker.host.ip.192.168.11.117=node-es2
-      docker.host.ip.192.168.11.118=node-es3
-  kafka:
-    kafka-dev.properties: |-
-      #kafka示例配置，请修改为实际中使用的配置,对于k8s，在各相关的configmap中进行配置，
-      common.others.kafka.common.bootstrap.servers=zk-kafka-01:9092,zk-kafka-02:9092,zk-kafka-03:9092,zk-kafka-04:9092
-      #kafka producer props
-      common.others.kafka.producer.acks=1
-      common.others.kafka.producer.retries=2147483647
-      common.others.kafka.producer.max.block.ms=9223372036854775807L
-      common.others.kafka.producer.max.in.flight.requests.per.connection=1
-      common.others.kafka.producer.linger.ms=10
-      common.others.kafka.producer.batch.size=102400
-      #32M
-      common.others.kafka.producer.buffer.memory=33554432
-      common.others.kafka.producer.compression.type=none
-      common.others.kafka.producer.max.request.size=1048576
-      common.others.kafka.producer.receive.buffer.bytes=32768
-      common.others.kafka.producer.request.timeout.ms=30000
-      common.others.kafka.producer.send.buffer.bytes=131072
-      common.others.kafka.producer.connections.max.idle.ms=540000
-      #kafka consumer props
-      common.others.kafka.consumer.group.id=tams-group
-      common.others.kafka.consumer.enable.auto.commit=true
-      common.others.kafka.consumer.auto.commit.interval.ms=1000
-      common.others.kafka.consumer.session.timeout.ms=30000
-      common.others.kafka.consumer.auto.offset.reset=earliest
-      #hosts,hostname用逗号隔开
-      docker.host.ip.192.168.11.61=zk-kafka-01
-      docker.host.ip.192.168.11.58=zk-kafka-02
-      docker.host.ip.192.168.11.60=zk-kafka-03
-      docker.host.ip.192.168.11.59=zk-kafka-04
-  redis:
-    redis-dev.properties: |-
-      #Redis配置示例，请修改为实际中使用的配置,对于k8s，在各相关的configmap中进行配置，
-      #common.redis.redisserver.host=localhost
-      #common.redis.redisserver.port=6379
-      #创建池的超时时间
-      common.redis.redisserver.timeout=2000
-      #获取Jedis连接的最大等待时间（10秒）   
-      common.redis.redisserver.maxWaitMillis=10000
-      #设置最大连接数
-      common.redis.redisserver.maxTotal=200
-      #最大空闲连接数 
-      common.redis.redisserver.maxIdle=20
-      #在将连接放回池中前
-      common.redis.redisserver.testOnBorrow=true
-      #自动测试池中的空闲连接是否都是可用连接  
-      common.redis.redisserver.testWhileIdle=true
-      common.redis.redisserver.defaultDb=0
-      common.redis.redisserver.password=null
-      #最小连接数
-      common.redis.redisserver.minIdle=0
-      common.redis.redisserver.minEvictableIdleTimeMillis=13000
-      common.redis.redisserver.softMinEvictableIdleTimeMillis=13000
-      common.redis.redisserver.numTestsPerEvictionRun=3
-      common.redis.redisserver.testOnReturn=false
-      common.redis.redisserver.timeBetweenEvictionRunsMillis=60000
-      common.redis.redisserver.blockWhenExhausted=true
-      #是否要治理连接汇漏
-      common.redis.redisserver.leak.enable=false
-      #设置客户端名称
-      common.redis.redisserver.clientName=tams
-      #cachecloud配置
-      common.redis.cachecloud.client_version = 1.2.0
-      common.redis.cachecloud.domain_url = http://118.31.67.136:9218
-      common.redis.cachecloud.redis_cluster_suffix = /cache/client/redis/cluster/%s.json?clientVersion=
-      common.redis.cachecloud.redis_sentinel_suffix = /cache/client/redis/sentinel/%s.json?clientVersion=
-      common.redis.cachecloud.redis_standalone_suffix = /cache/client/redis/standalone/%s.json?clientVersion=
-      common.redis.cachecloud.cachecloud_report_url = /cachecloud/client/reportData.json
-  
+
 podAnnotations: {}
 
 resources:
@@ -197,7 +31,7 @@ resources:
     cpu: 200m
   limits:
     memory: 1280Mi
-    cpu:  200m
+    cpu: 200m
 livenessProbe:
   initialDelaySeconds: 30
   periodSeconds: 10
@@ -211,3 +45,5 @@ readinessProbe:
   timeoutSeconds: 1
   successThreshold: 1
   failureThreshold: 3
+#hosts:
+#- {ip: 192.168.11.61, host: [zk-kafka-01]}

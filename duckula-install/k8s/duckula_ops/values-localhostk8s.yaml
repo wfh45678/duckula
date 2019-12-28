@@ -80,13 +80,13 @@ userconfig:
       common.kubernetes.apiserver.master.url=null
       common.kubernetes.apiserver.master.username=null
       common.kubernetes.apiserver.master.password=null
-      common.kubernetes.apiserver.namespace.default=default
+      common.kubernetes.apiserver.namespace.default=-1
       #20190912 默认的命名空间,用于在ops部署不同的命名空间,value-test.yaml
-      common.kubernetes.apiserver.namespace.valuepost=test
+      common.kubernetes.apiserver.namespace.valuepost=dev
       #k8s,此参数需要跟据情况修改为自己的私有镜像库
       #duckula.task.image.name=192.168.137.100:5000/rjzjh/duckula
-      duckula.task.image.name=registry.choerodon.xforceplus.com/rjzjh/duckula
-      duckula.task.image.tag=task.2.2.5
+      duckula.task.image.name=rjzjh/duckula
+      duckula.task.image.tag=task.2.2.8
       #位点保留最大天数
       duckula.ops.pos.maxsize=7
   es:
