@@ -1,0 +1,17 @@
+name: duckula-ops
+version: 0.0.1
+appVersion: 2.0
+description: binlog监听，数据实时推送
+keywords:
+- duckula
+- duckula-ops
+- binlog
+- mysql
+home: https://blog.csdn.net/rjzjh
+icon: https://profile.csdnimg.cn/7/9/2/1_rjzjh
+sources:
+- https://github.com/rjzjh/duckula
+maintainers:
+- name: andy.zhou
+  email: rjzjh@163.com
+engine: gotpl
