@@ -6,6 +6,13 @@
 
 这样就形成了一个从mysql->kafka->es 功能环。
 
+## duckula架构
+<div align=center><img src="https://github.com/rjzjh/duckula/wiki/images/InternalInstructions.png" width = "600" height = "400" /></div>
+duckula监听binlog数据，解析后经过序列化、发送者等处理后会到达ES，完成了ES的增量部分处理。
+
+还有一条线是从数据库全量同步到ES，完成了全量部分处理。
+
+
 ## 功能模块简介
 duckula专注于数据的实时推送，它分为四大模块：
 1. binlog在线监听
@@ -25,6 +32,7 @@ duckula专注于数据的实时推送，它分为四大模块：
 - duckula-common ...................................公共的引用模块
 - duckula-task ...........................................binlog监听模块
 - duckula-plugin-kafka .............................发送kafka发送者插件
+- duckula-plugin-kafka-idempotent..........幂等方式发送到kafka
 - duckula-plugin-elasticsearch .................直接发送ES的插件
 - duckula-busi-filter ....................................过虑器插件（暂不用）
 - duckula-dump-elasticsearch ..................全量导入ES的模块
@@ -40,4 +48,8 @@ duckula专注于数据的实时推送，它分为四大模块：
 - k8s   1.10.11
 - tiller 2.11.0
 - docker 18.09.02
-
+##  相关资源
+博客： https://blog.csdn.net/rjzjh
+微信：zhoujunhui1172
+邮箱：zhoujunhui@xforceplus.com
+公司：上海云砺信息科技有限公司   https://github.com/xforceplus
