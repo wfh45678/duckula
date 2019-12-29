@@ -1,6 +1,9 @@
 #           欢迎使用duckula
 
+## 首页
+<div align=center><img src="https://github.com/rjzjh/duckula/wiki/images/duckulahome.png" width = "600" height = "400" /></div>
 ## duckula能做的事
+
 <div align=center><img src="https://github.com/rjzjh/duckula/wiki/images/duckula_do.png" width = "600" height = "400" /></div>
 上面的红色线都是duckula能做的活，默认也提供了相关的工具依赖包供业务使用，
 
@@ -12,7 +15,10 @@ duckula监听binlog数据，解析后经过序列化、发送者等处理后会�
 
 还有一条线是从数据库全量同步到ES，完成了全量部分处理。
 
-
+## 安装与运维
+- 运维手册：  见项目wiki
+-  k8s版本安装：https://blog.csdn.net/rjzjh/article/details/103756170
+-  Ops-Server模式安装：https://blog.csdn.net/rjzjh/article/details/103756684
 ## 功能模块简介
 duckula专注于数据的实时推送，它分为四大模块：
 1. binlog在线监听
@@ -49,7 +55,7 @@ duckula专注于数据的实时推送，它分为四大模块：
 - tiller 2.11.0
 - docker 18.09.02
 ##  相关资源
-博客： https://blog.csdn.net/rjzjh
-微信：zhoujunhui1172
-邮箱：zhoujunhui@xforceplus.com
-公司：上海云砺信息科技有限公司   https://github.com/xforceplus
+- 博客： https://blog.csdn.net/rjzjh
+- 微信：zhoujunhui1172
+- 邮箱：zhoujunhui@xforceplus.com
+- 公司：上海云砺信息科技有限公司   https://github.com/xforceplus
